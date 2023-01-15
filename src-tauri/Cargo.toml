@@ -1,7 +1,7 @@
 [package]
-name = "bulb"
+name = "pavo"
 version = "0.0.0"
-description = "A Tauri App"
+description = "wallpaper"
 authors = ["you"]
 license = ""
 repository = ""
