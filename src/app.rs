@@ -67,33 +67,15 @@ pub fn app() -> Html {
   html! {
       <main class="container">
         <div class="row">
-            <a href="https://tauri.app" target="_blank">
-                <img src="public/tauri.svg" class="logo tauri" alt="Tauri logo"/>
-            </a>
-            <a href="https://yew.rs" target="_blank">
-                <img src="public/yew.png" class="logo yew" alt="Yew logo"/>
-            </a>
-        </div>
-
-        <p>{"Click on the Tauri and Yew logos to learn more."}</p>
-
-        <Wallpaper href="https://via.placeholder.com/150" title="test"/>
-
-        <p>
-            {"Recommended IDE setup: "}
-            <a href="https://code.visualstudio.com/" target="_blank">{"VS Code"}</a>
-            {" + "}
-            <a href="https://github.com/tauri-apps/tauri-vscode" target="_blank">{"Tauri"}</a>
-            {" + "}
-            <a href="https://github.com/rust-lang/rust-analyzer" target="_blank">{"rust-analyzer"}</a>
-        </p>
-
-        <div class="row">
             <input id="greet-input" ref={greet_input_ref} placeholder="Enter a name..." />
             <button type="button" onclick={greet}>{"Greetffff"}</button>
         </div>
-
-        <p><b>{ &*greet_msg }</b></p>
+        <div class="grid grid-cols-3 gap-4">
+          <Wallpaper href="https://picsum.photos/seed/picsum/200/300?random=1" title="Self" />
+          <Wallpaper href="https://picsum.photos/seed/picsum/200/300?random=2" title="Self" />
+          <Wallpaper href="https://picsum.photos/seed/picsum/200/300?random=3" title="Self" />
+          <Wallpaper href="https://picsum.photos/seed/picsum/200/300?random=4" title="Self" />
+        </div>
     </main>
   }
 }

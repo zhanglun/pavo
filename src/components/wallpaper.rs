@@ -30,8 +30,12 @@ impl Component for Wallpaper {
   fn view(&self, ctx: &Context<Self>) -> Html {
     html! {
       <div class="text-[red]">
-        <img src={ctx.props().href.clone()} title={ctx.props().title.clone()} />
-        {"This is a wallpaper"}
+        <img class="w-full" src={ctx.props().href.clone()} title={ctx.props().title.clone()} />
+        <div class="flex justify-between items-center p-2">
+          <span class="px-2 py-1 border border-rose-600 rounded">{"set"}</span>
+          <span class="px-2 py-1 border border-rose-600 rounded">{"download"}</span>
+          <span class="px-2 py-1 border border-rose-600 rounded">{"open"}</span>
+        </div>
       </div>
     }
   }

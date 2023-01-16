@@ -8,15 +8,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3d5a4b15-d587-4a8d-937f-4fca1926506e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/components/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/wallpaper.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Trunk.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Trunk.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/assets/styles.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/root.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/wallpaper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/wallpaper.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +52,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "settings.editor.selected.configurable": "editing.templates",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -88,7 +83,7 @@
       <workItem from="1673870580128" duration="13000" />
       <workItem from="1673870625534" duration="44000" />
       <workItem from="1673871191401" duration="77000" />
-      <workItem from="1673871275646" duration="5720000" />
+      <workItem from="1673871275646" duration="6510000" />
     </task>
     <servers />
   </component>
