@@ -4,6 +4,8 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
+use crate::components::wallpaper::Wallpaper;
+
 #[wasm_bindgen]
 extern "C" {
   #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
@@ -75,6 +77,8 @@ pub fn app() -> Html {
 
         <p>{"Click on the Tauri and Yew logos to learn more."}</p>
 
+        <Wallpaper href="https://via.placeholder.com/150" title="test"/>
+
         <p>
             {"Recommended IDE setup: "}
             <a href="https://code.visualstudio.com/" target="_blank">{"VS Code"}</a>
@@ -86,7 +90,7 @@ pub fn app() -> Html {
 
         <div class="row">
             <input id="greet-input" ref={greet_input_ref} placeholder="Enter a name..." />
-            <button type="button" onclick={greet}>{"Greet"}</button>
+            <button type="button" onclick={greet}>{"Greetffff"}</button>
         </div>
 
         <p><b>{ &*greet_msg }</b></p>
