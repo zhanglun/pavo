@@ -8,7 +8,8 @@ mod cmd;
 fn main() {
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
-      cmd::greet
+      cmd::greet,
+      cmd::set_as_desktop
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
