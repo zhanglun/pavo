@@ -71,10 +71,10 @@ pub fn app() -> Html {
             <button type="button" onclick={greet}>{"Greetffff"}</button>
         </div>
         <div class="grid grid-cols-3 gap-4">
-          <Wallpaper href="https://picsum.photos/seed/picsum/200/300?random=1" title="Self" />
-          <Wallpaper href="https://picsum.photos/seed/picsum/200/300?random=2" title="Self" />
-          <Wallpaper href="https://picsum.photos/seed/picsum/200/300?random=3" title="Self" />
-          <Wallpaper href="https://picsum.photos/seed/picsum/200/300?random=4" title="Self" />
+          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
+          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
+          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
+          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
         </div>
     </main>
   }

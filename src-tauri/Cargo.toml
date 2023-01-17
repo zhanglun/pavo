@@ -21,6 +21,8 @@ reqwest = { version = "0.11", features = ["json", "socks", "stream"] }
 tokio = { version = "1", features = ["full"] }
 indicatif = "0.17.3"
 futures-util = "0.3.25"
+wallpaper = { version = "3.2.0", features = ["from_url"] }
+
 [features]
 # by default Tauri runs in production mode
 # when `tauri dev` runs it is executed with `cargo run --no-default-features` if `devPath` is an URL

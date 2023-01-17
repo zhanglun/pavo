@@ -4,8 +4,11 @@
 )]
 
 mod cmd;
+mod config;
 
 fn main() {
+  config::PavoConfig::create_app_folder();
+
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
       cmd::greet,

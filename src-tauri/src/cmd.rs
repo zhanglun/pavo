@@ -1,9 +1,13 @@
 use std::cmp::min;
 use std::fs::{File, OpenOptions};
 use std::io::{Seek, Write};
+use std::path::Path;
+use wallpaper;
 use reqwest::Client;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures_util::StreamExt;
+
+use crate::config;
 
 pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<String, String> {
   let res = client
@@ -26,8 +30,10 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
   let mut stream = res.bytes_stream();
 
   println!("Seeking in file.");
+
   if std::path::Path::new(path).exists() {
     println!("File exists. Resuming.");
+
     file = std::fs::OpenOptions::new()
       .read(true)
       .append(true)
@@ -35,16 +41,20 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
       .unwrap();
 
     let file_size = std::fs::metadata(path).unwrap().len();
+
     file.seek(std::io::SeekFrom::Start(file_size)).unwrap();
     downloaded = file_size;
   } else {
     println!("Fresh file..");
+
     file = File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
   }
 
   println!("Commencing transfer");
+
   while let Some(item) = stream.next().await {
     let chunk = item.or(Err(format!("Error while downloading file")))?;
+
     file.write(&chunk)
       .or(Err(format!("Error while writing to file")))?;
     let new = min(downloaded + (chunk.len() as u64), total_size);
@@ -64,16 +74,29 @@ pub fn greet(name: &str) -> String {
 
 #[tauri::command]
 pub fn set_as_desktop(url: &str) -> String {
-  println!("set as desktop : {:?}", url);
+  wallpaper::set_from_url(url).unwrap();
 
-  String::from(url)
+  "Ok".to_string()
 }
 
 #[tauri::command]
 pub async fn download(url: &str) -> Result<String, String> {
-  let a = download_file(&Client::new(), "https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100", "./aa.jpg").await;
+  let app_folder = config::PavoConfig::get_app_folder();
 
-  a
+  match app_folder {
+    Ok(dir) => {
+      let filename = "test.jpg";
+      let path = Path::new(&dir).join(&*filename);
+      let a = download_file(&Client::new(), url, path.clone().to_str().unwrap()).await;
+
+      a
+    }
+    Err(e) => {
+      let (num, msg) = e;
+
+      Err(msg)
+    }
+  }
 }
 
 #[cfg(test)]
