@@ -9,8 +9,9 @@ fn main() {
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
       cmd::greet,
-      cmd::set_as_desktop
+      cmd::set_as_desktop,
+      cmd::download
     ])
     .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .expect("error while running Pavo");
 }
