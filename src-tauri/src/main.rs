@@ -5,6 +5,7 @@
 
 mod cmd;
 mod config;
+mod services;
 
 fn main() {
   config::PavoConfig::create_app_folder();

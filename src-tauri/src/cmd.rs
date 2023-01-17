@@ -7,7 +7,7 @@ use reqwest::Client;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures_util::StreamExt;
 
-use crate::config;
+use crate::{config, services};
 
 pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<String, String> {
   let res = client
@@ -81,22 +81,28 @@ pub fn set_as_desktop(url: &str) -> String {
 
 #[tauri::command]
 pub async fn download(url: &str) -> Result<String, String> {
-  let app_folder = config::PavoConfig::get_app_folder();
+  // let app_folder = config::PavoConfig::get_app_folder();
+  //
+  // match app_folder {
+  //   Ok(dir) => {
+  //     let filename = "test.jpg";
+  //     let path = Path::new(&dir).join(&*filename);
+  //     let a = download_file(&Client::new(), url, path.clone().to_str().unwrap()).await;
+  //
+  //     a
+  //   }
+  //   Err(e) => {
+  //     let (num, msg) = e;
+  //
+  //     Err(msg)
+  //   }
+  // }
+  let bingwallpaper = services::bingwallpaper::Bingwallpaper::new(0, 1).await?;
 
-  match app_folder {
-    Ok(dir) => {
-      let filename = "test.jpg";
-      let path = Path::new(&dir).join(&*filename);
-      let a = download_file(&Client::new(), url, path.clone().to_str().unwrap()).await;
+  bingwallpaper.save_wallpaper().await?;
+  bingwallpaper.set_wallpaper();
 
-      a
-    }
-    Err(e) => {
-      let (num, msg) = e;
-
-      Err(msg)
-    }
-  }
+  Ok("".to_string())
 }
 
 #[cfg(test)]
