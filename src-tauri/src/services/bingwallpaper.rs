@@ -1,4 +1,4 @@
-use serde_derive::Deserialize;
+use serde_derive::{Serialize, Deserialize};
 use serde_json::Number;
 use std::{
   env::var,
@@ -6,12 +6,10 @@ use std::{
   io::{copy, Cursor},
   path::Path,
 };
-use serde::Deserialize;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[derive(Debug, Serialize, Deserialize)]
-#[allow(dead_code)]
 pub struct Tooltips {
   pub loading: String,
   pub next: String,
@@ -21,7 +19,6 @@ pub struct Tooltips {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[allow(dead_code)]
 pub struct Images {
   pub bot: Number,
   pub copyright: String,
@@ -77,11 +74,40 @@ impl Images {
   }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Wallpaper {
+  pub images: Vec<Images>,
+  pub tooltips: Tooltips,
+}
+
+impl Wallpaper {
+  pub async fn new(index: u8, number: u8) -> Option<Wallpaper> {
+    let client = reqwest::Client::new();
+    let res = client.get(get_url(index, number).as_str())
+      .send()
+      .await;
+
+    match res {
+      Ok(r) => {
+        let content = res.expect("REASON").json().await;
+
+        match content {
+          Ok(content) => {
+            Some(content)
+          }
+          Err(_) => None
+        }
+      }
+      Err(_) => {
+        None
+      }
+    }
+  }
+}
 
 const BING_URL: &str = "https://www.bing.com/HPImageArchive.aspx?&format=js";
 
-#[derive(Serialize, Deserialize, ebug)]
-#[allow(dead_code)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Bingwallpaper {
   index: u8,
   number: u8,
@@ -121,18 +147,3 @@ fn get_url(index: u8, number: u8) -> String {
     .join("")
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[allow(dead_code)]
-pub struct Wallpaper {
-  pub images: Vec<Images>,
-  pub tooltips: Tooltips,
-}
-
-impl Wallpaper {
-  pub async fn new(index: u8, number: u8) -> Result<Wallpaper> {
-    Ok(reqwest::get(get_url(index, number).as_str())
-      .await?
-      .json::<Wallpaper>()
-      .await?)
-  }
-}

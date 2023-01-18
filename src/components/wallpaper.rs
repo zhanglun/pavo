@@ -47,7 +47,7 @@ impl Component for Wallpaper {
 
   fn view(&self, ctx: &Context<Self>) -> Html {
     let set_as_desktop = {
-      let mut wurl = ctx.props().href.clone().to_string();
+      let wurl = ctx.props().href.clone().to_string();
 
       Callback::from(move |_| {
         log("set_as_desktop");

@@ -97,10 +97,20 @@ pub async fn download(url: &str) -> Result<String, String> {
   //     Err(msg)
   //   }
   // }
-  let bingwallpaper = services::bingwallpaper::Bingwallpaper::new(0, 1).await?;
+  let bingwallpaper = services::bingwallpaper::Bingwallpaper::new(0, 1).await;
 
-  bingwallpaper.save_wallpaper().await?;
-  bingwallpaper.set_wallpaper();
+  match bingwallpaper {
+    Ok(bingwallpaper) => {
+      println!("{:?}", bingwallpaper);
+
+      bingwallpaper.save_wallpaper().await;
+      bingwallpaper.set_wallpaper();
+    }
+    Err(e) => {
+      return Err("error".to_string());
+    }
+  }
+
 
   Ok("".to_string())
 }

@@ -8,7 +8,7 @@ mod config;
 mod services;
 
 fn main() {
-  config::PavoConfig::create_app_folder();
+  config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
