@@ -1,4 +1,4 @@
-use serde_derive::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize};
 use serde_json::Number;
 use std::{
   env::var,
@@ -75,33 +75,18 @@ impl Images {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct Wallpaper {
   pub images: Vec<Images>,
   pub tooltips: Tooltips,
 }
 
 impl Wallpaper {
-  pub async fn new(index: u8, number: u8) -> Option<Wallpaper> {
-    let client = reqwest::Client::new();
-    let res = client.get(get_url(index, number).as_str())
-      .send()
-      .await;
-
-    match res {
-      Ok(r) => {
-        let content = res.expect("REASON").json().await;
-
-        match content {
-          Ok(content) => {
-            Some(content)
-          }
-          Err(_) => None
-        }
-      }
-      Err(_) => {
-        None
-      }
-    }
+  pub async fn new(index: u8, number: u8) -> Result<Wallpaper> {
+    Ok(reqwest::get(get_url(index, number).as_str())
+      .await?
+      .json::<Wallpaper>()
+      .await?)
   }
 }
 

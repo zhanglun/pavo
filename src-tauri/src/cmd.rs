@@ -8,6 +8,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use futures_util::StreamExt;
 
 use crate::{config, services};
+use crate::services::bingwallpaper::Bingwallpaper;
 
 pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<String, String> {
   let res = client
@@ -113,6 +114,21 @@ pub async fn download(url: &str) -> Result<String, String> {
 
 
   Ok("".to_string())
+}
+
+#[tauri::command]
+pub async fn get_bing_wallpaper_list() -> Result<Bingwallpaper, String> {
+  let bing = services::bingwallpaper::Bingwallpaper::new(0, 10).await;
+
+  match bing {
+    Ok(bing) => {
+      println!("{:?}", bing);
+      Ok(bing)
+    }
+    Err(_) => {
+      Err("".to_string())
+    }
+  }
 }
 
 #[cfg(test)]

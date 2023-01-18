@@ -14,7 +14,8 @@ fn main() {
     .invoke_handler(tauri::generate_handler![
       cmd::greet,
       cmd::set_as_desktop,
-      cmd::download
+      cmd::download,
+      cmd::get_bing_wallpaper_list,
     ])
     .run(tauri::generate_context!())
     .expect("error while running Pavo");

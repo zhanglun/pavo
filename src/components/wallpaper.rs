@@ -47,11 +47,11 @@ impl Component for Wallpaper {
 
   fn view(&self, ctx: &Context<Self>) -> Html {
     let set_as_desktop = {
-      let wurl = ctx.props().href.clone().to_string();
+      let clone_url = ctx.props().href.clone().to_string();
 
       Callback::from(move |_| {
-        log("set_as_desktop");
-        let url = wurl.clone();
+        let url = clone_url.clone();
+
         spawn_local(async move {
           log(url.as_str());
           let res = invoke("set_as_desktop", to_value(&SetAsDesktopArgs { url: &*url }).unwrap()).await;
@@ -61,11 +61,11 @@ impl Component for Wallpaper {
     };
 
     let download = {
-      let mut wurl = ctx.props().href.clone().to_string();
+      let clone_url = ctx.props().href.clone().to_string();
 
       Callback::from(move |_| {
-        log("download");
-        let url = wurl.clone();
+        let url = clone_url.clone();
+
         spawn_local(async move {
           log(url.as_str());
           let res = invoke("download", to_value(&SetAsDesktopArgs { url: &*url }).unwrap()).await;

@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
-use crate::components::wallpaper::Wallpaper;
+use crate::components::home::Home;
 
 #[wasm_bindgen]
 extern "C" {
@@ -65,17 +65,12 @@ pub fn app() -> Html {
   };
 
   html! {
-      <main class="container">
-        <div class="row">
-            <input id="greet-input" ref={greet_input_ref} placeholder="Enter a name..." />
-            <button type="button" onclick={greet}>{"Greetffff"}</button>
-        </div>
-        <div class="grid grid-cols-3 gap-4">
-          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
-          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
-          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
-          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
-        </div>
+    <main class="container">
+      <div class="row">
+        <input id="greet-input" ref={greet_input_ref} placeholder="Enter a name..." />
+        <button type="button" onclick={greet}>{"Greetffff"}</button>
+      </div>
+      <Home />
     </main>
   }
 }
