@@ -122,7 +122,6 @@ pub async fn get_bing_wallpaper_list() -> Result<Bingwallpaper, String> {
 
   match bing {
     Ok(bing) => {
-      println!("{:?}", bing);
       Ok(bing)
     }
     Err(_) => {

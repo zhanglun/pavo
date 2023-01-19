@@ -75,7 +75,6 @@ impl Images {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[allow(dead_code)]
 pub struct Wallpaper {
   pub images: Vec<Images>,
   pub tooltips: Tooltips,
