@@ -3,6 +3,7 @@ use serde_json;
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
+use weblog::*;
 use yew::prelude::*;
 
 use crate::components::wallpaper::Wallpaper;
@@ -11,9 +12,6 @@ use crate::components::wallpaper::Wallpaper;
 extern "C" {
   #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
   async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-
-  #[wasm_bindgen(js_namespace = console)]
-  fn log(s: &str);
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -61,53 +59,51 @@ pub struct Tooltips {
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {}
 
-pub struct Home {}
+#[function_component(ImageList)]
+fn image_list() -> Html {
+  let images: UseStateHandle<Vec<Images>> = use_state(|| Vec::with_capacity(0));
 
-impl Component for Home {
-  type Message = ();
-  type Properties = ();
+  {
+    let _images = images.clone();
+    use_effect_with_deps(
+      move |_| {
+        let images = _images.clone();
+        spawn_local(async move {
+          let list: JsValue = invoke("get_bing_wallpaper_list", to_value("").unwrap()).await;
+          let bing: Bingwallpaper = serde_wasm_bindgen::from_value(list).unwrap();
 
-  fn create(ctx: &Context<Self>) -> Self {
-    Self
+          images.set(bing.json.images)
+        });
+        || ()
+      },
+      (),
+    );
   }
 
-
-  fn view(&self, _ctx: Context<Self>) -> Html {
-    let mut images = Vec::new();
-
-    spawn_local(async move {
-      let list: JsValue = invoke("get_bing_wallpaper_list", to_value("").unwrap()).await;
-      let bing: Bingwallpaper = serde_wasm_bindgen::from_value(list).unwrap();
-
-      bing.json.images.iter().map(|image| {
-        images.push(image)
-      });
-      log(&serde_json::to_string(&images).unwrap());
-      // serde_json::from_str::<Vec<Images>>(&serde_json::to_string(&*images).unwrap()).unwrap().iter().map(|image| {
-      //   log(image.title.as_str());
-      // });
-    });
-    
+  let images = (*images).clone();
+  let images = images.iter().map(|item| {
     html! {
-      <div>
-        {"Home"}
-      // {list.iter().map(|_| {
-      //   "ddd"
-      // })}
-      // { for *images.to_vec().iter().map(|image| {
-      //   html_nested! {
-      //         <div>{"hhhhhh---"}</div>
-      //      }
-      // })}
-
-
-        <div class="grid grid-cols-3 gap-4">
-          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
-          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
-          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
-          <Wallpaper href="https://bing.com/th?id=OHR.SessileOaks_ZH-CN6385464274_1920x1080.jpg&qlt=100" title="Self" />
-        </div>
-      </div>
+      <Wallpaper
+        href={["https://www.bing.com", &item.url.clone()].concat()}
+        title={item.title.clone()}
+        description={String::from("ddd")}
+      />
     }
+  }).collect::<Html>();
+  html! {
+    <>
+      {images}
+    </>
+  }
+}
+
+#[function_component(Home)]
+pub fn home() -> Html {
+  html! {
+    <div>
+      <div class="grid grid-cols-3 gap-4">
+        <ImageList />
+      </div>
+    </div>
   }
 }

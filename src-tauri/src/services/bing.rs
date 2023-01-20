@@ -48,6 +48,13 @@ impl Images {
     &self.url[s..e]
   }
 
+  pub fn get_filename(url: &str) -> &str {
+    let s = url.find("OHR.").ok_or(0).unwrap();
+    let e = url.find("&rf=").ok_or(0).unwrap();
+
+    &url[s..e]
+  }
+
   fn copyright(&self) -> &str {
     self.copyright.as_str()
   }
@@ -75,16 +82,16 @@ impl Images {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Wallpaper {
+pub struct WallpaperRes {
   pub images: Vec<Images>,
   pub tooltips: Tooltips,
 }
 
-impl Wallpaper {
-  pub async fn new(index: u8, number: u8) -> Result<Wallpaper> {
+impl WallpaperRes {
+  pub async fn new(index: u8, number: u8) -> Result<WallpaperRes> {
     Ok(reqwest::get(get_url(index, number).as_str())
       .await?
-      .json::<Wallpaper>()
+      .json::<WallpaperRes>()
       .await?)
   }
 }
@@ -92,17 +99,17 @@ impl Wallpaper {
 const BING_URL: &str = "https://www.bing.com/HPImageArchive.aspx?&format=js";
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Bingwallpaper {
+pub struct Wallpaper {
   index: u8,
   number: u8,
   files: Vec<String>,
-  json: Wallpaper,
+  json: WallpaperRes,
 }
 
-impl Bingwallpaper {
-  pub async fn new(index: u8, number: u8) -> Result<Bingwallpaper> {
-    let json = Wallpaper::new(index, number).await?;
-    Ok(Bingwallpaper {
+impl Wallpaper {
+  pub async fn new(index: u8, number: u8) -> Result<Wallpaper> {
+    let json = WallpaperRes::new(index, number).await?;
+    Ok(Wallpaper {
       index,
       number,
       files: vec![],

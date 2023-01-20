@@ -1,1 +1,1 @@
-pub mod bingwallpaper;
+pub mod bing;

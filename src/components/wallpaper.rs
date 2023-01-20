@@ -2,20 +2,19 @@ use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
+use weblog::*;
 use yew::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
   #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
   async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-
-  #[wasm_bindgen(js_namespace = console)]
-  fn log(s: &str);
 }
 
 pub struct Wallpaper {
   title: String,
   href: String,
+  description: String,
 }
 
 pub enum Msg {
@@ -27,6 +26,7 @@ pub struct Props {
   #[prop_or_default]
   pub title: String,
   pub href: String,
+  pub description: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -42,6 +42,7 @@ impl Component for Wallpaper {
     Self {
       title: String::from(&ctx.props().title),
       href: String::from(&ctx.props().href),
+      description: String::from(&ctx.props().description),
     }
   }
 
@@ -53,9 +54,9 @@ impl Component for Wallpaper {
         let url = clone_url.clone();
 
         spawn_local(async move {
-          log(url.as_str());
+          console_log!(url.as_str());
           let res = invoke("set_as_desktop", to_value(&SetAsDesktopArgs { url: &*url }).unwrap()).await;
-          log(&*res.as_string().unwrap());
+          console_log!(&*res.as_string().unwrap());
         })
       })
     };
@@ -66,8 +67,10 @@ impl Component for Wallpaper {
       Callback::from(move |_| {
         let url = clone_url.clone();
 
+        console_log!("download -> ", &url);
+
         spawn_local(async move {
-          log(url.as_str());
+          console_log!(url.as_str());
           let res = invoke("download", to_value(&SetAsDesktopArgs { url: &*url }).unwrap()).await;
         })
       })
@@ -75,7 +78,7 @@ impl Component for Wallpaper {
 
     let open_in_browser = {
       Callback::from(move |_| {
-        log("open in browser");
+        console_log!("open in browser");
       })
     };
 

@@ -8,7 +8,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use futures_util::StreamExt;
 
 use crate::{config, services};
-use crate::services::bingwallpaper::Bingwallpaper;
+use crate::services::bing;
 
 pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<String, String> {
   let res = client
@@ -74,51 +74,66 @@ pub fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-pub fn set_as_desktop(url: &str) -> String {
-  wallpaper::set_from_url(url).unwrap();
+pub async fn set_as_desktop(url: &str) -> Result<String, String> {
+  println!("set as {:?}", url);
 
-  "Ok".to_string()
+  let app_folder = config::PavoConfig::get_app_folder();
+
+  match app_folder {
+    Ok(dir) => {
+      let filename = bing::Images::get_filename(&url);
+      let path = Path::new(&dir).join(&*filename);
+      let a = download_file(&Client::new(), url, path.clone().to_str().unwrap()).await;
+
+      match a {
+        Ok(a) => {
+          wallpaper::set_from_path(a.as_str()).unwrap();
+
+          Ok(a)
+        }
+        Err(e) => {
+          Err(e)
+        }
+      }
+    }
+    Err(e) => {
+      let (num, msg) = e;
+
+      Err(msg)
+    }
+  }
 }
 
 #[tauri::command]
 pub async fn download(url: &str) -> Result<String, String> {
-  // let app_folder = config::PavoConfig::get_app_folder();
-  //
-  // match app_folder {
-  //   Ok(dir) => {
-  //     let filename = "test.jpg";
-  //     let path = Path::new(&dir).join(&*filename);
-  //     let a = download_file(&Client::new(), url, path.clone().to_str().unwrap()).await;
-  //
-  //     a
-  //   }
-  //   Err(e) => {
-  //     let (num, msg) = e;
-  //
-  //     Err(msg)
-  //   }
-  // }
-  let bingwallpaper = services::bingwallpaper::Bingwallpaper::new(0, 1).await;
+  let app_folder = config::PavoConfig::get_app_folder();
 
-  match bingwallpaper {
-    Ok(bingwallpaper) => {
-      println!("{:?}", bingwallpaper);
+  match app_folder {
+    Ok(dir) => {
+      let filename = bing::Images::get_filename(&url);
+      let path = Path::new(&dir).join(&*filename);
+      let a = download_file(&Client::new(), url, path.clone().to_str().unwrap()).await;
 
-      bingwallpaper.save_wallpaper().await;
-      bingwallpaper.set_wallpaper();
+      match a {
+        Ok(a) => {
+          Ok(a)
+        }
+        Err(e) => {
+          Err(e)
+        }
+      }
     }
     Err(e) => {
-      return Err("error".to_string());
+      let (num, msg) = e;
+
+      Err(msg)
     }
   }
-
-
-  Ok("".to_string())
 }
 
 #[tauri::command]
-pub async fn get_bing_wallpaper_list() -> Result<Bingwallpaper, String> {
-  let bing = services::bingwallpaper::Bingwallpaper::new(0, 10).await;
+pub async fn get_bing_wallpaper_list() -> Result<bing::Wallpaper, String> {
+  let bing = services::bing::Wallpaper::new(0, 12).await;
 
   match bing {
     Ok(bing) => {
