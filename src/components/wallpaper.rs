@@ -83,12 +83,16 @@ impl Component for Wallpaper {
     };
 
     html! {
-      <div class="text-[red]">
-        <img class="w-full" src={ctx.props().href.clone()} title={ctx.props().title.clone()} />
-        <div class="flex justify-between items-center p-2">
-          <span class="px-2 py-1 border border-rose-600 rounded" onclick={set_as_desktop}>{"set"}</span>
-          <span class="px-2 py-1 border border-rose-600 rounded" onclick={download}>{"download"}</span>
-          <span class="px-2 py-1 border border-rose-600 rounded" onclick={open_in_browser}>{"open"}</span>
+      <div class="relative overflow-hidden">
+        <img class="w-full rounded-2xl" src={ctx.props().href.clone()} title={ctx.props().title
+        .clone()} />
+        <div class="flex justify-between items-center p-2 absolute left-0 right-0 bottom-0 bg-slate-600">
+          <div class="text-slate-200">{ctx.props().title.clone()}</div>
+          <div>
+            <span class="px-2 py-1 border border-rose-600 rounded" onclick={set_as_desktop}>{"set"}</span>
+            <span class="px-2 py-1 border border-rose-600 rounded" onclick={download}>{"download"}</span>
+            <span class="px-2 py-1 border border-rose-600 rounded" onclick={open_in_browser}>{"open"}</span>
+          </div>
         </div>
       </div>
     }

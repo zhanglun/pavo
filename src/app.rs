@@ -51,25 +51,25 @@ pub fn app() -> Html {
     );
   }
 
-  let greet = {
-    let name = name.clone();
-    let greet_input_ref = greet_input_ref.clone();
-    Callback::from(move |_| {
-      name.set(
-        greet_input_ref
-          .cast::<web_sys::HtmlInputElement>()
-          .unwrap()
-          .value(),
-      );
-    })
-  };
+  // let greet = {
+  //   let name = name.clone();
+  //   let greet_input_ref = greet_input_ref.clone();
+  //   Callback::from(move |_| {
+  //     name.set(
+  //       greet_input_ref
+  //         .cast::<web_sys::HtmlInputElement>()
+  //         .unwrap()
+  //         .value(),
+  //     );
+  //   })
+  // };
 
   html! {
     <main class="container">
-      <div class="row">
-        <input id="greet-input" ref={greet_input_ref} placeholder="Enter a name..." />
-        <button type="button" onclick={greet}>{"Greetffff"}</button>
-      </div>
+      // <div class="row">
+      //   <input id="greet-input" ref={greet_input_ref} placeholder="Enter a name..." />
+      //   <button type="button" onclick={greet}>{"Greetffff"}</button>
+      // </div>
       <Home />
     </main>
   }
