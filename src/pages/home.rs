@@ -1,9 +1,7 @@
 use serde::{Deserialize, Serialize};
-use serde_json;
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use weblog::*;
 use yew::prelude::*;
 
 use crate::components::wallpaper::Wallpaper;
@@ -100,8 +98,8 @@ fn image_list() -> Html {
 #[function_component(Home)]
 pub fn home() -> Html {
   html! {
-    <div>
-      <div class="grid grid-cols-3 gap-4">
+    <div class="w-full p-4">
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-8">
         <ImageList />
       </div>
     </div>

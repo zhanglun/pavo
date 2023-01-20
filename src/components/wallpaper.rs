@@ -11,6 +11,7 @@ extern "C" {
   async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 }
 
+#[warn(dead_code)]
 pub struct Wallpaper {
   title: String,
   href: String,
@@ -86,7 +87,7 @@ impl Component for Wallpaper {
       <div class="relative overflow-hidden">
         <img class="w-full rounded-2xl" src={ctx.props().href.clone()} title={ctx.props().title
         .clone()} />
-        <div class="flex justify-between items-center p-2 absolute left-0 right-0 bottom-0 bg-slate-600">
+        <div class="flex justify-between items-center p-2 absolute left-0 right-0 bottom-0 bg-slate-600 rounded-b-2xl">
           <div class="text-slate-200">{ctx.props().title.clone()}</div>
           <div>
             <span class="px-2 py-1 border border-rose-600 rounded" onclick={set_as_desktop}>{"set"}</span>

@@ -4,7 +4,8 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
-use crate::components::home::Home;
+use crate::pages::layout::Layout;
+use crate::pages::home::Home;
 
 #[wasm_bindgen]
 extern "C" {
@@ -65,12 +66,8 @@ pub fn app() -> Html {
   // };
 
   html! {
-    <main class="container">
-      // <div class="row">
-      //   <input id="greet-input" ref={greet_input_ref} placeholder="Enter a name..." />
-      //   <button type="button" onclick={greet}>{"Greetffff"}</button>
-      // </div>
+    <Layout>
       <Home />
-    </main>
+    </Layout>
   }
 }
