@@ -96,7 +96,7 @@ impl WallpaperRes {
   }
 }
 
-const BING_URL: &str = "https://www.bing.com/HPImageArchive.aspx?&format=js";
+const BING_URL: &str = "https://www.bing.com/HPImageArchive.aspx?&format=js&nc=1612409408851&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Wallpaper {

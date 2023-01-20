@@ -14,6 +14,7 @@ wasm-bindgen-futures = "0.4.32"
 web-sys = "0.3.59"
 weblog = "0.3"
 yew = { version="0.20.0", features = ["csr"] }
+yew-router = "0.17"
 
 [workspace]
 members = ["src-tauri"]

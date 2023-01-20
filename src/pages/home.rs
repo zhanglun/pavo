@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
-use crate::components::wallpaper::Wallpaper;
+use crate::components::bingwallpaper::Wallpaper;
 
 #[wasm_bindgen]
 extern "C" {
@@ -84,7 +84,7 @@ fn image_list() -> Html {
       <Wallpaper
         href={["https://www.bing.com", &item.url.clone()].concat()}
         title={item.title.clone()}
-        description={String::from("ddd")}
+        copyright={item.copyright.clone()}
       />
     }
   }).collect::<Html>();
