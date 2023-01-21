@@ -9,6 +9,7 @@ use futures_util::StreamExt;
 
 use crate::{config, services};
 use crate::services::bing;
+use crate::services::pexels;
 
 pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<String, String> {
   let res = client
@@ -66,11 +67,6 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
   // pb.finish_with_message(&format!("Downloaded {} to {}", url, path));
   println!("Downloaded ==> {:?} to {:?}", url, path);
   return Ok(path.to_string());
-}
-
-#[tauri::command]
-pub fn greet(name: &str) -> String {
-  format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
 #[tauri::command]
@@ -143,6 +139,14 @@ pub async fn get_bing_wallpaper_list() -> Result<bing::Wallpaper, String> {
       Err("".to_string())
     }
   }
+}
+
+#[tauri::command]
+pub async fn get_pexels_curated_photos() -> serde_json::Value {
+  let pexels_client = pexels::Pexels::new("s9GlfCrhK5qzYQTQjMipbIQ25spgFJnThF9n3uW73g9dge6eFzMJ7aeY".to_string());
+  let res = pexels_client.get_photo_curated(20, 1).await;
+
+  res
 }
 
 #[cfg(test)]

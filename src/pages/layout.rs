@@ -19,13 +19,9 @@ enum Route {
 
 fn switch(routes: Route) -> Html {
   match routes {
-    Route::Home => html! {<Home /> },
-    Route::Unsplash => html! {
-      <h1>{"Unsplsh"}</h1>
-    },
-    Route::Pexels => html! {
-      <Pexels />
-    },
+    Route::Home => html! { <Home /> },
+    Route::Unsplash => html! { <h1>{"Unsplsh"}</h1> },
+    Route::Pexels => html! { <Pexels /> },
     // s9GlfCrhK5qzYQTQjMipbIQ25spgFJnThF9n3uW73g9dge6eFzMJ7aeY
     Route::NotFound => html! { <h1>{ "404" }</h1> },
   }

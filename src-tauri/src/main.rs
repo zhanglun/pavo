@@ -12,10 +12,10 @@ fn main() {
 
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
-      cmd::greet,
       cmd::set_as_desktop,
       cmd::download,
       cmd::get_bing_wallpaper_list,
+      cmd::get_pexels_curated_photos,
     ])
     .run(tauri::generate_context!())
     .expect("error while running Pavo");
