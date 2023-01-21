@@ -5,6 +5,8 @@ use wasm_bindgen_futures::spawn_local;
 use weblog::*;
 use yew::prelude::*;
 
+use crate::components::toolbar::Toolbar;
+
 pub enum Msg {
   Clicked,
 }
@@ -41,6 +43,8 @@ pub struct Props {
   pub photo: Photo,
 }
 
+
+#[derive(Clone, Serialize, Deserialize)]
 pub struct PexelsPhoto {
   pub photo: Photo,
 }
@@ -65,8 +69,8 @@ impl Component for PexelsPhoto {
             title={ctx.props().photo.alt.clone()}
           />
           <div class="
+            absolute left-0 right-0 bottom-0 top-0 transition-all
             p-2 bg-gradient-to-r from-black/50 to-black/0
-            absolute left-0 right-0 bottom-0 top-0
           ">
           </div>
         </div>
@@ -81,6 +85,7 @@ impl Component for PexelsPhoto {
             <div class="text-base font-semibold">{ctx.props().photo.alt.clone()}</div>
             <div class="text-sm">{ctx.props().photo.photographer.clone()}</div>
           </div>
+          <Toolbar href={ctx.props().photo.src.original.clone()} />
         </div>
       </div>
     }

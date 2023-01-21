@@ -1,12 +1,37 @@
+use serde::{Deserialize, Serialize};
+use serde_wasm_bindgen::to_value;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::spawn_local;
+use weblog::*;
 use yew::prelude::*;
 
+#[wasm_bindgen]
+extern "C" {
+  #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
+  async fn invoke(cmd: &str, args: JsValue) -> JsValue;
+}
+
+#[derive(Serialize, Deserialize)]
+struct SetAsDesktopArgs<'a> {
+  url: &'a str,
+}
+
+// pub enum PhotoService {
+//   Bing,
+//   Pexels,
+//   Unsplash
+// }
+
 #[derive(Clone, PartialEq, Properties)]
-pub struct Props {}
+pub struct Props {
+  pub href: String,
+  // pub service: PhotoService,
+}
 
 #[function_component(Toolbar)]
-pub fn toolbar(props: &Poprs) -> Html {
+pub fn toolbar(props: &Props) -> Html {
     let set_as_desktop = {
-      let clone_url = ctx.props().href.clone().to_string();
+      let clone_url = props.href.clone().to_string();
 
       Callback::from(move |_| {
         let url = clone_url.clone();
@@ -20,7 +45,7 @@ pub fn toolbar(props: &Poprs) -> Html {
     };
 
     let download = {
-      let clone_url = ctx.props().href.clone().to_string();
+      let clone_url = props.href.clone().to_string();
 
       Callback::from(move |_| {
         let url = clone_url.clone();
