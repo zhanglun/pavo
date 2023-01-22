@@ -92,7 +92,7 @@ impl Pexels {
 
   pub fn get_filename(url: &str) -> &str {
     let s = url.find("pexels-").ok_or(0).unwrap();
-    let e = url.find("?").ok_or(0).unwrap();
+    let e = url.find("?").unwrap_or(url.len());
 
     &url[s..e]
   }
@@ -112,6 +112,7 @@ impl Pexels {
     match a {
       Ok(a) => {
         wallpaper::set_from_path(a.as_str()).unwrap();
+        wallpaper::set_mode(wallpaper::Mode::Span).unwrap();
 
         Ok(String::from("OK"))
       }

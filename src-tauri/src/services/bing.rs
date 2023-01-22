@@ -138,6 +138,7 @@ impl Wallpaper {
     match a {
       Ok(a) => {
         wallpaper::set_from_path(a.as_str()).unwrap();
+        wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
 
         Ok(String::from("OK"))
       }
