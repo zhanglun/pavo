@@ -1,11 +1,15 @@
-use reqwest;
+use std::path::Path;
+use reqwest::Client;
+
+use crate::config;
+use super::download_file;
 
 const API_URL: &'static str = "https://api.pexels.com/";
 
 #[derive(Debug)]
 pub struct Pexels {
   api_key: String,
-  client: reqwest::Client,
+  client: Client,
 }
 
 pub struct PhotoSrcSet {
@@ -37,7 +41,7 @@ impl Pexels {
   pub fn new(api_key: String) -> Pexels {
     Pexels {
       api_key,
-      client: reqwest::Client::new(),
+      client: Client::new(),
     }
   }
 
@@ -84,6 +88,37 @@ impl Pexels {
         .to_vec(),
       ),
     ).await.unwrap()
+  }
+
+  pub fn get_filename(url: &str) -> &str {
+    let s = url.find("pexels-").ok_or(0).unwrap();
+    let e = url.find("?").ok_or(0).unwrap();
+
+    &url[s..e]
+  }
+
+  pub async fn save_photo(url: &str) -> Result<String, String> {
+    let filename = Pexels::get_filename(url);
+    let app_folder = config::PavoConfig::get_app_folder().unwrap();
+    let path = Path::new(&app_folder).join(&*filename);
+    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap()).await.unwrap();
+
+    Ok(res)
+  }
+
+  pub async fn set_wallpaper(url: &str) -> Result<String, String> {
+    let a = Pexels::save_photo(url).await;
+
+    match a {
+      Ok(a) => {
+        wallpaper::set_from_path(a.as_str()).unwrap();
+
+        Ok(String::from("OK"))
+      }
+      Err(e) => {
+        Err(e.to_string().into())
+      }
+    }
   }
 }
 

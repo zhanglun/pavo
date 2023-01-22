@@ -14,31 +14,35 @@ extern "C" {
 #[derive(Serialize, Deserialize)]
 struct SetAsDesktopArgs<'a> {
   url: &'a str,
+  service: PhotoService,
 }
 
-// pub enum PhotoService {
-//   Bing,
-//   Pexels,
-//   Unsplash
-// }
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
+pub enum PhotoService {
+  Bing,
+  Pexels,
+  Unsplash
+}
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
   pub href: String,
-  // pub service: PhotoService,
+  pub service: PhotoService,
 }
 
 #[function_component(Toolbar)]
 pub fn toolbar(props: &Props) -> Html {
     let set_as_desktop = {
       let clone_url = props.href.clone().to_string();
+      let service = props.service.clone();
 
       Callback::from(move |_| {
         let url = clone_url.clone();
+        let service = service.clone();
 
         spawn_local(async move {
           console_log!(url.as_str());
-          let res = invoke("set_as_desktop", to_value(&SetAsDesktopArgs { url: &*url }).unwrap()).await;
+          let res = invoke("set_as_desktop", to_value(&SetAsDesktopArgs { url: &*url, service: service }).unwrap()).await;
           console_log!(&*res.as_string().unwrap());
         })
       })
@@ -46,15 +50,17 @@ pub fn toolbar(props: &Props) -> Html {
 
     let download = {
       let clone_url = props.href.clone().to_string();
+      let service = props.service.clone();
 
       Callback::from(move |_| {
         let url = clone_url.clone();
+        let service = service.clone();
 
         console_log!("download -> ", &url);
 
         spawn_local(async move {
           console_log!(url.as_str());
-          let res = invoke("download", to_value(&SetAsDesktopArgs { url: &*url }).unwrap()).await;
+          let res = invoke("download", to_value(&SetAsDesktopArgs { url: &*url, service: service }).unwrap()).await;
         })
       })
     };

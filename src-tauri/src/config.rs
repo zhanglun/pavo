@@ -38,11 +38,11 @@ impl PavoConfig {
         if app_config_dir.exists() {
           Ok(app_config_dir.clone().to_str().unwrap().to_string())
         } else {
-          Err((1, "no app folder".to_string()))
+          Ok(Self::create_app_folder().unwrap())
         }
       }
       None => {
-        Err((1, "no home dir".to_string()))
+        Err((2, "no home dir".to_string()))
       }
     }
   }

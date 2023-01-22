@@ -5,6 +5,8 @@ use wasm_bindgen_futures::spawn_local;
 use weblog::*;
 use yew::prelude::*;
 
+use crate::components::toolbar::PhotoService;
+
 #[wasm_bindgen]
 extern "C" {
   #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
@@ -33,6 +35,7 @@ pub struct Props {
 #[derive(Serialize, Deserialize)]
 struct SetAsDesktopArgs<'a> {
   url: &'a str,
+  service: PhotoService,
 }
 
 impl Component for Wallpaper {
@@ -56,7 +59,7 @@ impl Component for Wallpaper {
 
         spawn_local(async move {
           console_log!(url.as_str());
-          let res = invoke("set_as_desktop", to_value(&SetAsDesktopArgs { url: &*url }).unwrap()).await;
+          let res = invoke("set_as_desktop", to_value(&SetAsDesktopArgs { url: &*url, service: PhotoService::Bing }).unwrap()).await;
           console_log!(&*res.as_string().unwrap());
         })
       })
@@ -72,7 +75,7 @@ impl Component for Wallpaper {
 
         spawn_local(async move {
           console_log!(url.as_str());
-          let res = invoke("download", to_value(&SetAsDesktopArgs { url: &*url }).unwrap()).await;
+          let res = invoke("download", to_value(&SetAsDesktopArgs { url: &*url, service: PhotoService::Bing }).unwrap()).await;
         })
       })
     };

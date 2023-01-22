@@ -1,3 +1,4 @@
+use reqwest::Client;
 use serde::{Serialize, Deserialize};
 use serde_json::Number;
 use std::{
@@ -6,6 +7,9 @@ use std::{
   io::{copy, Cursor},
   path::Path,
 };
+
+use crate::config;
+use super::download_file;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -117,13 +121,30 @@ impl Wallpaper {
     })
   }
 
-  pub async fn save_wallpaper(&self) -> Result<()> {
-    self.json.images[0].save_wallpaper().await?;
-    Ok(())
+  pub async fn save_wallpaper(url: &str) -> Result<String> {
+    let filename = Images::get_filename(url);
+    let app_folder = config::PavoConfig::get_app_folder().unwrap();
+    let path = Path::new(&app_folder).join(&*filename);
+    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap()).await.unwrap();
+
+    println!("{:?}", res);
+
+    Ok(res)
   }
 
-  pub fn set_wallpaper(&self) {
-    self.json.images[0].set_wallpaper();
+  pub async fn set_wallpaper(url: &str) -> Result<String> {
+    let a = Wallpaper::save_wallpaper(url).await;
+
+    match a {
+      Ok(a) => {
+        wallpaper::set_from_path(a.as_str()).unwrap();
+
+        Ok(String::from("OK"))
+      }
+      Err(e) => {
+        Err(e.to_string().into())
+      }
+    }
   }
 }
 

@@ -7,6 +7,8 @@ use yew::prelude::*;
 
 use crate::components::toolbar::Toolbar;
 
+use super::toolbar::PhotoService;
+
 pub enum Msg {
   Clicked,
 }
@@ -85,7 +87,7 @@ impl Component for PexelsPhoto {
             <div class="text-base font-semibold">{ctx.props().photo.alt.clone()}</div>
             <div class="text-sm">{ctx.props().photo.photographer.clone()}</div>
           </div>
-          <Toolbar href={ctx.props().photo.src.original.clone()} />
+          <Toolbar href={ctx.props().photo.src.original.clone()} service={PhotoService::Pexels} />
         </div>
       </div>
     }
