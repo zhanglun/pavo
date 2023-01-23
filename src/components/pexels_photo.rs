@@ -5,9 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 use weblog::*;
 use yew::prelude::*;
 
-use crate::components::toolbar::Toolbar;
-
-use super::toolbar::PhotoService;
+use crate::components::toolbar::{Toolbar, PhotoService};
 
 pub enum Msg {
   Clicked,

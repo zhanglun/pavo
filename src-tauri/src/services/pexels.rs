@@ -112,7 +112,10 @@ impl Pexels {
     match a {
       Ok(a) => {
         wallpaper::set_from_path(a.as_str()).unwrap();
-        wallpaper::set_mode(wallpaper::Mode::Span).unwrap();
+
+        if cfg!(not(target_os="macos")) {
+          wallpaper::set_mode(wallpaper::Mode::Span).unwrap();
+        }
 
         Ok(String::from("OK"))
       }
