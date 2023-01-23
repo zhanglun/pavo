@@ -3,7 +3,15 @@ module.exports = {
     './src/**/*.rs',
   ],
   theme: {
-    extend: {},
+    colors: ({ colors }) => {
+      return {
+        ...colors,
+      }
+
+    },
+    extend: {
+
+    },
   },
   plugins: [
   ]

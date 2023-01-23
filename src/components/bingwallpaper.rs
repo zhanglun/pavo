@@ -51,41 +51,6 @@ impl Component for Wallpaper {
   }
 
   fn view(&self, ctx: &Context<Self>) -> Html {
-    let set_as_desktop = {
-      let clone_url = ctx.props().href.clone().to_string();
-
-      Callback::from(move |_| {
-        let url = clone_url.clone();
-
-        spawn_local(async move {
-          console_log!(url.as_str());
-          let res = invoke("set_as_desktop", to_value(&SetAsDesktopArgs { url: &*url, service: PhotoService::Bing }).unwrap()).await;
-          console_log!(&*res.as_string().unwrap());
-        })
-      })
-    };
-
-    let download = {
-      let clone_url = ctx.props().href.clone().to_string();
-
-      Callback::from(move |_| {
-        let url = clone_url.clone();
-
-        console_log!("download -> ", &url);
-
-        spawn_local(async move {
-          console_log!(url.as_str());
-          let res = invoke("download", to_value(&SetAsDesktopArgs { url: &*url, service: PhotoService::Bing }).unwrap()).await;
-        })
-      })
-    };
-
-    let open_in_browser = {
-      Callback::from(move |_| {
-        console_log!("open in browser");
-      })
-    };
-
     html! {
       <div class="relative">
         <div class="relative overflow-hidden rounded-2xl group">
@@ -111,7 +76,10 @@ impl Component for Wallpaper {
             <div class="text-base font-semibold">{ctx.props().title.clone()}</div>
             <div class="text-sm">{ctx.props().copyright.clone()}</div>
           </div>
-      <Toolbar href={ctx.props().href.clone()} service={PhotoService::Bing} />
+          <Toolbar
+            href={ctx.props().href.clone()}
+            service={PhotoService::Bing}
+          />
         </div>
       </div>
     }

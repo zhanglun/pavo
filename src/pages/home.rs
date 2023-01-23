@@ -99,8 +99,11 @@ fn image_list() -> Html {
 pub fn home() -> Html {
   html! {
     <div class="w-full p-4">
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-8">
+      <div class="grid grid-cols-3 gap-4 lg:grid-cols-3 lg:gap-4">
         <ImageList />
+      </div>
+      <div class="p-4 flex items-center justify-center">
+        <div class="px-6 py-2 rounded-full border border-stone-700 cursor-pointer hover:bg-orange-600">{"Load More"}</div>
       </div>
     </div>
   }
