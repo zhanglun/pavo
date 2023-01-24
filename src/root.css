@@ -108,3 +108,25 @@ button {
     background-color: #0f0f0f98;
   }
 }
+
+.btn-grad {
+  background-size: 200% auto;
+}
+
+.btn-grad:hover {
+  background-position: right center; /* change the direction of the change here */
+  color: #fff;
+  text-decoration: none;
+}
+
+
+.btn-grad {
+  background-image: linear-gradient(to right, #283c86 0%, #45a247  51%, #283c86  100%);
+  text-align: center;
+  text-transform: uppercase;
+  transition: 0.3s;
+  background-size: 200% auto;
+  color: white;
+  box-shadow: 0 0 20px #eee;
+  display: block;
+}

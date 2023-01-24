@@ -102,8 +102,14 @@ pub fn home() -> Html {
       <div class="grid grid-cols-3 gap-4 lg:grid-cols-3 lg:gap-4">
         <ImageList />
       </div>
-      <div class="p-4 flex items-center justify-center">
-        <div class="px-6 py-2 rounded-full border border-stone-700 cursor-pointer hover:bg-orange-600">{"Load More"}</div>
+      <div class="p-4 m-8 flex items-center justify-center">
+        <div class="px-6 py-2
+          rounded-full
+          text-white
+          cursor-pointer
+          transition-all
+          btn-grad
+          bg-button-gradient">{"Load More"}</div>
       </div>
     </div>
   }
