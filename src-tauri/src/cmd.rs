@@ -1,4 +1,3 @@
-use crate::services::pexels::Pexels;
 use crate::{services};
 use crate::services::{bing, pexels, PhotoService};
 
@@ -37,8 +36,10 @@ pub async fn download(url: &str, service: PhotoService) -> Result<String, String
 }
 
 #[tauri::command]
-pub async fn get_bing_wallpaper_list() -> Result<bing::Wallpaper, String> {
-  let bing = services::bing::Wallpaper::new(0, 12).await;
+pub async fn get_bing_wallpaper_list(page: u8) -> Result<bing::Wallpaper, String> {
+  println!("page ===> {:?}", page);
+  let idx = page * 8;
+  let bing = services::bing::Wallpaper::new(idx, 8).await;
 
   match bing {
     Ok(bing) => {

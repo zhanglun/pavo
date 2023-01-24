@@ -153,13 +153,17 @@ impl Wallpaper {
 }
 
 fn get_url(index: u8, number: u8) -> String {
-  [
+  let url = [
     BING_URL,
     "&idx=",
     &index.to_string(),
     "&n=",
     &number.to_string(),
   ]
-    .join("")
+    .join("");
+
+  println!("url: {:?}", url);
+
+  url
 }
 

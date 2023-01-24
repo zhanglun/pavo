@@ -12,7 +12,7 @@ extern "C" {
   async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bingwallpaper {
   index: u8,
   number: u8,
@@ -20,7 +20,7 @@ pub struct Bingwallpaper {
   json: Paper,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Paper {
   pub images: Vec<Images>,
   pub tooltips: Tooltips,
@@ -45,7 +45,7 @@ pub struct Images {
   pub wp: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tooltips {
   pub loading: String,
   pub next: String,
@@ -57,59 +57,51 @@ pub struct Tooltips {
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {}
 
-#[function_component(ImageList)]
-fn image_list() -> Html {
-  let images: UseStateHandle<Vec<Images>> = use_state(|| Vec::with_capacity(0));
-
-  {
-    let _images = images.clone();
-    use_effect_with_deps(
-      move |_| {
-        let images = _images.clone();
-        spawn_local(async move {
-          let list: JsValue = invoke("get_bing_wallpaper_list", to_value("").unwrap()).await;
-          let bing: Bingwallpaper = serde_wasm_bindgen::from_value(list).unwrap();
-
-          images.set(bing.json.images)
-        });
-        || ()
-      },
-      (),
-    );
-  }
-
-  let images = (*images).clone();
-  let images = images.iter().map(|item| {
-    html! {
-      <Wallpaper
-        href={["https://www.bing.com", &item.url.clone()].concat()}
-        title={item.title.clone()}
-        copyright={item.copyright.clone()}
-      />
-    }
-  }).collect::<Html>();
-  html! {
-    <>
-      {images}
-    </>
-  }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BingQuery {
+  page: u8
 }
 
 #[function_component(Home)]
 pub fn home() -> Html {
+  let images: UseStateHandle<Vec<Images>> = use_state(|| Vec::with_capacity(0));
+
+  {
+    let _images = images.clone();
+
+    use_effect_with_deps(move |_| {
+      let images = _images.clone();
+
+      spawn_local(async move {
+        let list: JsValue = invoke("get_bing_wallpaper_list", to_value(&BingQuery { page: 0 }).unwrap()).await;
+        let bing: Bingwallpaper = serde_wasm_bindgen::from_value(list).unwrap();
+
+        let list2: JsValue = invoke("get_bing_wallpaper_list", to_value(&BingQuery { page: 1 }).unwrap()).await;
+        let bing2: Bingwallpaper = serde_wasm_bindgen::from_value(list2).unwrap();
+
+        let page1 = bing.json.images;
+        let page2 = bing2.json.images;
+
+        images.set(page1.into_iter().chain(page2.into_iter()).collect());
+      });
+      || ()
+    }, ());
+  }
+
+  let images = (*images).clone();
+
   html! {
     <div class="w-full p-4">
-      <div class="grid grid-cols-3 gap-4 lg:grid-cols-3 lg:gap-4">
-        <ImageList />
-      </div>
-      <div class="p-4 m-8 flex items-center justify-center">
-        <div class="px-6 py-2
-          rounded-full
-          text-white
-          cursor-pointer
-          transition-all
-          btn-grad
-          bg-button-gradient">{"Load More"}</div>
+      <div class="grid grid-cols-4 gap-4 lg:grid-cols-4 lg:gap-4">
+        {images.iter().map(|item| {
+          html! {
+            <Wallpaper
+              href={["https://www.bing.com", &item.url.clone()].concat()}
+              title={item.title.clone()}
+              copyright={item.copyright.clone()}
+            />
+          }
+        }).collect::<Html>()}
       </div>
     </div>
   }
