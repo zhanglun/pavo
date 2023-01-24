@@ -77,7 +77,7 @@ impl Pexels {
   //     self.get(&format!("{}{}", "v1/photos/", id), None).await
   //   }
 
-  pub async fn get_photo_curated(&self, per_page: u32, page: u32) -> serde_json::Value {
+  pub async fn get_photo_curated(&self, per_page: u8, page: u8) -> serde_json::Value {
     self.get(
       "v1/curated",
       Some(

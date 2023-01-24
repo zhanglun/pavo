@@ -1,3 +1,4 @@
+use std::iter;
 use serde::{Serialize, Deserialize};
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
@@ -22,24 +23,44 @@ pub struct PexlesJSON {
   pub total_results: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PexelQuery {
+  page: u8
+}
+
 #[function_component(Pexels)]
 pub fn pexels() -> Html {
+  let page:UseStateHandle<u8> = use_state(|| 1);
   let photos: UseStateHandle<Vec<Photo>> = use_state(|| Vec::with_capacity(0));
+  let get_next_page = {
+    let page = page.clone();
+
+    Callback::from(move |_| {
+      page.set(*page + 1)
+    })
+  };
 
   {
     let photos = photos.clone();
+    let page = page.clone();
 
-    use_effect_with_deps(move |_| {
+    use_effect_with_deps(move |page| {
       let photos = photos.clone();
-      spawn_local(async move {
-        // let list:JsValue = invoke("get_pexels_curated_photos", to_value("").unwrap()).await;
-        // let res: PexlesJSON = serde_wasm_bindgen::from_value(list).unwrap();
+      let page = page.clone();
 
-        let res = mock::Mock::pexel_curated();
-        photos.set(res.photos);
+      spawn_local(async move {
+        let list:JsValue = invoke("get_pexels_curated_photos", to_value(&PexelQuery { page: page }).unwrap()).await;
+        let res: PexlesJSON = serde_wasm_bindgen::from_value(list).unwrap();
+
+        // let res = mock::Mock::pexel_curated();
+        let mut r = vec![];
+
+        r.append(&mut (*photos).clone());
+        r.append(&mut res.photos.clone());
+        photos.set(r);
       });
       || ()
-    }, ());
+    }, *page);
   }
 
   let photos = (*photos).clone();
@@ -55,6 +76,16 @@ pub fn pexels() -> Html {
     <div class="w-full p-4">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8 xl:grid-cols-4">
         {photos}
+      </div>
+      <div class="p-4 m-6 flex items-center justify-center">
+        <div class="px-6 py-2
+          rounded-full
+          text-white
+          cursor-pointer
+          transition-all
+          btn-grad
+          bg-button-gradient"
+          onclick={get_next_page}>{"Load More"}</div>
       </div>
     </div>
   }
