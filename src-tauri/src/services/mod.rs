@@ -8,6 +8,7 @@ use reqwest::Client;
 
 pub mod bing;
 pub mod pexels;
+pub mod mock;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum PhotoService {

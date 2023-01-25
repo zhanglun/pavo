@@ -53,14 +53,16 @@ impl Component for Wallpaper {
   fn view(&self, ctx: &Context<Self>) -> Html {
     html! {
       <div class="relative">
-        <div class="relative overflow-hidden rounded-2xl group">
+        <div class="relative rounded-2xl overflow-hidden group">
           <img
-            class="w-full group-hover:scale-125 transition-all"
+            class="w-full rounded-2xl transition-all group-hover:scale-125"
             src={ctx.props().href.clone()}
             title={ctx.props().title.clone()}
           />
           <div class="
             p-2 bg-gradient-to-r from-black/50 to-black/0
+            rounded-2xl
+            overflow-hidden
             absolute left-0 right-0 bottom-0 top-0
           ">
           </div>
