@@ -1,4 +1,3 @@
-use std::iter;
 use serde::{Serialize, Deserialize};
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
@@ -6,7 +5,6 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
 use crate::components::pexels_photo::{Photo, PexelsPhoto};
-use crate::pages::mock;
 
 #[wasm_bindgen]
 extern "C" {
@@ -51,8 +49,6 @@ pub fn pexels() -> Html {
       spawn_local(async move {
         let list:JsValue = invoke("get_pexels_curated_photos", to_value(&PexelQuery { page: page }).unwrap()).await;
         let res: PexlesJSON = serde_wasm_bindgen::from_value(list).unwrap();
-
-        // let res = mock::Mock::pexel_curated();
         let mut r = vec![];
 
         r.append(&mut (*photos).clone());
@@ -74,7 +70,7 @@ pub fn pexels() -> Html {
 
   html! {
     <div class="w-full p-4">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8 xl:grid-cols-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-8 xl:grid-cols-5">
         {photos}
       </div>
       <div class="p-4 m-6 flex items-center justify-center">

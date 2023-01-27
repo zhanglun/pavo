@@ -1,5 +1,7 @@
-use crate::pages::pexels::{PexlesJSON};
-use crate::components::pexels_photo::{Photo, PhotoSrcSet };
+use std::{fs, env};
+use std::path::Path;
+
+use super::pexels::{Photo, PhotoSrcSet, PexlesJSON};
 
 pub struct Mock {
 
@@ -455,5 +457,17 @@ Photo {
     ],
       total_results: 8000,
     }
+  }
+
+  pub fn pexel_search () -> PexlesJSON {
+    println!("{:?}", env::current_dir().unwrap());
+    let file_path = "./src/services/landscape.json";
+
+    println!("{:?}", file_path);
+
+    let contents = fs::read_to_string(file_path).unwrap();
+
+    println!("{}", contents);
+    serde_json::from_str(&contents).unwrap()
   }
 }

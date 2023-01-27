@@ -1,8 +1,9 @@
 use std::path::Path;
+use serde::{Serialize, Deserialize};
 use reqwest::Client;
 
 use crate::config;
-use super::download_file;
+use super::{download_file, mock::Mock};
 
 const API_URL: &'static str = "https://api.pexels.com/";
 
@@ -12,6 +13,17 @@ pub struct Pexels {
   client: Client,
 }
 
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PexlesJSON {
+  pub next_page: String,
+  pub page: usize,
+  pub per_page: usize,
+  pub photos: Vec<Photo>,
+  pub total_results: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PhotoSrcSet {
   pub original: String,
   pub large2x: String,
@@ -23,7 +35,8 @@ pub struct PhotoSrcSet {
   pub tiny: String,
 }
 
-pub struct PexelsPhoto {
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Photo {
   pub id: usize,
   pub width: usize,
   pub height: usize,
@@ -36,6 +49,7 @@ pub struct PexelsPhoto {
   pub liked: bool,
   pub alt: String,
 }
+
 
 impl Pexels {
   pub fn new(api_key: String) -> Pexels {
@@ -78,16 +92,32 @@ impl Pexels {
   //   }
 
   pub async fn get_photo_curated(&self, per_page: u8, page: u8) -> serde_json::Value {
-    self.get(
-      "v1/curated",
-      Some(
-        [
-          ("per_page", per_page.to_string()),
-          ("page", page.to_string()),
-        ]
-        .to_vec(),
-      ),
-    ).await.unwrap()
+    // self.get(
+    //   "v1/curated",
+    //   Some(
+    //     [
+    //       ("per_page", per_page.to_string()),
+    //       ("page", page.to_string()),
+    //     ]
+    //     .to_vec(),
+    //   ),
+    // ).await.unwrap()
+    serde_json::to_value(Mock::pexel_curated()).unwrap()
+  }
+
+  pub async fn get_photo_search(&self, per_page: u8, page: u8) -> serde_json::Value {
+    // self.get(
+    //   "v1/search",
+    //   Some(
+    //     [
+    //       ("per_page", per_page.to_string()),
+    //       ("page", page.to_string()),
+    //       ("query", String::from("4k wallpaper")),
+    //     ]
+    //     .to_vec(),
+    //   ),
+    // ).await.unwrap()
+    serde_json::to_value(Mock::pexel_search()).unwrap()
   }
 
   pub fn get_filename(url: &str) -> &str {
