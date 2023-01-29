@@ -7,7 +7,8 @@ mod cmd;
 mod config;
 mod services;
 
-use tauri::{CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem};
+use tauri::{api::dialog::ask, CustomMenuItem, GlobalWindowEvent, Manager, MenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem, WindowEvent, Wry}
+;
 
 fn create_tray () -> SystemTray {
   let quit = CustomMenuItem::new("quit".to_string(), "Quit");
@@ -22,6 +23,35 @@ fn create_tray () -> SystemTray {
   tray
 }
 
+fn handle_window_event (event: GlobalWindowEvent<Wry>) {
+  let window = event.window();
+  let app = window.app_handle();
+
+  match event.event() {
+    WindowEvent::CloseRequested { api, .. } => {
+      let window = window.clone();
+      api.prevent_close();
+      window.hide().unwrap();
+      // ask the user if he wants to quit
+      // ask(
+      //   Some(&window),
+      //   "Tauri API",
+      //   "Are you sure that you want to close this window?",
+      //   |answer| {
+      //     if answer {
+      //       // .close() cannot be called on the main thread
+      //       std::thread::spawn(move || {
+      //         window.close().unwrap();
+      //       });
+      //     }
+      //   },
+      // );
+    }
+    _ => {}
+  }
+
+}
+
 fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
@@ -33,6 +63,7 @@ fn main() {
       cmd::get_bing_wallpaper_list,
       cmd::get_pexels_curated_photos,
     ])
+    .on_window_event(handle_window_event)
     .run(tauri::generate_context!())
     .expect("error while running Pavo");
 }
