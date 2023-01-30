@@ -94,6 +94,8 @@ fn main() {
       cmd::download,
       cmd::get_bing_wallpaper_list,
       cmd::get_pexels_curated_photos,
+      cmd::set_auto_rotate,
+      cmd::set_randomly,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())

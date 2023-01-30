@@ -46,4 +46,12 @@ impl PavoConfig {
       }
     }
   }
+
+  pub fn set_auto_rotate(auto_rotate: bool) -> bool {
+    auto_rotate
+  }
+
+  pub fn set_randomly(random: bool) -> bool {
+    random
+  }
 }
