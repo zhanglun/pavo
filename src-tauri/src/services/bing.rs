@@ -41,6 +41,7 @@ pub struct Images {
   pub wp: bool,
 }
 
+#[warn(dead_code)]
 impl Images {
   pub fn url(&self) -> String {
     ["https://www.bing.com", &self.url].concat()
@@ -121,8 +122,11 @@ impl Wallpaper {
     })
   }
 
-  pub async fn save_wallpaper(url: &str) -> Result<String> {
-    let filename = Images::get_filename(url);
+  pub async fn save_wallpaper(url: &str, filename: Option<&str>) -> Result<String> {
+    let filename = match filename {
+      Some(filename) => filename,
+      None => Images::get_filename(url)
+    };
     let app_folder = config::PavoConfig::get_app_folder().unwrap();
     let path = Path::new(&app_folder).join(&*filename);
     let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap()).await.unwrap();
@@ -133,7 +137,7 @@ impl Wallpaper {
   }
 
   pub async fn set_wallpaper(url: &str) -> Result<String> {
-    let a = Wallpaper::save_wallpaper(url).await;
+    let a = Wallpaper::save_wallpaper(url, Some("wallpaper.png")).await;
 
     match a {
       Ok(a) => {

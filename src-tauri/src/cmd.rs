@@ -13,7 +13,7 @@ pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, 
       Ok(pexels::Pexels::set_wallpaper(url).await.unwrap())
     }
     PhotoService::Unsplash => {
-      bing::Wallpaper::set_wallpaper(url);
+      bing::Wallpaper::set_wallpaper(url).await.unwrap();
       Ok(String::from("asdf"))
     }
   }
@@ -23,13 +23,13 @@ pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, 
 pub async fn download(url: &str, service: PhotoService) -> Result<String, String> {
   match service {
     PhotoService::Bing => {
-      Ok(bing::Wallpaper::save_wallpaper(url).await.unwrap())
+      Ok(bing::Wallpaper::save_wallpaper(url, None).await.unwrap())
     }
     PhotoService::Pexels => {
       Ok(pexels::Pexels::save_photo(url).await.unwrap())
     }
     PhotoService::Unsplash => {
-      bing::Wallpaper::set_wallpaper(url);
+      bing::Wallpaper::set_wallpaper(url).await.unwrap();
       Ok(String::from("asdf"))
     }
   }

@@ -75,13 +75,17 @@ impl Component for Wallpaper {
           xl:grid-flow-col
         ">
           <div class="grid gap-2">
-            <div class="text-base font-semibold">{ctx.props().title.clone()}</div>
+            <div class="flex justify-between items-center">
+              <div class="text-base font-semibold">
+                {ctx.props().title.clone()}
+              </div>
+              <Toolbar
+                href={ctx.props().href.clone()}
+                service={PhotoService::Bing}
+              />
+            </div>
             <div class="text-sm">{ctx.props().copyright.clone()}</div>
           </div>
-          <Toolbar
-            href={ctx.props().href.clone()}
-            service={PhotoService::Bing}
-          />
         </div>
       </div>
     }

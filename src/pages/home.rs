@@ -92,7 +92,7 @@ pub fn home() -> Html {
 
   html! {
     <div class="w-full p-4">
-      <div class="grid grid-cols-4 gap-4 lg:grid-cols-4 lg:gap-4">
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-4 2xl:grid-cols-3 2xl:gap-4">
         {images.iter().map(|item| {
           html! {
             <Wallpaper

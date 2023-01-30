@@ -7,20 +7,51 @@ mod cmd;
 mod config;
 mod services;
 
-use tauri::{api::dialog::ask, CustomMenuItem, GlobalWindowEvent, Manager, MenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem, WindowEvent, Wry}
-;
+use tauri::{
+  Manager, CustomMenuItem, MenuItem,
+  SystemTray, SystemTrayMenu, SystemTrayMenuItem, SystemTrayEvent,
+  AppHandle, GlobalWindowEvent, WindowEvent, Wry
+};
 
 fn create_tray () -> SystemTray {
-  let quit = CustomMenuItem::new("quit".to_string(), "Quit");
+  let show = CustomMenuItem::new("show".to_string(), "Show");
   let hide = CustomMenuItem::new("hide".to_string(), "Hide");
+  let quit = CustomMenuItem::new("quit".to_string(), "Quit");
   let tray_menu = SystemTrayMenu::new()
-    .add_item(quit)
+    .add_item(show)
+    .add_item(hide)
     .add_native_item(SystemTrayMenuItem::Separator)
-    .add_item(hide);
+    .add_item(quit);
 
   let tray = SystemTray::new().with_menu(tray_menu);
 
   tray
+}
+
+fn handle_tray_event (app: &AppHandle, event: SystemTrayEvent) {
+  match event {
+    SystemTrayEvent::DoubleClick { tray_id, position, size, .. } => {
+      let window = app.get_window("main").unwrap();
+      window.show().unwrap();
+    }
+    SystemTrayEvent::MenuItemClick { id, .. } => {
+      match id.as_str() {
+        "show" => {
+          let window = app.get_window("main").unwrap();
+          window.show().unwrap();
+        }
+        "hide" => {
+          let window = app.get_window("main").unwrap();
+          window.hide().unwrap();
+        }
+        "quit" => {
+          std::process::exit(0);
+        }
+        _ => {}
+      }
+    }
+    _ => {}
+  };
 }
 
 fn handle_window_event (event: GlobalWindowEvent<Wry>) {
@@ -57,6 +88,7 @@ fn main() {
 
   tauri::Builder::default()
     .system_tray(create_tray())
+    .on_system_tray_event(handle_tray_event)
     .invoke_handler(tauri::generate_handler![
       cmd::set_as_desktop,
       cmd::download,
