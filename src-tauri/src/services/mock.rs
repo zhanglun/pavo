@@ -1,5 +1,4 @@
 use std::{fs, env};
-use std::path::Path;
 
 use super::pexels::{Photo, PhotoSrcSet, PexlesJSON};
 

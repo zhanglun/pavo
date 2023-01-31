@@ -8,7 +8,7 @@ mod config;
 mod services;
 
 use tauri::{
-  Manager, CustomMenuItem, MenuItem,
+  Manager, CustomMenuItem,
   SystemTray, SystemTrayMenu, SystemTrayMenuItem, SystemTrayEvent,
   AppHandle, GlobalWindowEvent, WindowEvent, Wry
 };
@@ -94,6 +94,7 @@ fn main() {
       cmd::download,
       cmd::get_bing_wallpaper_list,
       cmd::get_pexels_curated_photos,
+      cmd::get_config,
       cmd::set_auto_rotate,
       cmd::set_randomly,
     ])

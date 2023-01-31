@@ -1,13 +1,25 @@
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use std::fs;
 use std::io::{Error, ErrorKind};
+use serde::{Serialize, Deserialize};
 use tauri;
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
-
+  auto_rotate: bool,
+  randomly: bool,
+  interval: u8,
 }
 
 impl PavoConfig {
+  pub fn new() -> Self {
+    Self {
+      auto_rotate: false,
+      randomly: false,
+      interval: 30,
+    }
+  }
+
   pub fn create_app_folder () -> Result<String, Error> {
     let home_dir = tauri::api::path::home_dir();
 
@@ -47,11 +59,57 @@ impl PavoConfig {
     }
   }
 
-  pub fn set_auto_rotate(auto_rotate: bool) -> bool {
-    auto_rotate
+  pub fn write_config(data: PavoConfig) {
+    let folder_dir = Self::get_app_folder().unwrap();
+    let file_path = Path::new(&folder_dir).join("pavo.toml");
+
+    if !file_path.exists() {
+      fs::File::create(&file_path).expect("create config failed");
+    }
+
+    let content = toml::to_string(&data).unwrap();
+
+    fs::write(file_path, content).expect("write file error");
   }
 
-  pub fn set_randomly(random: bool) -> bool {
-    random
+  pub fn get_config() -> Self {
+    let folder_dir = Self::get_app_folder().unwrap();
+    let file_path = Path::new(&folder_dir).join("pavo.toml");
+
+    if !file_path.exists() {
+      fs::File::create(&file_path).expect("create config failed");
+    }
+
+    let content = match fs::read_to_string(&file_path) {
+      Ok(content) => content,
+      Err(_) => "".to_string(),
+    };
+
+    let data: PavoConfig = match toml::from_str(&content) {
+      Ok(data) => PavoConfig { ..data },
+      Err(_) => PavoConfig::new()
+    };
+
+    data
+  }
+
+  pub fn set_auto_rotate(&self, auto_rotate: bool) -> Self {
+    let mut data = Self::get_config();
+
+    data.auto_rotate = auto_rotate;
+
+    Self::write_config(data.clone());
+
+    data
+  }
+
+  pub fn set_randomly(&self, randomly: bool) -> Self {
+    let mut data = Self::get_config();
+
+    data.randomly = randomly;
+
+    Self::write_config(data.clone());
+
+    data
   }
 }

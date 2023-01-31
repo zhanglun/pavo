@@ -1,9 +1,8 @@
 use serde::{Serialize, Deserialize};
-use std::fs::{File, OpenOptions};
+use std::fs::{File};
 use std::io::{Seek, Write};
 use std::cmp::min;
 use futures_util::StreamExt;
-use std::path::Path;
 use reqwest::Client;
 
 pub mod bing;

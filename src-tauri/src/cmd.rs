@@ -60,13 +60,22 @@ pub async fn get_pexels_curated_photos(page: u8) -> serde_json::Value {
 }
 
 #[tauri::command]
-pub async fn set_auto_rotate (auto_rotate: bool) {
-  println!("{:?}", auto_rotate);
-  config::PavoConfig::set_auto_rotate(auto_rotate);
+pub async fn get_config() -> serde_json::Value {
+  let pavo_config = config::PavoConfig::get_config();
+
+  serde_json::to_value(pavo_config).unwrap()
 }
 
 #[tauri::command]
-pub async fn set_randomly (random: bool) {
-  println!("{:?}", random);
-  config::PavoConfig::set_randomly(random);
+pub async fn set_auto_rotate (auto_rotate: bool) {
+  let pavo_config = config::PavoConfig::get_config();
+
+  pavo_config.set_auto_rotate(auto_rotate);
+}
+
+#[tauri::command]
+pub async fn set_randomly (randomly: bool) {
+  let pavo_config = config::PavoConfig::get_config();
+
+  pavo_config.set_randomly(randomly);
 }

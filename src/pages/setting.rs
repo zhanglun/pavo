@@ -14,9 +14,14 @@ extern "C" {
   async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct Params {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RotateParams {
   autoRotate: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RandomParams {
+  randomly: bool,
 }
 
 #[function_component(Setting)]
@@ -24,11 +29,11 @@ pub fn setting () -> Html {
   let navigator = use_navigator().unwrap();
 
   let interval_options = vec![
-    ("0.5h", "Every 30 Minutes"),
-    ("1h", "Every Hour"),
-    ("2h", "Every 2 Hours"),
-    ("5h", "Every 5 Hours"),
-    ("24h", "Every Day"),
+    (30, "Every 30 Minutes"),
+    (60, "Every Hour"),
+    (120, "Every 2 Hours"),
+    (300, "Every 5 Hours"),
+    (3600, "Every Day"),
   ];
 
   let handle_back = Callback::from(move |_| navigator.push(&Route::Home));
@@ -44,7 +49,25 @@ pub fn setting () -> Html {
       if let Some(checkbox) = checkbox {
         state_auto_rotate.set(checkbox.checked());
         spawn_local(async move {
-          invoke("set_auto_rotate", to_value(&Params { autoRotate: checkbox.checked()}).unwrap()).await;
+          invoke("set_auto_rotate", to_value(&RotateParams { autoRotate: checkbox.checked()}).unwrap()).await;
+        });
+      }
+    })
+  };
+
+  let ref_randomly = use_node_ref();
+  let state_randomly: UseStateHandle<bool> = use_state(|| false);
+  let value_randomly = (*state_randomly).clone();
+  let handle_randomly = {
+    let ref_randomly = ref_randomly.clone();
+
+    Callback::from(move |_| {
+      let checkbox = ref_randomly.cast::<HtmlInputElement>();
+
+      if let Some(checkbox) = checkbox {
+        state_randomly.set(checkbox.checked());
+        spawn_local(async move {
+          invoke("set_randomly", to_value(&RandomParams { randomly: checkbox.checked()}).unwrap()).await;
         });
       }
     })
@@ -77,7 +100,7 @@ pub fn setting () -> Html {
               {
                 interval_options.iter().map(|item| {
                   html! {
-                  <option value={item.0}>{item.1}</option>
+                  <option value={item.0.to_string()}>{item.1}</option>
                   }
                 }).collect::<Html>()
               }
@@ -86,7 +109,12 @@ pub fn setting () -> Html {
           </div>
           <div>
             <label id="random">
-            <input type="checkbox" />
+            <input
+              ref={ref_randomly}
+              type="checkbox"
+              onchange={handle_randomly}
+              checked={value_randomly}
+            />
             {"Randomly"}
             </label>
           </div>
