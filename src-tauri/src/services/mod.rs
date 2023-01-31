@@ -38,24 +38,26 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
 
   println!("Seeking in file.");
 
-  if std::path::Path::new(path).exists() {
-    println!("File exists. Resuming.");
+  // if std::path::Path::new(path).exists() {
+  //   println!("File exists. Resuming.");
 
-    file = std::fs::OpenOptions::new()
-      .read(true)
-      .append(true)
-      .open(path)
-      .unwrap();
+  //   file = std::fs::OpenOptions::new()
+  //     .read(true)
+  //     .append(true)
+  //     .open(path)
+  //     .unwrap();
 
-    let file_size = std::fs::metadata(path).unwrap().len();
+  //   let file_size = std::fs::metadata(path).unwrap().len();
 
-    file.seek(std::io::SeekFrom::Start(file_size)).unwrap();
-    downloaded = file_size;
-  } else {
-    println!("Fresh file..");
+  //   file.seek(std::io::SeekFrom::Start(file_size)).unwrap();
+  //   downloaded = file_size;
+  // } else {
+  //   println!("Fresh file..");
 
-    file = File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
-  }
+  //   file = File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
+  // }
+
+  file = File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
 
   println!("Commencing transfer");
 

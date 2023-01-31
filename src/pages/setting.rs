@@ -1,8 +1,9 @@
 use serde::{Serialize, Deserialize};
-use serde_wasm_bindgen::to_value;
+use serde_wasm_bindgen;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::HtmlInputElement;
+use weblog::console_log;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -12,11 +13,26 @@ use crate::pages::layout::Route;
 extern "C" {
   #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
   async fn invoke(cmd: &str, args: JsValue) -> JsValue;
+
 }
+
+#[wasm_bindgen]
+extern "C" {
+  #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"], js_name=invoke)]
+  async fn invoke_get_config(cmd: &str) -> JsValue;
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PavoConfig {
+  auto_rotate: bool,
+  randomly: bool,
+  interval: u8,
+}
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RotateParams {
-  autoRotate: bool,
+  rotate: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -39,9 +55,9 @@ pub fn setting () -> Html {
   let handle_back = Callback::from(move |_| navigator.push(&Route::Home));
   let ref_auto_rotate = use_node_ref();
   let state_auto_rotate: UseStateHandle<bool> = use_state(|| false);
-  let value_auto_rotate = (*state_auto_rotate).clone();
   let handle_auto_rotate = {
     let ref_auto_rotate = ref_auto_rotate.clone();
+    let state_auto_rotate: UseStateHandle<bool> = state_auto_rotate.clone();
 
     Callback::from(move |_| {
       let checkbox = ref_auto_rotate.cast::<HtmlInputElement>();
@@ -49,7 +65,7 @@ pub fn setting () -> Html {
       if let Some(checkbox) = checkbox {
         state_auto_rotate.set(checkbox.checked());
         spawn_local(async move {
-          invoke("set_auto_rotate", to_value(&RotateParams { autoRotate: checkbox.checked()}).unwrap()).await;
+          invoke("set_auto_rotate", serde_wasm_bindgen::to_value(&RotateParams { rotate: checkbox.checked()}).unwrap()).await;
         });
       }
     })
@@ -57,9 +73,9 @@ pub fn setting () -> Html {
 
   let ref_randomly = use_node_ref();
   let state_randomly: UseStateHandle<bool> = use_state(|| false);
-  let value_randomly = (*state_randomly).clone();
   let handle_randomly = {
     let ref_randomly = ref_randomly.clone();
+    let state_randomly = state_randomly.clone();
 
     Callback::from(move |_| {
       let checkbox = ref_randomly.cast::<HtmlInputElement>();
@@ -67,12 +83,28 @@ pub fn setting () -> Html {
       if let Some(checkbox) = checkbox {
         state_randomly.set(checkbox.checked());
         spawn_local(async move {
-          invoke("set_randomly", to_value(&RandomParams { randomly: checkbox.checked()}).unwrap()).await;
+          invoke("set_randomly", serde_wasm_bindgen::to_value(&RandomParams { randomly: checkbox.checked()}).unwrap()).await;
         });
       }
     })
   };
 
+  {
+    let state_auto_rotate = state_auto_rotate.clone();
+    let state_randomly = state_randomly.clone();
+
+    use_effect_with_deps(move |_| {
+      spawn_local(async move {
+        let config = invoke_get_config("get_config").await;
+        let config: PavoConfig = serde_wasm_bindgen::from_value(config).unwrap();
+
+        console_log!(serde_wasm_bindgen::to_value(&config).unwrap());
+
+        state_auto_rotate.set(config.auto_rotate);
+        state_randomly.set(config.randomly);
+      });
+    }, ());
+  }
 
   html! {
     <div>
@@ -88,9 +120,9 @@ pub fn setting () -> Html {
               ref={ref_auto_rotate}
               type="checkbox"
               onchange={handle_auto_rotate}
-              checked={value_auto_rotate}
+              checked={*state_auto_rotate}
             />
-            {"Auto Rotate"}
+            {"Auto Rotate"} {*state_auto_rotate}
             </label>
           </div>
           <div>
@@ -113,9 +145,9 @@ pub fn setting () -> Html {
               ref={ref_randomly}
               type="checkbox"
               onchange={handle_randomly}
-              checked={value_randomly}
+              checked={*state_randomly}
             />
-            {"Randomly"}
+            {"Randomly"} {*state_randomly}
             </label>
           </div>
         </div>

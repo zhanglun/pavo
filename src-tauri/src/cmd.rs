@@ -67,14 +67,15 @@ pub async fn get_config() -> serde_json::Value {
 }
 
 #[tauri::command]
-pub async fn set_auto_rotate (auto_rotate: bool) {
+pub async fn set_auto_rotate(rotate: bool) {
+  println!("auto rotate {:?}", rotate);
   let pavo_config = config::PavoConfig::get_config();
 
-  pavo_config.set_auto_rotate(auto_rotate);
+  pavo_config.set_auto_rotate(rotate);
 }
 
 #[tauri::command]
-pub async fn set_randomly (randomly: bool) {
+pub async fn set_randomly(randomly: bool) {
   let pavo_config = config::PavoConfig::get_config();
 
   pavo_config.set_randomly(randomly);
