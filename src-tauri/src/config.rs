@@ -103,6 +103,18 @@ impl PavoConfig {
     data
   }
 
+  pub fn set_interval(&self, interval: u8) -> Self {
+    let mut data = Self::get_config();
+
+    data.interval = interval;
+
+    println!("data; {:?}", data);
+
+    Self::write_config(data.clone());
+
+    data
+  }
+
   pub fn set_randomly(&self, randomly: bool) -> Self {
     let mut data = Self::get_config();
 

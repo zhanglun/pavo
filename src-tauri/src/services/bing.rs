@@ -137,7 +137,7 @@ impl Wallpaper {
   }
 
   pub async fn set_wallpaper(url: &str) -> Result<String> {
-    let a = Wallpaper::save_wallpaper(url, Some("wallpaper.png")).await;
+    let a = Wallpaper::save_wallpaper(url, None).await;
 
     match a {
       Ok(a) => {

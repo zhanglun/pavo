@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 use serde_wasm_bindgen;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::HtmlInputElement;
+use web_sys::{HtmlInputElement};
 use weblog::console_log;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -14,10 +14,6 @@ extern "C" {
   #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
   async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 
-}
-
-#[wasm_bindgen]
-extern "C" {
   #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"], js_name=invoke)]
   async fn invoke_get_config(cmd: &str) -> JsValue;
 }
@@ -40,19 +36,17 @@ pub struct RandomParams {
   randomly: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IntervalParams {
+  interval: u8,
+}
+
 #[function_component(Setting)]
 pub fn setting () -> Html {
   let navigator = use_navigator().unwrap();
 
-  let interval_options = vec![
-    (30, "Every 30 Minutes"),
-    (60, "Every Hour"),
-    (120, "Every 2 Hours"),
-    (300, "Every 5 Hours"),
-    (3600, "Every Day"),
-  ];
-
   let handle_back = Callback::from(move |_| navigator.push(&Route::Home));
+
   let ref_auto_rotate = use_node_ref();
   let state_auto_rotate: UseStateHandle<bool> = use_state(|| false);
   let handle_auto_rotate = {
@@ -89,9 +83,35 @@ pub fn setting () -> Html {
     })
   };
 
+  let interval_options = vec![
+    (30, "Every 30 Minutes"),
+    (60, "Every Hour"),
+    (120, "Every 2 Hours"),
+    (300, "Every 5 Hours"),
+    (3600, "Every Day"),
+  ];
+  let ref_interval = use_node_ref();
+  let state_interval = use_state(|| 30);
+  let handle_interval = {
+    let ref_interval = ref_interval.clone();
+    let state_interval = state_interval.clone();
+
+    Callback::from(move |_| {
+      let select = ref_interval.cast::<HtmlInputElement>();
+      if let Some(select) = select {
+        let val = select.value().parse::<u8>().unwrap();
+        state_interval.set(val);
+        spawn_local(async move {
+          invoke("set_interval", serde_wasm_bindgen::to_value(&IntervalParams { interval:  val }).unwrap()).await;
+        });
+      }
+    })
+  };
+
   {
     let state_auto_rotate = state_auto_rotate.clone();
     let state_randomly = state_randomly.clone();
+    let state_interval = state_interval.clone();
 
     use_effect_with_deps(move |_| {
       spawn_local(async move {
@@ -102,6 +122,7 @@ pub fn setting () -> Html {
 
         state_auto_rotate.set(config.auto_rotate);
         state_randomly.set(config.randomly);
+        state_interval.set(config.interval);
       });
     }, ());
   }
@@ -128,7 +149,8 @@ pub fn setting () -> Html {
           <div>
             {"Change picture"}
             <label id="">
-            <select>
+            {*state_interval}
+            <select onchange={handle_interval}>
               {
                 interval_options.iter().map(|item| {
                   html! {

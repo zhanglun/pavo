@@ -96,6 +96,7 @@ fn main() {
       cmd::get_pexels_curated_photos,
       cmd::get_config,
       cmd::set_auto_rotate,
+      cmd::set_interval,
       cmd::set_randomly,
     ])
     .on_window_event(handle_window_event)
