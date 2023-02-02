@@ -19,8 +19,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.4"
 tauri = { version = "1.2", features = ["dialog", "fs-read-file", "shell-open", "system-tray"] }
 reqwest = { version = "0.11", features = ["json", "socks", "stream"] }
-tokio = { version = "1", features = ["full"] }
-toml = "0.5"
+tokio = { version = "1.25.0", features = ["full"] }
+toml = "0.7.1"
 indicatif = "0.17.3"
 futures-util = "0.3.25"
 wallpaper = { version = "3.2.0", features = ["from_url"] }

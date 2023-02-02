@@ -5,6 +5,7 @@
 
 mod cmd;
 mod config;
+mod scheduler;
 mod services;
 
 use tauri::{
@@ -86,12 +87,16 @@ fn handle_window_event (event: GlobalWindowEvent<Wry>) {
 fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
+  // let my_scheduler = scheduler::Scheduler::new();
+  // my_scheduler::create_task();
+
   tauri::Builder::default()
     .system_tray(create_tray())
     .on_system_tray_event(handle_tray_event)
     .invoke_handler(tauri::generate_handler![
       cmd::set_as_desktop,
       cmd::download,
+      cmd::view_photo,
       cmd::get_bing_wallpaper_list,
       cmd::get_pexels_curated_photos,
       cmd::get_config,

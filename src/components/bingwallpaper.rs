@@ -32,6 +32,11 @@ pub struct Props {
   pub copyright: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ViewPhotoParams {
+  href: String,
+}
+
 #[derive(Serialize, Deserialize)]
 struct SetAsDesktopArgs<'a> {
   url: &'a str,
@@ -50,9 +55,28 @@ impl Component for Wallpaper {
     }
   }
 
+  fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    match msg {
+      Msg::Clicked => {
+        {
+          let href = ctx.props().href.clone();
+
+          spawn_local(async move {
+            let href = href.clone();
+            invoke("view_photo", to_value(&ViewPhotoParams { href: href }).unwrap()).await;
+          });
+        }
+
+        true
+      }
+    }
+  }
+
   fn view(&self, ctx: &Context<Self>) -> Html {
+    let view_photo = ctx.link().callback(|_| Msg::Clicked);
+
     html! {
-      <div class="relative">
+      <div class="relative cursor-pointer" onclick={view_photo}>
         <div class="relative rounded-2xl overflow-hidden group">
           <img
             class="w-full rounded-2xl transition-all group-hover:scale-125"

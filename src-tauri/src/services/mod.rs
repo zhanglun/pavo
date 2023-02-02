@@ -75,3 +75,12 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
   println!("Downloaded ==> {:?} to {:?}", url, path);
   return Ok(path.to_string());
 }
+
+pub fn view_photo (handle: tauri::AppHandle, href: String) {
+  let view_window = tauri::WindowBuilder::new(
+    &handle,
+    "external",
+    tauri::WindowUrl::External(href.parse().unwrap())
+  ).build().unwrap();
+  println!("{:?}", href);
+}

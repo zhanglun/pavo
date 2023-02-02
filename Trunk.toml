@@ -2,14 +2,15 @@
 target = "./index.html"
 
 [watch]
-wath = ["./src"]
+watch = ["./src"]
+ignore = ["./public", "./src-tauri"]
 
 [serve]
 address = "127.0.0.1"
 port = 1420
 open = false
 
-[[hooks]]
-stage = "pre_build"
-command = "npx"
-command_arguments = ["tailwindcss", "-i", "./src/root.css", "-o", "assets/styles.css", "--minify"]
+# [[hooks]]
+# stage = "pre_build"
+# command = "npx"
+# command_arguments = ["tailwindcss", "-i", "./src/root.css", "-o", "assets/styles.css", "--minify"]

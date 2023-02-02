@@ -88,3 +88,8 @@ pub async fn set_randomly(randomly: bool) {
 
   pavo_config.set_randomly(randomly);
 }
+
+#[tauri::command]
+pub async fn view_photo(handle: tauri::AppHandle, href: String) {
+  services::view_photo(handle, href);
+}
