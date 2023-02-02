@@ -1,19 +1,19 @@
-use std::time::{Duration, Instant};
+use std::thread;
+use chrono::Local;
+use tokio::{self, runtime::Runtime, time, task};
 
-pub struct Scheduler {
-
+#[allow(dead_code)]
+fn now() -> String {
+  Local::now().format("%F %T").to_string()
 }
 
-impl Scheduler {
-  pub fn new () -> Self{
-    Self {}
-  }
+pub fn test_timer() {
+  let rt = Runtime::new().unwrap();
+    let _guard = rt.enter();
+    task::spawn(async {
+        time::sleep(time::Duration::from_secs(30)).await;
+        println!("task over: {}", now());
+    });
 
-  fn create_task() {
-    let when = Instant::now() + Duration::from_millis(100);
-  }
-
-  fn update_interval() {
-
-  }
+    thread::sleep(time::Duration::from_secs(4));
 }

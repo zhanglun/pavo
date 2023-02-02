@@ -84,11 +84,12 @@ fn handle_window_event (event: GlobalWindowEvent<Wry>) {
 
 }
 
+use tokio::{self, runtime::Runtime, time};
+
 fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
-  // let my_scheduler = scheduler::Scheduler::new();
-  // my_scheduler::create_task();
+  scheduler::test_timer();
 
   tauri::Builder::default()
     .system_tray(create_tray())

@@ -5,6 +5,8 @@ use std::cmp::min;
 use futures_util::StreamExt;
 use reqwest::Client;
 
+use crate::services::bing::Images;
+
 pub mod bing;
 pub mod pexels;
 pub mod mock;
@@ -77,10 +79,17 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
 }
 
 pub fn view_photo (handle: tauri::AppHandle, href: String) {
+  let label = href.clone();
+  let label = Images::get_filename(label.as_str());
+  let label = "view_photo";
+
+  println!("{:?}", label);
+
   let view_window = tauri::WindowBuilder::new(
     &handle,
-    "external",
+    label,
     tauri::WindowUrl::External(href.parse().unwrap())
   ).build().unwrap();
-  println!("{:?}", href);
+
+  println!("{:?} ", href);
 }

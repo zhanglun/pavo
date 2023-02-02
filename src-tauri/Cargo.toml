@@ -24,6 +24,7 @@ toml = "0.7.1"
 indicatif = "0.17.3"
 futures-util = "0.3.25"
 wallpaper = { version = "3.2.0", features = ["from_url"] }
+chrono= { version = "0.4.23"}
 
 [features]
 # by default Tauri runs in production mode
