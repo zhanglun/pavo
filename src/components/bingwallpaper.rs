@@ -76,12 +76,13 @@ impl Component for Wallpaper {
     let view_photo = ctx.link().callback(|_| Msg::Clicked);
 
     html! {
-      <div class="relative cursor-pointer" onclick={view_photo}>
+      <div class="relative cursor-pointer">
         <div class="relative rounded-2xl overflow-hidden group">
           <img
             class="w-full rounded-2xl transition-all group-hover:scale-125"
             src={ctx.props().href.clone()}
             title={ctx.props().title.clone()}
+            onclick={view_photo}
           />
           <div class="
             p-2 bg-gradient-to-r from-black/50 to-black/0

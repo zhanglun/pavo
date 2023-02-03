@@ -11,9 +11,16 @@ pub fn test_timer() {
   let rt = Runtime::new().unwrap();
     let _guard = rt.enter();
     task::spawn(async {
-        time::sleep(time::Duration::from_secs(30)).await;
+      println!("task start ===>");
+        time::sleep(time::Duration::from_secs(5)).await;
         println!("task over: {}", now());
     });
 
-    thread::sleep(time::Duration::from_secs(4));
+  thread::spawn(|| {
+    loop {
+      thread::sleep(time::Duration::from_secs(10));
+      println!("thread spawn");
+    }
+  });
+
 }
