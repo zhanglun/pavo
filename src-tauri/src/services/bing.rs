@@ -1,19 +1,21 @@
 use reqwest::Client;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::Number;
 use std::{
   env::var,
   fs,
   io::{copy, Cursor},
   path::Path,
+  thread,
 };
+use tokio::{self, runtime::Runtime, task, time};
 
-use crate::config;
 use super::download_file;
+use crate::config;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tooltips {
   pub loading: String,
   pub next: String,
@@ -22,7 +24,7 @@ pub struct Tooltips {
   pub walls: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Images {
   pub bot: Number,
   pub copyright: String,
@@ -86,7 +88,7 @@ impl Images {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WallpaperRes {
   pub images: Vec<Images>,
   pub tooltips: Tooltips,
@@ -94,10 +96,12 @@ pub struct WallpaperRes {
 
 impl WallpaperRes {
   pub async fn new(index: u8, number: u8) -> Result<WallpaperRes> {
-    Ok(reqwest::get(get_url(index, number).as_str())
-      .await?
-      .json::<WallpaperRes>()
-      .await?)
+    Ok(
+      reqwest::get(get_url(index, number).as_str())
+        .await?
+        .json::<WallpaperRes>()
+        .await?,
+    )
   }
 }
 
@@ -125,11 +129,13 @@ impl Wallpaper {
   pub async fn save_wallpaper(url: &str, filename: Option<&str>) -> Result<String> {
     let filename = match filename {
       Some(filename) => filename,
-      None => Images::get_filename(url)
+      None => Images::get_filename(url),
     };
     let app_folder = config::PavoConfig::get_app_folder().unwrap();
     let path = Path::new(&app_folder).join(&*filename);
-    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap()).await.unwrap();
+    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap())
+      .await
+      .unwrap();
 
     println!("{:?}", res);
 
@@ -143,16 +149,46 @@ impl Wallpaper {
       Ok(a) => {
         wallpaper::set_from_path(a.as_str()).unwrap();
 
-        if cfg!(not(target_os="macos")) {
+        if cfg!(not(target_os = "macos")) {
           wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
         }
 
         Ok(String::from("OK"))
       }
-      Err(e) => {
-        Err(e.to_string().into())
-      }
+      Err(e) => Err(e.to_string().into()),
     }
+  }
+
+  pub async fn rotate_photo() {
+    let json1 = Self::new(0, 8).await;
+    let json2 = Self::new(1, 8).await;
+
+    let mut list = json1.unwrap().json.images;
+    let mut list2 = json2.unwrap().json.images;
+
+    list.append(&mut list2);
+
+    thread::spawn(move || {
+      let mut cache = list.clone();
+
+      loop {
+        thread::sleep(time::Duration::from_secs(5));
+
+        let item = cache.pop();
+
+        (|| async {
+          println!("{:?} item =-==>", item);
+          match item {
+            Some(image) => {
+              Self::set_wallpaper(&image.url).await;
+            }
+            None => {
+              cache = list.clone();
+            }
+          }
+        })();
+      }
+    });
   }
 }
 
@@ -164,10 +200,9 @@ fn get_url(index: u8, number: u8) -> String {
     "&n=",
     &number.to_string(),
   ]
-    .join("");
+  .join("");
 
   println!("url: {:?}", url);
 
   url
 }
-

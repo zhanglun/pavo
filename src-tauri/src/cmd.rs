@@ -1,4 +1,4 @@
-use crate::{services, config};
+use crate::{services, config, scheduler};
 use crate::services::{bing, pexels, PhotoService};
 
 #[tauri::command]
@@ -72,6 +72,10 @@ pub async fn set_auto_rotate(rotate: bool) {
   let pavo_config = config::PavoConfig::get_config();
 
   pavo_config.set_auto_rotate(rotate);
+
+  if rotate {
+    bing::Wallpaper::rotate_photo().await;
+  }
 }
 
 #[tauri::command]

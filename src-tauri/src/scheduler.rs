@@ -22,5 +22,14 @@ pub fn test_timer() {
       println!("thread spawn");
     }
   });
+}
 
+pub fn timer_wrap<F: Fn() + Send + 'static>(f: F) {
+  thread::spawn(move || {
+    loop {
+      thread::sleep(time::Duration::from_secs(5));
+      f();
+      println!("thread spawn 2");
+    }
+  });
 }
