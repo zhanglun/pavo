@@ -73,8 +73,10 @@ pub async fn set_auto_rotate(rotate: bool) {
 
   pavo_config.set_auto_rotate(rotate);
 
+  scheduler::Scheduler::stop_rotate_photo().await;
+
   if rotate {
-    bing::Wallpaper::rotate_photo().await;
+    scheduler::Scheduler::rotate_photo().await;
   }
 }
 

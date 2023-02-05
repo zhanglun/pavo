@@ -49,7 +49,7 @@ impl Images {
     ["https://www.bing.com", &self.url].concat()
   }
 
-  fn filename(&self) -> &str {
+  pub fn filename(&self) -> &str {
     let s = self.url.find("OHR.").ok_or(0).unwrap();
     let e = self.url.find("&rf=").ok_or(0).unwrap();
     &self.url[s..e]
@@ -112,7 +112,7 @@ pub struct Wallpaper {
   index: u8,
   number: u8,
   files: Vec<String>,
-  json: WallpaperRes,
+  pub json: WallpaperRes,
 }
 
 impl Wallpaper {
@@ -157,47 +157,6 @@ impl Wallpaper {
       }
       Err(e) => Err(e.to_string().into()),
     }
-  }
-
-  pub async fn rotate_photo() {
-    let json1 = Self::new(0, 8).await;
-    let json2 = Self::new(1, 8).await;
-
-    let mut list = json1.unwrap().json.images;
-    let mut list2 = json2.unwrap().json.images;
-
-    list.append(&mut list2);
-
-    let mut interval = time::interval(time::Duration::from_secs(10));
-
-    for item in list {
-      interval.tick().await;
-
-      println!("{:?} item =-==>", item.url());
-
-      Self::set_wallpaper(&item.url()).await;
-    }
-
-    // thread::spawn(move || {
-    //   let mut cache = list.clone();
-
-    //   loop {
-    //     thread::sleep(time::Duration::from_secs(5));
-
-    //     let item = cache.pop();
-
-    //       println!("{:?} item =-==>", item);
-    //       match item {
-    //         Some(image) => {
-    //           Self::set_wallpaper(&image.url).await;
-    //         }
-    //         None => {
-    //           cache = list.clone();
-    //         }
-    //       }
-    //     };
-    //   }
-    // });
   }
 
 }
