@@ -168,28 +168,38 @@ impl Wallpaper {
 
     list.append(&mut list2);
 
-    thread::spawn(move || {
-      let mut cache = list.clone();
+    let mut interval = time::interval(time::Duration::from_secs(10));
 
-      loop {
-        thread::sleep(time::Duration::from_secs(5));
+    for item in list {
+      interval.tick().await;
 
-        let item = cache.pop();
+      println!("{:?} item =-==>", item.url());
 
-        (|| async {
-          println!("{:?} item =-==>", item);
-          match item {
-            Some(image) => {
-              Self::set_wallpaper(&image.url).await;
-            }
-            None => {
-              cache = list.clone();
-            }
-          }
-        })();
-      }
-    });
+      Self::set_wallpaper(&item.url()).await;
+    }
+
+    // thread::spawn(move || {
+    //   let mut cache = list.clone();
+
+    //   loop {
+    //     thread::sleep(time::Duration::from_secs(5));
+
+    //     let item = cache.pop();
+
+    //       println!("{:?} item =-==>", item);
+    //       match item {
+    //         Some(image) => {
+    //           Self::set_wallpaper(&image.url).await;
+    //         }
+    //         None => {
+    //           cache = list.clone();
+    //         }
+    //       }
+    //     };
+    //   }
+    // });
   }
+
 }
 
 fn get_url(index: u8, number: u8) -> String {

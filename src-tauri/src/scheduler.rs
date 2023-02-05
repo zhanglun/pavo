@@ -33,3 +33,8 @@ pub fn timer_wrap<F: Fn() + Send + 'static>(f: F) {
     }
   });
 }
+
+pub async fn test_tokio() {
+  let mut interval = time::interval(time::Duration::from_secs(10));
+
+}
