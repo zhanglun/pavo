@@ -1,21 +1,27 @@
-use serde::{Serialize, Deserialize};
-use std::fs::{File};
-use std::io::{Seek, Write};
-use std::cmp::min;
 use futures_util::StreamExt;
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use std::cmp::min;
+use std::fs::File;
+use std::io::{Seek, Write};
 
 use crate::services::bing::Images;
 
 pub mod bing;
-pub mod pexels;
 pub mod mock;
+pub mod pexels;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum PhotoService {
   Bing,
   Pexels,
   Unsplash,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum AsyncProcessMessage {
+  StartRotate,
+  StopRotate,
 }
 
 pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<String, String> {
@@ -66,7 +72,8 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
   while let Some(item) = stream.next().await {
     let chunk = item.or(Err(format!("Error while downloading file")))?;
 
-    file.write(&chunk)
+    file
+      .write(&chunk)
       .or(Err(format!("Error while writing to file")))?;
     let new = min(downloaded + (chunk.len() as u64), total_size);
     downloaded = new;
@@ -78,7 +85,7 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
   return Ok(path.to_string());
 }
 
-pub fn view_photo (handle: tauri::AppHandle, href: String) {
+pub fn view_photo(handle: tauri::AppHandle, href: String) {
   let label = href.clone();
   let label = Images::get_filename(label.as_str());
   let label = "view_photo";
@@ -88,8 +95,10 @@ pub fn view_photo (handle: tauri::AppHandle, href: String) {
   let view_window = tauri::WindowBuilder::new(
     &handle,
     label,
-    tauri::WindowUrl::External(href.parse().unwrap())
-  ).build().unwrap();
+    tauri::WindowUrl::External(href.parse().unwrap()),
+  )
+  .build()
+  .unwrap();
 
   println!("{:?} ", href);
 }

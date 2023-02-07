@@ -8,13 +8,14 @@ mod config;
 mod scheduler;
 mod services;
 
+use cmd::AsyncProcInputTx;
+use services::AsyncProcessMessage;
 use tauri::{
-  Manager, CustomMenuItem,
-  SystemTray, SystemTrayMenu, SystemTrayMenuItem, SystemTrayEvent,
-  AppHandle, GlobalWindowEvent, WindowEvent, Wry
+  AppHandle, CustomMenuItem, GlobalWindowEvent, Manager, SystemTray, SystemTrayEvent,
+  SystemTrayMenu, SystemTrayMenuItem, WindowEvent, Wry,
 };
 
-fn create_tray () -> SystemTray {
+fn create_tray() -> SystemTray {
   let show = CustomMenuItem::new("show".to_string(), "Show");
   let hide = CustomMenuItem::new("hide".to_string(), "Hide");
   let quit = CustomMenuItem::new("quit".to_string(), "Quit");
@@ -29,33 +30,36 @@ fn create_tray () -> SystemTray {
   tray
 }
 
-fn handle_tray_event (app: &AppHandle, event: SystemTrayEvent) {
+fn handle_tray_event(app: &AppHandle, event: SystemTrayEvent) {
   match event {
-    SystemTrayEvent::DoubleClick { tray_id, position, size, .. } => {
+    SystemTrayEvent::DoubleClick {
+      tray_id,
+      position,
+      size,
+      ..
+    } => {
       let window = app.get_window("main").unwrap();
       window.show().unwrap();
     }
-    SystemTrayEvent::MenuItemClick { id, .. } => {
-      match id.as_str() {
-        "show" => {
-          let window = app.get_window("main").unwrap();
-          window.show().unwrap();
-        }
-        "hide" => {
-          let window = app.get_window("main").unwrap();
-          window.hide().unwrap();
-        }
-        "quit" => {
-          std::process::exit(0);
-        }
-        _ => {}
+    SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
+      "show" => {
+        let window = app.get_window("main").unwrap();
+        window.show().unwrap();
       }
-    }
+      "hide" => {
+        let window = app.get_window("main").unwrap();
+        window.hide().unwrap();
+      }
+      "quit" => {
+        std::process::exit(0);
+      }
+      _ => {}
+    },
     _ => {}
   };
 }
 
-fn handle_window_event (event: GlobalWindowEvent<Wry>) {
+fn handle_window_event(event: GlobalWindowEvent<Wry>) {
   let window = event.window();
   let app = window.app_handle();
 
@@ -81,21 +85,46 @@ fn handle_window_event (event: GlobalWindowEvent<Wry>) {
     }
     _ => {}
   }
-
 }
 
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 
 #[tokio::main]
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
-  // scheduler::Scheduler::create_interval().await;
- 
-    let (async_process_input_tx, async_process_input_rx) = mpsc::channel(1);
-    let (async_process_output_tx, async_process_output_rx) = mpsc::channel(1);        
+  let (async_process_input_tx, mut async_process_input_rx) =
+    mpsc::channel::<AsyncProcessMessage>(32);
+
+  // tokio::spawn(async move {
+  //   async_process_input_tx
+  //     .send(String::from("sending from second handle"))
+  //     .await;
+  // });
 
   tauri::Builder::default()
+    .manage(AsyncProcInputTx {
+      inner: Mutex::new(async_process_input_tx),
+    })
+    .setup(|app| {
+      let app_handle = app.handle();
+      tauri::async_runtime::spawn(async move {
+        loop {
+          if let Some(output) = async_process_input_rx.recv().await {
+            match output {
+              AsyncProcessMessage::StartRotate => {
+                println!("ouput {:?}", output);
+              }
+              AsyncProcessMessage::StopRotate => {
+                println!("output stop {:?}", output);
+              }
+            }
+          }
+        }
+      });
+
+      Ok(())
+    })
     .system_tray(create_tray())
     .on_system_tray_event(handle_tray_event)
     .invoke_handler(tauri::generate_handler![

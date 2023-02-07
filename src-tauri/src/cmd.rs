@@ -1,17 +1,19 @@
-use crate::{services, config, scheduler};
-use crate::services::{bing, pexels, PhotoService};
+use crate::services::{bing, pexels, PhotoService, AsyncProcessMessage};
+use crate::{config, scheduler, services};
+
+use tokio::sync::{mpsc, Mutex};
+
+pub struct AsyncProcInputTx {
+  pub inner: Mutex<mpsc::Sender<AsyncProcessMessage>>,
+}
 
 #[tauri::command]
 pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, String> {
   println!("set as {:?}", url);
 
   match service {
-    PhotoService::Bing => {
-      Ok(bing::Wallpaper::set_wallpaper(url).await.unwrap())
-    }
-    PhotoService::Pexels => {
-      Ok(pexels::Pexels::set_wallpaper(url).await.unwrap())
-    }
+    PhotoService::Bing => Ok(bing::Wallpaper::set_wallpaper(url).await.unwrap()),
+    PhotoService::Pexels => Ok(pexels::Pexels::set_wallpaper(url).await.unwrap()),
     PhotoService::Unsplash => {
       bing::Wallpaper::set_wallpaper(url).await.unwrap();
       Ok(String::from("asdf"))
@@ -22,12 +24,8 @@ pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, 
 #[tauri::command]
 pub async fn download(url: &str, service: PhotoService) -> Result<String, String> {
   match service {
-    PhotoService::Bing => {
-      Ok(bing::Wallpaper::save_wallpaper(url, None).await.unwrap())
-    }
-    PhotoService::Pexels => {
-      Ok(pexels::Pexels::save_photo(url).await.unwrap())
-    }
+    PhotoService::Bing => Ok(bing::Wallpaper::save_wallpaper(url, None).await.unwrap()),
+    PhotoService::Pexels => Ok(pexels::Pexels::save_photo(url).await.unwrap()),
     PhotoService::Unsplash => {
       bing::Wallpaper::set_wallpaper(url).await.unwrap();
       Ok(String::from("asdf"))
@@ -42,18 +40,15 @@ pub async fn get_bing_wallpaper_list(page: u8) -> Result<bing::Wallpaper, String
   let bing = services::bing::Wallpaper::new(idx, 8).await;
 
   match bing {
-    Ok(bing) => {
-      Ok(bing)
-    }
-    Err(_) => {
-      Err("".to_string())
-    }
+    Ok(bing) => Ok(bing),
+    Err(_) => Err("".to_string()),
   }
 }
 
 #[tauri::command]
 pub async fn get_pexels_curated_photos(page: u8) -> serde_json::Value {
-  let pexels_client = pexels::Pexels::new("s9GlfCrhK5qzYQTQjMipbIQ25spgFJnThF9n3uW73g9dge6eFzMJ7aeY".to_string());
+  let pexels_client =
+    pexels::Pexels::new("s9GlfCrhK5qzYQTQjMipbIQ25spgFJnThF9n3uW73g9dge6eFzMJ7aeY".to_string());
   let res = pexels_client.get_photo_search(20, page).await;
 
   res
@@ -67,17 +62,31 @@ pub async fn get_config() -> serde_json::Value {
 }
 
 #[tauri::command]
-pub async fn set_auto_rotate(rotate: bool) {
+pub async fn set_auto_rotate(
+  rotate: bool,
+  state: tauri::State<'_, AsyncProcInputTx>,
+) -> Result<(), ()> {
   println!("auto rotate {:?}", rotate);
   let pavo_config = config::PavoConfig::get_config();
 
   pavo_config.set_auto_rotate(rotate);
 
-  scheduler::Scheduler::stop_rotate_photo().await;
+  let async_proc_input_tx = state.inner.lock().await;
 
   if rotate {
-    scheduler::Scheduler::rotate_photo().await;
+    async_proc_input_tx
+      .send(AsyncProcessMessage::StartRotate)
+      .await
+      .map_err(|e| e.to_string());
+    // scheduler::Scheduler::rotate_photo().await;
+  } else {
+    async_proc_input_tx
+      .send(AsyncProcessMessage::StopRotate)
+      .await
+      .map_err(|e| e.to_string());
   }
+
+  Ok(())
 }
 
 #[tauri::command]
@@ -86,7 +95,6 @@ pub async fn set_interval(interval: u64) {
 
   pavo_config.set_interval(interval);
 }
-
 
 #[tauri::command]
 pub async fn set_randomly(randomly: bool) {
