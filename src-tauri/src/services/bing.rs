@@ -8,7 +8,6 @@ use std::{
   path::Path,
   thread,
 };
-use tokio::{self, runtime::Runtime, task, time};
 
 use super::download_file;
 use crate::config;

@@ -84,8 +84,16 @@ fn handle_window_event (event: GlobalWindowEvent<Wry>) {
 
 }
 
-fn main() {
+use tokio::sync::mpsc;
+
+#[tokio::main]
+async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
+
+  // scheduler::Scheduler::create_interval().await;
+ 
+    let (async_process_input_tx, async_process_input_rx) = mpsc::channel(1);
+    let (async_process_output_tx, async_process_output_rx) = mpsc::channel(1);        
 
   tauri::Builder::default()
     .system_tray(create_tray())

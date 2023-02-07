@@ -3,6 +3,7 @@ use std::thread;
 use tokio::{self, runtime::Runtime, task, time};
 
 use crate::services::bing;
+use crate::config;
 
 #[allow(dead_code)]
 fn now() -> String {
@@ -24,39 +25,6 @@ pub fn test_timer() {
   });
 }
 
-pub fn timer_wrap<F: Fn() + Send + 'static>(f: F) {
-  thread::spawn(move || loop {
-    thread::sleep(time::Duration::from_secs(5));
-    f();
-    println!("thread spawn 2");
-  });
-}
-
-pub async fn rotate_photo() {
-  let json1 = bing::Wallpaper::new(0, 8).await;
-  let json2 = bing::Wallpaper::new(1, 8).await;
-
-  let mut list = json1.unwrap().json.images;
-  let mut list2 = json2.unwrap().json.images;
-
-  list.append(&mut list2);
-
-  let mut interval = time::interval(time::Duration::from_secs(10));
-
-  for item in list {
-    interval.tick().await;
-
-    println!("{:?} item =-==>", item.url());
-    println!("{:?} item.name =-==>", item.filename());
-
-    bing::Wallpaper::set_wallpaper(&item.url()).await;
-  }
-}
-
-pub fn stop_rotate_photo() {
-  println!("stop rotate photo");
-}
-
 pub struct Scheduler {}
 
 impl Scheduler {
@@ -64,11 +32,14 @@ impl Scheduler {
     let json1 = bing::Wallpaper::new(0, 8).await;
     let json2 = bing::Wallpaper::new(8, 8).await;
 
-    let mut list = json1.unwrap().json.images;
-    let mut list2 = json2.unwrap().json.images;
+    let list = json1.unwrap().json.images;
+    let list2 = json2.unwrap().json.images;
     let mut list = list.into_iter().chain(list2.clone().into_iter()).collect::<Vec<bing::Images>>();
-    let mut cache = list.clone();
-    let mut interval = time::interval(time::Duration::from_secs(5));
+    let cache = list.clone();
+
+    let rotate_interval = config::PavoConfig::get_interval();
+    println!("rotate_interval ==> {:?}", rotate_interval * 60);
+    let mut interval = time::interval(time::Duration::from_secs(rotate_interval));
 
     while list.len() > 0 {
       let item = list.pop().unwrap();
@@ -76,7 +47,7 @@ impl Scheduler {
       println!("{:?}", item.title);
 
       interval.tick().await;
-      bing::Wallpaper::set_wallpaper(&item.url()).await;
+      bing::Wallpaper::set_wallpaper(&item.url()).await.unwrap();
 
       if list.len() == 0 {
         list = cache.clone();
@@ -87,4 +58,16 @@ impl Scheduler {
   pub async fn stop_rotate_photo() {
     // TODO: how to cancel inerval ?
   }
+
+    pub async fn create_interval () {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let _guard = rt.enter();
+
+        task::spawn(async {
+            time::sleep(time::Duration::from_secs(3)).await;
+            println!("task over: {}", now());
+        });
+
+        thread::sleep(time::Duration::from_secs(4));
+    }
 }

@@ -8,7 +8,7 @@ use tauri;
 pub struct PavoConfig {
   auto_rotate: bool,
   randomly: bool,
-  interval: u8,
+  interval: u64,
 }
 
 impl PavoConfig {
@@ -103,7 +103,7 @@ impl PavoConfig {
     data
   }
 
-  pub fn set_interval(&self, interval: u8) -> Self {
+  pub fn set_interval(&self, interval: u64) -> Self {
     let mut data = Self::get_config();
 
     data.interval = interval;
@@ -113,6 +113,12 @@ impl PavoConfig {
     Self::write_config(data.clone());
 
     data
+  }
+
+  pub fn get_interval() -> u64 {
+    let data = Self::get_config();
+
+    data.interval.clone()
   }
 
   pub fn set_randomly(&self, randomly: bool) -> Self {

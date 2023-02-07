@@ -81,7 +81,7 @@ pub async fn set_auto_rotate(rotate: bool) {
 }
 
 #[tauri::command]
-pub async fn set_interval(interval: u8) {
+pub async fn set_interval(interval: u64) {
   let pavo_config = config::PavoConfig::get_config();
 
   pavo_config.set_interval(interval);
