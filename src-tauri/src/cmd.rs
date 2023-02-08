@@ -93,6 +93,8 @@ pub async fn set_auto_rotate(
 pub async fn set_interval(interval: u64) {
   let pavo_config = config::PavoConfig::get_config();
 
+  println!("{:?}", interval);
+
   pavo_config.set_interval(interval);
 }
 
