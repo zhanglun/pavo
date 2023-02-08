@@ -6,9 +6,9 @@ use tauri;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
-  auto_rotate: bool,
-  randomly: bool,
-  interval: u64,
+  pub auto_rotate: bool,
+  pub randomly: bool,
+  pub interval: u64,
 }
 
 impl PavoConfig {

@@ -38,25 +38,24 @@ impl Scheduler {
     let cache = list.clone();
 
     let rotate_interval = config::PavoConfig::get_interval();
-    println!("rotate_interval ==> {:?}", rotate_interval * 60);
     let mut interval = time::interval(time::Duration::from_secs(rotate_interval));
 
-    while list.len() > 0 {
+    let mut setting_auto_rotate = config::PavoConfig::get_config().auto_rotate;
+
+    while list.len() > 0 && setting_auto_rotate {
       let item = list.pop().unwrap();
 
-      println!("{:?}", item.title);
-
       interval.tick().await;
+
+      println!("{:?}", item.title);
       bing::Wallpaper::set_wallpaper(&item.url()).await.unwrap();
+
+      setting_auto_rotate = config::PavoConfig::get_config().auto_rotate;
 
       if list.len() == 0 {
         list = cache.clone();
       }
     }
-  }
-
-  pub async fn stop_rotate_photo() {
-    // TODO: how to cancel inerval ?
   }
 
     pub async fn create_interval () {

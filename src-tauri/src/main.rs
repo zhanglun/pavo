@@ -113,6 +113,7 @@ async fn main() {
           if let Some(output) = async_process_input_rx.recv().await {
             match output {
               AsyncProcessMessage::StartRotate => {
+                scheduler::Scheduler::rotate_photo().await;
                 println!("ouput {:?}", output);
               }
               AsyncProcessMessage::StopRotate => {
