@@ -6,7 +6,6 @@ use std::{
   fs,
   io::{copy, Cursor},
   path::Path,
-  thread,
 };
 
 use super::download_file;
@@ -141,16 +140,22 @@ impl Wallpaper {
     Ok(res)
   }
 
+  /// set wallpaper from local file
+  pub async fn set_wallpaper_from_local(a: String) -> String {
+    wallpaper::set_from_path(a.as_str()).unwrap();
+
+    if cfg!(not(target_os = "macos")) {
+      wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
+    }
+
+    a
+  }
+
   pub async fn set_wallpaper(url: &str) -> Result<String> {
     let a = Wallpaper::save_wallpaper(url, None).await;
-
     match a {
       Ok(a) => {
-        wallpaper::set_from_path(a.as_str()).unwrap();
-
-        if cfg!(not(target_os = "macos")) {
-          wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
-        }
+        Self::set_wallpaper_from_local(a).await;
 
         Ok(String::from("OK"))
       }

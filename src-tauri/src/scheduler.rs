@@ -58,15 +58,15 @@ impl Scheduler {
     }
   }
 
-    pub async fn create_interval () {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let _guard = rt.enter();
+  pub async fn create_interval () {
+      let rt = tokio::runtime::Runtime::new().unwrap();
+      let _guard = rt.enter();
 
-        task::spawn(async {
-            time::sleep(time::Duration::from_secs(3)).await;
-            println!("task over: {}", now());
-        });
+      task::spawn(async {
+          time::sleep(time::Duration::from_secs(3)).await;
+          println!("task over: {}", now());
+      });
 
-        thread::sleep(time::Duration::from_secs(4));
-    }
+      thread::sleep(time::Duration::from_secs(4));
+  }
 }

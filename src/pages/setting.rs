@@ -8,6 +8,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::pages::layout::Route;
+use crate::components::interval::IntervalItem;
 
 #[wasm_bindgen]
 extern "C" {
@@ -33,11 +34,6 @@ pub struct RotateParams {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RandomParams {
   randomly: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct IntervalParams {
-  interval: usize,
 }
 
 #[function_component(Setting)]
@@ -96,6 +92,7 @@ pub fn setting() -> Html {
     })
   };
 
+
   let interval_options = vec![
     (30, "Every 30 Minutes"),
     (60, "Every Hour"),
@@ -103,27 +100,8 @@ pub fn setting() -> Html {
     (300, "Every 5 Hours"),
     (3600, "Every Day"),
   ];
-  let ref_interval = use_node_ref();
-  let state_interval: UseStateHandle<usize> = use_state(|| 30);
-  let handle_interval = {
-    let ref_interval = ref_interval.clone();
-    let state_interval = state_interval.clone();
 
-    Callback::from(move |_| {
-      let select = ref_interval.cast::<HtmlInputElement>();
-      if let Some(select) = select {
-        let val = select.value().parse::<usize>().unwrap();
-        state_interval.set(val);
-        spawn_local(async move {
-          invoke(
-            "set_interval",
-            serde_wasm_bindgen::to_value(&IntervalParams { interval: val }).unwrap(),
-          )
-          .await;
-        });
-      }
-    })
-  };
+  let state_interval: UseStateHandle<usize> = use_state(|| 30);
 
   {
     let state_auto_rotate = state_auto_rotate.clone();
@@ -168,87 +146,16 @@ pub fn setting() -> Html {
           </div>
           <div>
             {"Change picture"}
-            <label id="">
-            {*state_interval}
-            <select onchange={handle_interval}>
-              {
-                interval_options.iter().map(|item| {
-                  html! {
-                  <option value={item.0.to_string()}>{item.1}</option>
-                  }
-                }).collect::<Html>()
-              }
-            </select>
-            </label>
           </div>
           <fieldset>
               <legend>{"Select a interval:"}</legend>
-              // {
-              //     interval_options.iter().map(move |item| {
-              //       html! {
-              //       <div>
-              //         <label for={item.0.to_string()}>
-              //           <input
-              //             type="radio"
-              //             id={item.0.to_string()}
-              //             name={"interval"}
-              //             value={item.0.to_string()}
-              //             onchange={handle_interval}
-              //             checked={item.0 == *state_interval}/>
-              //           {item.1}
-              //         </label>
-              //       </div>
-              //       }
-              //     }).collect::<Html>()
-              // }
-                    <div>
-                      <label for={"30"}>
-                        <input
-                          type="radio"
-                          id={"30"}
-                          name={"interval"}
-                          value={30}
-                          onchange={handle_interval}
-                          checked={30 == *state_interval}/>
-                        {"Every 30 Minutes"}
-                      </label>
-                    </div>
-                    <div>
-                      <label for={"60"}>
-                        <input
-                          type="radio"
-                          id={"60"}
-                          name={"interval"}
-                          value={"60"}
-                          onchange={handle_interval}
-                          checked={60 == *state_interval}/>
-                          {"Every Hour"}
-                      </label>
-                    </div>
-                    <div>
-                      <label for={"120"}>
-                        <input
-                          type="radio"
-                          id={"120"}
-                          name={"interval"}
-                          value={"120"}
-                          onchange={handle_interval}
-                          checked={120 == *state_interval}/>
-                        {"Every 2 Hours"}
-                      </label>
-                    </div>
-                    <div>
-                      <label for={"300"}>
-                        <input
-                          type="radio"
-                          id={"300"}
-                          name={"interval"}
-                          value={"300"}
-                          onchange={handle_interval}
-                          checked={300 == *state_interval}/>
-                        {"Every 5 Hours"}
-                      </label>
-                    </div>
+              {
+                interval_options.iter().map(move |item| {
+                  html! {
+                    <IntervalItem label={item.1} interval={item.0} />
+                  }
+                }).collect::<Html>()
+              }
           </fieldset>
           <div>
             <label id="random">
