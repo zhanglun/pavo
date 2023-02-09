@@ -109,14 +109,19 @@ async fn main() {
     .setup(|app| {
       let app_handle = app.handle();
       tauri::async_runtime::spawn(async move {
+        let mut scheduler = scheduler::Scheduler::new();
+
+        scheduler.setup_list().await;
+
         loop {
           if let Some(output) = async_process_input_rx.recv().await {
             match output {
               AsyncProcessMessage::StartRotate => {
-                scheduler::Scheduler::rotate_photo().await;
+                scheduler.rotate_photo().await;
                 println!("ouput {:?}", output);
               }
               AsyncProcessMessage::StopRotate => {
+                scheduler.stop_rotate_photo().await;
                 println!("output stop {:?}", output);
               }
             }

@@ -74,7 +74,7 @@ pub fn interval(props: &Props) -> Html {
 
   html! {
     <div>
-      <label for={props.label.clone()}>
+      <label for={props.interval.to_string()}>
         <input
           ref={ref_interval}
           type="radio"

@@ -1,8 +1,9 @@
 use chrono::Local;
+use serde::{Deserialize, Serialize};
 use std::thread;
 use tokio::{self, runtime::Runtime, task, time};
 
-use crate::services::bing;
+use crate::services::bing::{self, Images};
 use crate::config;
 
 #[allow(dead_code)]
@@ -25,16 +26,43 @@ pub fn test_timer() {
   });
 }
 
-pub struct Scheduler {}
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Scheduler {
+  pub interval: u64,
+  pub auto_rotate: bool,
+  pub randomly: bool,
+  pub list: Vec<Images>,
+}
 
 impl Scheduler {
-  pub async fn rotate_photo() {
+  pub fn new() -> Self {
+    let cfg = config::PavoConfig::get_config();
+
+    Self {
+      interval: cfg.interval,
+      auto_rotate: cfg.auto_rotate,
+      randomly: cfg.randomly,
+      list: vec![],
+    }
+  }
+
+  pub async fn setup_list(&mut self) {
     let json1 = bing::Wallpaper::new(0, 8).await;
     let json2 = bing::Wallpaper::new(8, 8).await;
 
     let list = json1.unwrap().json.images;
     let list2 = json2.unwrap().json.images;
-    let mut list = list.into_iter().chain(list2.clone().into_iter()).collect::<Vec<bing::Images>>();
+    let list = list.into_iter().chain(list2.clone().into_iter()).collect::<Vec<bing::Images>>();
+
+    self.list = list;
+  }
+
+  pub async fn push_list(&mut self, image: Images) {
+    self.list.push(image);
+  }
+
+  pub async fn rotate_photo(&self) {
+    let mut list = self.list.clone();
     let cache = list.clone();
 
     let rotate_interval = config::PavoConfig::get_interval();
@@ -56,6 +84,14 @@ impl Scheduler {
         list = cache.clone();
       }
     }
+  }
+
+  pub async fn stop_rotate_photo(&self) {
+
+  }
+
+  pub async fn rotate_photo_randomly(&mut self) {
+
   }
 
   pub async fn create_interval () {
