@@ -1,10 +1,10 @@
 use crate::services::{bing, pexels, PhotoService, AsyncProcessMessage};
-use crate::{config, scheduler, services};
+use crate::{config, services};
 
 use tokio::sync::{mpsc, Mutex};
 
 pub struct AsyncProcInputTx {
-  pub inner: Mutex<mpsc::Sender<AsyncProcessMessage>>,
+  pub sender: Mutex<mpsc::Sender<AsyncProcessMessage>>,
 }
 
 #[tauri::command]
@@ -62,6 +62,7 @@ pub async fn get_config() -> serde_json::Value {
 }
 
 #[tauri::command]
+#[allow(unused)]
 pub async fn set_auto_rotate(
   rotate: bool,
   state: tauri::State<'_, AsyncProcInputTx>,
@@ -71,14 +72,13 @@ pub async fn set_auto_rotate(
 
   pavo_config.set_auto_rotate(rotate);
 
-  let async_proc_input_tx = state.inner.lock().await;
+  let async_proc_input_tx = state.sender.lock().await;
 
   if rotate {
     async_proc_input_tx
       .send(AsyncProcessMessage::StartRotate)
       .await
       .map_err(|e| e.to_string());
-    // scheduler::Scheduler::rotate_photo().await;
   } else {
     async_proc_input_tx
       .send(AsyncProcessMessage::StopRotate)

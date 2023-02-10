@@ -2,7 +2,9 @@ use chrono::Local;
 use serde::{Deserialize, Serialize};
 use std::thread;
 use tokio::{self, runtime::Runtime, task, time};
+use tokio::sync::{mpsc, Mutex};
 
+use crate::services::AsyncProcessMessage;
 use crate::services::bing::{self, Images};
 use crate::config;
 
@@ -104,5 +106,28 @@ impl Scheduler {
       });
 
       thread::sleep(time::Duration::from_secs(4));
+  }
+
+  pub fn init(mut rx: mpsc::Receiver<AsyncProcessMessage>) {
+    tokio::spawn(async move {
+      let mut scheduler = Scheduler::new();
+
+      scheduler.setup_list().await;
+      scheduler.rotate_photo().await;
+
+      loop {
+        if let Some(output) = rx.recv().await {
+          match output {
+            AsyncProcessMessage::StartRotate => {
+              scheduler.rotate_photo().await;
+              println!("init output start 2 {:?}", output);
+            }
+            AsyncProcessMessage::StopRotate => {
+              println!("init output stop 2 {:?}", output);
+            }
+          }
+        }
+      }
+    });
   }
 }

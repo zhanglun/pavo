@@ -93,41 +93,17 @@ use tokio::sync::{mpsc, Mutex};
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
-  let (async_process_input_tx, mut async_process_input_rx) =
+  let (async_process_input_tx, async_process_input_rx) =
     mpsc::channel::<AsyncProcessMessage>(32);
-
-  // tokio::spawn(async move {
-  //   async_process_input_tx
-  //     .send(String::from("sending from second handle"))
-  //     .await;
-  // });
 
   tauri::Builder::default()
     .manage(AsyncProcInputTx {
-      inner: Mutex::new(async_process_input_tx),
+      sender: Mutex::new(async_process_input_tx),
     })
     .setup(|app| {
-      let app_handle = app.handle();
-      tauri::async_runtime::spawn(async move {
-        let mut scheduler = scheduler::Scheduler::new();
+      // let app_handle = app.handle();
 
-        scheduler.setup_list().await;
-
-        loop {
-          if let Some(output) = async_process_input_rx.recv().await {
-            match output {
-              AsyncProcessMessage::StartRotate => {
-                scheduler.rotate_photo().await;
-                println!("ouput {:?}", output);
-              }
-              AsyncProcessMessage::StopRotate => {
-                scheduler.stop_rotate_photo().await;
-                println!("output stop {:?}", output);
-              }
-            }
-          }
-        }
-      });
+      scheduler::Scheduler::init(async_process_input_rx);
 
       Ok(())
     })
