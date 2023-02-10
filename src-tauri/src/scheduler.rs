@@ -1,8 +1,9 @@
+use std::thread;
 use chrono::Local;
 use serde::{Deserialize, Serialize};
-use std::thread;
 use tokio::{self, runtime::Runtime, task, time};
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{mpsc};
+use rand::prelude::*;
 
 use crate::services::AsyncProcessMessage;
 use crate::services::bing::{self, Images};
@@ -68,19 +69,30 @@ impl Scheduler {
     let cache = list.clone();
 
     let rotate_interval = config::PavoConfig::get_interval();
-    let mut interval = time::interval(time::Duration::from_secs(rotate_interval));
+    let mut interval = time::interval(time::Duration::from_secs(rotate_interval * 60));
 
-    let mut setting_auto_rotate = config::PavoConfig::get_config().auto_rotate;
+    let mut cfg = config::PavoConfig::get_config();
 
-    while list.len() > 0 && setting_auto_rotate {
-      let item = list.pop().unwrap();
-
+    while list.len() > 0 && cfg.auto_rotate {
       interval.tick().await;
 
-      println!("{:?}", item.title);
-      bing::Wallpaper::set_wallpaper(&item.url()).await.unwrap();
+      cfg = config::PavoConfig::get_config();
 
-      setting_auto_rotate = config::PavoConfig::get_config().auto_rotate;
+      let mut item = list[0].clone();
+
+      if cfg.randomly {
+        let mut rng = rand::thread_rng();
+        let idx = rng.gen_range(0, list.len());
+
+        item = list[idx].clone();
+        list.remove(idx);
+      } else {
+        item = list.pop().unwrap();
+      }
+
+      println!("{:?}", item.title);
+
+      bing::Wallpaper::set_wallpaper(&item.url()).await.unwrap();
 
       if list.len() == 0 {
         list = cache.clone();
