@@ -32,22 +32,23 @@ fn switch(routes: Route) -> Html {
 }
 
 #[derive(Properties, PartialEq)]
-pub struct Props {
-}
-
+pub struct Props {}
 
 #[function_component(Layout)]
-pub fn layout () -> Html {
+pub fn layout() -> Html {
   html! {
-    <div class="w-full grid gap-2 grid-rows-[58_1fr]">
-      <div class="flex justify-center pb-2 pt-6 fixed top-0 left-[50%] translate-x-[-50%] z-10">
-        <nav class="py-2 px-1 flex items-center justify-start rounded-full bg-white shadow-md">
-          <a class="inline-block text-center text-base text-black hover:text-black hover:bg-slate-100 px-3 py-2 mx-1 rounded-full" href={"/"}>{"Home"}</a>
-          // <a class="inline-block text-center text-base text-black hover:text-black hover:bg-slate-100 px-3 py-2 mx-1 rounded-full" href={"/pexels"}>{"Pexels"}</a>
-          <a class="inline-block text-center text-base text-black hover:text-black hover:bg-slate-100 px-3 py-2 mx-1 rounded-full" href={"/setting"}>{"Setting"}</a>
-        </nav>
+    <div class="w-full grid gap-2 grid-cols-[58px_1fr]">
+      <div class="w-full h-[100vh] border-r">
+        <div class="fixed left-0 top-0 w-[58px] h-full bg-white">
+            <nav class="grid gap-1">
+              <a class="text-center text-base text-black hover:text-black hover:bg-slate-100 py-2 mx-1"
+                 href={"/"}
+              >{"Bing"}</a>
+              // <a class="text-center text-base text-black hover:text-black hover:bg-slate-100 py-2 mx-1" href={"/pexels"}>{"Pexels"}</a>
+              <a class="text-center text-base text-black hover:text-black hover:bg-slate-100 py-2 mx-1" href={"/setting"}>{"Setting"}</a>
+            </nav>
+        </div>
       </div>
-
       <div class="">
         <BrowserRouter>
           <Switch<Route> render={switch} />

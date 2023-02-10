@@ -1,13 +1,12 @@
-use std::thread;
 use chrono::Local;
-use serde::{Deserialize, Serialize};
-use tokio::{self, runtime::Runtime, task, time};
-use tokio::sync::{mpsc};
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
+use std::thread;
+use tokio::{self, runtime::Runtime, sync::mpsc, task, time};
 
-use crate::services::AsyncProcessMessage;
-use crate::services::bing::{self, Images};
 use crate::config;
+use crate::services::bing::{self, Images};
+use crate::services::AsyncProcessMessage;
 
 #[allow(dead_code)]
 fn now() -> String {
@@ -55,7 +54,10 @@ impl Scheduler {
 
     let list = json1.unwrap().json.images;
     let list2 = json2.unwrap().json.images;
-    let list = list.into_iter().chain(list2.clone().into_iter()).collect::<Vec<bing::Images>>();
+    let list = list
+      .into_iter()
+      .chain(list2.clone().into_iter())
+      .collect::<Vec<bing::Images>>();
 
     self.list = list;
   }
@@ -100,24 +102,16 @@ impl Scheduler {
     }
   }
 
-  pub async fn stop_rotate_photo(&self) {
+  pub async fn create_interval() {
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    let _guard = rt.enter();
 
-  }
+    task::spawn(async {
+      time::sleep(time::Duration::from_secs(3)).await;
+      println!("task over: {}", now());
+    });
 
-  pub async fn rotate_photo_randomly(&mut self) {
-
-  }
-
-  pub async fn create_interval () {
-      let rt = tokio::runtime::Runtime::new().unwrap();
-      let _guard = rt.enter();
-
-      task::spawn(async {
-          time::sleep(time::Duration::from_secs(3)).await;
-          println!("task over: {}", now());
-      });
-
-      thread::sleep(time::Duration::from_secs(4));
+    thread::sleep(time::Duration::from_secs(4));
   }
 
   pub fn init(mut rx: mpsc::Receiver<AsyncProcessMessage>) {
