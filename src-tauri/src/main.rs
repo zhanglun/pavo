@@ -138,6 +138,7 @@ async fn main() {
       cmd::download,
       cmd::view_photo,
       cmd::get_bing_wallpaper_list,
+      cmd::get_bing_daily,
       cmd::get_pexels_curated_photos,
       cmd::get_config,
       cmd::set_auto_rotate,

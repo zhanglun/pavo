@@ -5,6 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
 use crate::components::bingwallpaper::Wallpaper;
+use crate::components::bing_daily::BingDaily;
 
 #[wasm_bindgen]
 extern "C" {
@@ -17,7 +18,7 @@ pub struct Bingwallpaper {
   index: u8,
   number: u8,
   files: Vec<String>,
-  json: Paper,
+  pub json: Paper,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,7 +27,7 @@ pub struct Paper {
   pub tooltips: Tooltips,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Images {
   pub bot: i32,
   pub copyright: String,
@@ -92,6 +93,7 @@ pub fn home() -> Html {
 
   html! {
     <div class="w-full p-4">
+      <BingDaily />
       <div class="grid grid-cols-2 gap-4 lg:grid-cols-2 lg:gap-4">
         {images.iter().map(|item| {
           html! {
