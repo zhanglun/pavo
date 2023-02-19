@@ -7,8 +7,8 @@ use weblog::console_log;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::pages::layout::Route;
 use crate::components::interval::IntervalItem;
+use crate::pages::layout::Route;
 
 #[wasm_bindgen]
 extern "C" {
@@ -92,7 +92,6 @@ pub fn setting() -> Html {
     })
   };
 
-
   let interval_options = vec![
     (30, "Every 30 Minutes"),
     (60, "Every Hour"),
@@ -127,10 +126,9 @@ pub fn setting() -> Html {
 
   html! {
     <div>
-      <div>
-        <span onclick={handle_back}>{"Back"}</span>
+      <div class="text-2xl mt-8 mb-4">
+        {"Setting"}
       </div>
-      {"Setting"}
       <div>
         <div>
           <div>
