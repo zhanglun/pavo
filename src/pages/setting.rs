@@ -40,7 +40,9 @@ pub struct RandomParams {
 pub fn setting() -> Html {
   let navigator = use_navigator().unwrap();
 
-  let handle_back = Callback::from(move |_| navigator.push(&Route::Home));
+  let handle_back: Callback<()>= Callback::from(move |_:_| {
+    navigator.push(&Route::Home);
+  });
 
   let ref_auto_rotate = use_node_ref();
   let state_auto_rotate: UseStateHandle<bool> = use_state(|| false);
