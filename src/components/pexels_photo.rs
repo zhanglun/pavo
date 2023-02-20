@@ -61,7 +61,7 @@ impl Component for PexelsPhoto {
         <div class="relative overflow-hidden rounded-3xl group">
           <img
             class="w-full max-h-full group-hover:scale-125 transition-all"
-            src={ctx.props().photo.src.portrait.clone()}
+            src={ctx.props().photo.src.tiny.clone()}
             title={ctx.props().photo.alt.clone()}
           />
           <div class="

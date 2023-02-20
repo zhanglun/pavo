@@ -63,6 +63,7 @@ pub fn pexels() -> Html {
   let photos = photos.iter().map(|item| {
     html! {
       <PexelsPhoto
+        key={item.clone().id}
         photo={item.clone()}
       />
     }
@@ -70,7 +71,7 @@ pub fn pexels() -> Html {
 
   html! {
     <div class="w-full p-4">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-8 xl:grid-cols-5">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8 xl:grid-cols-5">
         {photos}
       </div>
       <div class="p-4 m-6 flex items-center justify-center">
