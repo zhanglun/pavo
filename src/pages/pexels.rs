@@ -71,7 +71,7 @@ pub fn pexels() -> Html {
 
   html! {
     <div class="w-full p-4">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8 xl:grid-cols-5">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
         {photos}
       </div>
       <div class="p-4 m-6 flex items-center justify-center">
