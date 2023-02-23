@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
-use crate::components::toolbar::{Toolbar, PhotoService};
+use crate::components::toolbar::{PhotoService, Toolbar};
 
 #[wasm_bindgen]
 extern "C" {
@@ -62,7 +62,11 @@ impl Component for Wallpaper {
 
           spawn_local(async move {
             let href = href.clone();
-            invoke("view_photo", to_value(&ViewPhotoParams { href: href }).unwrap()).await;
+            invoke(
+              "view_photo",
+              to_value(&ViewPhotoParams { href: href }).unwrap(),
+            )
+            .await;
           });
         }
 
@@ -76,7 +80,7 @@ impl Component for Wallpaper {
 
     html! {
       <div class="relative cursor-pointer">
-        <div class="relative rounded-2xl overflow-hidden group">
+        <div class="relative rounded-2xl overflow-hidden group w-full aspect-[1.78] bg-medirian-1">
           <img
             class="w-full rounded-2xl transition-all group-hover:scale-125"
             src={ctx.props().href.clone()}

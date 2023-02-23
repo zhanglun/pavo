@@ -44,7 +44,7 @@ pub fn bing_daily() -> Html {
   html! {
     <div class="w-full my-5">
       <h2 class="font-semibold text-2xl mt-2 mb-4">{"Today"}</h2>
-      <div class="relative">
+      <div class="relative rounded-2xl overflow-hidden aspect-[1.78] bg-medirian-2">
         <img class="rounded-2xl" src={["https://www.bing.com", &daily_image.url.clone()].concat()} alt="" />
         <div class="absolute right-0 bottom-0 text-white bg-black bg-opacity-75 px-3 py-2 rounded-xl">
           <p classe="text-2xl">{daily_image.title.clone()}</p>

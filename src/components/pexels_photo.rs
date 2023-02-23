@@ -58,10 +58,10 @@ impl Component for PexelsPhoto {
   fn view(&self, ctx: &Context<Self>) -> Html {
     html! {
       <div>
-        <div class="relative overflow-hidden rounded-3xl group">
+        <div class="relative overflow-hidden rounded-2xl group w-full aspect-[0.67] bg-medirian-1">
           <img
             class="w-full max-h-full group-hover:scale-125 transition-all"
-            src={ctx.props().photo.src.tiny.clone()}
+            src={ctx.props().photo.src.portrait.clone()}
             title={ctx.props().photo.alt.clone()}
           />
           <div class="
