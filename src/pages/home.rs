@@ -101,6 +101,7 @@ pub fn home() -> Html {
               href={["https://www.bing.com", &item.url.clone()].concat()}
               title={item.title.clone()}
               copyright={item.copyright.clone()}
+              copyrightlink={["https://www.bing.com", &item.copyrightlink.clone()].concat()}
             />
           }
         }).collect::<Html>()}

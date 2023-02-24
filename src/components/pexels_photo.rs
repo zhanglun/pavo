@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 
-use crate::components::toolbar::{Toolbar, PhotoService};
+use crate::components::toolbar::{PhotoService, Toolbar};
 
 pub enum Msg {
   Clicked,
@@ -38,7 +38,6 @@ pub struct Photo {
 pub struct Props {
   pub photo: Photo,
 }
-
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PexelsPhoto {
@@ -81,7 +80,10 @@ impl Component for PexelsPhoto {
             <div class="text-base font-semibold">{ctx.props().photo.alt.clone()}</div>
             <div class="text-sm">{ctx.props().photo.photographer.clone()}</div>
           </div>
-          <Toolbar href={ctx.props().photo.src.original.clone()} service={PhotoService::Pexels} />
+          <Toolbar
+            service={PhotoService::Pexels}
+            url={ctx.props().photo.src.original.clone()}
+            href={ctx.props().photo.url.clone()} />
         </div>
       </div>
     }

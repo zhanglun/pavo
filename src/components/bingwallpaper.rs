@@ -29,6 +29,7 @@ pub struct Props {
   pub title: String,
   pub href: String,
   pub copyright: String,
+  pub copyrightlink: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -108,8 +109,9 @@ impl Component for Wallpaper {
                 {ctx.props().title.clone()}
               </div>
               <Toolbar
-                href={ctx.props().href.clone()}
                 service={PhotoService::Bing}
+                url={ctx.props().href.clone()}
+                href={ctx.props().copyrightlink.clone()}
               />
             </div>
             <div class="text-sm">{ctx.props().copyright.clone()}</div>
