@@ -1,4 +1,7 @@
-# Pavo
+<p align="center">
+  <img src="./pavo.png" width="360px"/>
+</p>
+<h1 align="center">Pavo</h1>
 
 A wallpaper application.
 
