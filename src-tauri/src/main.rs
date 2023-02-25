@@ -120,6 +120,7 @@ async fn main() {
       cmd::set_auto_rotate,
       cmd::set_interval,
       cmd::set_randomly,
+      cmd::set_rotate_source,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())

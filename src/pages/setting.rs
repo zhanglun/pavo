@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen;
+use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::HtmlInputElement;
+use web_sys::{HtmlInputElement};
 use weblog::console_log;
 use yew::prelude::*;
-use yew_router::prelude::*;
 
 use crate::components::interval::IntervalItem;
-use crate::pages::layout::Route;
+use crate::components::toolbar::PhotoService;
 
 #[wasm_bindgen]
 extern "C" {
@@ -19,9 +19,10 @@ extern "C" {
   async fn invoke_get_config(cmd: &str) -> JsValue;
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
   auto_rotate: bool,
+  rotate_source: Vec<String>,
   randomly: bool,
   interval: usize,
 }
@@ -36,14 +37,15 @@ pub struct RandomParams {
   randomly: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SourceParams {
+  source: String,
+  checked: bool,
+}
+
 #[function_component(Setting)]
 pub fn setting() -> Html {
-  let navigator = use_navigator().unwrap();
-
-  let handle_back: Callback<()>= Callback::from(move |_:_| {
-    navigator.push(&Route::Home);
-  });
-
+  let state_config = use_state(|| PavoConfig::default() );
   let ref_auto_rotate = use_node_ref();
   let state_auto_rotate: UseStateHandle<bool> = use_state(|| false);
   let handle_auto_rotate = {
@@ -94,6 +96,31 @@ pub fn setting() -> Html {
     })
   };
 
+  let handle_change_source = {
+    Callback::from(move |e: Event| {
+      let target = e.target();
+
+      let input = target.and_then(|t| t.dyn_into::<HtmlInputElement>().ok());
+
+      if let Some(input) = input {
+          console_log!(input.value());
+          console_log!(input.checked());
+
+          spawn_local(async move {
+            invoke(
+              "set_rotate_source",
+              serde_wasm_bindgen::to_value(&SourceParams {
+                source: input.value(),
+                checked: input.checked(),
+              })
+              .unwrap(),
+            )
+            .await;
+          });
+      }
+    })
+  };
+
   let interval_options = vec![
     (15, "Every 15 Minutes"),
     (30, "Every 30 Minutes"),
@@ -109,6 +136,7 @@ pub fn setting() -> Html {
     let state_auto_rotate = state_auto_rotate.clone();
     let state_randomly = state_randomly.clone();
     let state_interval = state_interval.clone();
+    let state_config = state_config.clone();
 
     use_effect_with_deps(
       move |_| {
@@ -121,6 +149,7 @@ pub fn setting() -> Html {
           state_auto_rotate.set(config.auto_rotate);
           state_randomly.set(config.randomly);
           state_interval.set(config.interval);
+          state_config.set(config);
         });
       },
       (),
@@ -133,7 +162,7 @@ pub fn setting() -> Html {
         {"Setting"}
       </div>
       <div>
-        <div>
+        <form>
           <div>
             <label id="rotate">
             <input
@@ -142,8 +171,40 @@ pub fn setting() -> Html {
               onchange={handle_auto_rotate}
               checked={*state_auto_rotate}
             />
-            {"Auto Rotate"} {*state_auto_rotate}
+            {"Auto Rotate"}
             </label>
+            <label id="random">
+            <input
+              ref={ref_randomly}
+              type="checkbox"
+              onchange={handle_randomly}
+              checked={*state_randomly}
+            />
+            {"Randomly"}
+            </label>
+          </div>
+          <div>
+            {"Source"}
+            <div>
+              <label id="bing">
+                <input
+                  type="checkbox"
+                  value={PhotoService::Bing.as_str()}
+                  checked={(*state_config.rotate_source.clone()).contains(&PhotoService::Bing.as_str().to_string())}
+                  onchange={handle_change_source.clone()}
+                />
+                {"Bing"}
+              </label>
+              <label id="pexels">
+                <input
+                  type="checkbox"
+                  value={PhotoService::Pexels.as_str()}
+                  checked={(*state_config.rotate_source.clone()).contains(&PhotoService::Pexels.as_str().to_string())}
+                  onchange={handle_change_source.clone()}
+                />
+                {"Pexels"}
+              </label>
+            </div>
           </div>
           <div>
             {"Change picture"}
@@ -158,18 +219,7 @@ pub fn setting() -> Html {
                 }).collect::<Html>()
               }
           </fieldset>
-          <div>
-            <label id="random">
-            <input
-              ref={ref_randomly}
-              type="checkbox"
-              onchange={handle_randomly}
-              checked={*state_randomly}
-            />
-            {"Randomly"} {*state_randomly}
-            </label>
-          </div>
-        </div>
+        </form>
       </div>
     </div>
   }

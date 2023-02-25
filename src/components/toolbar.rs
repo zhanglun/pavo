@@ -24,6 +24,16 @@ pub enum PhotoService {
   Unsplash,
 }
 
+impl PhotoService {
+  pub fn as_str(&self) -> &'static str {
+    match self {
+      PhotoService::Bing => "bing",
+      PhotoService::Pexels => "pexels",
+      PhotoService::Unsplash => "unsplash"
+    }
+  }
+}
+
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
   pub url: String,

@@ -37,7 +37,7 @@ pub struct Props {}
 #[function_component(Layout)]
 pub fn layout() -> Html {
   html! {
-    <div class="w-full grid gap-2 grid-cols-[58px_1fr]">
+    <div class="w-full h-[100vh] grid gap-2 grid-cols-[58px_1fr]">
       <div class="w-full h-[100vh] border-r">
         <div class="fixed left-0 top-0 w-[58px] h-full bg-white">
           <nav class="h-full flex flex-col justify-between">
@@ -71,7 +71,7 @@ pub fn layout() -> Html {
           </nav>
         </div>
       </div>
-      <div class="">
+      <div class="overflow-auto">
         <BrowserRouter>
           <Switch<Route> render={switch} />
         </BrowserRouter>

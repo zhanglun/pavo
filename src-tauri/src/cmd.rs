@@ -118,6 +118,13 @@ pub async fn set_randomly(randomly: bool) {
 }
 
 #[tauri::command]
+pub async fn set_rotate_source(source: String, checked: bool) {
+  let pavo_config = config::PavoConfig::get_config();
+
+  pavo_config.set_rotate_source(source, checked);
+}
+
+#[tauri::command]
 pub async fn view_photo(handle: tauri::AppHandle, href: String) {
   services::view_photo(handle, href);
 }

@@ -19,6 +19,10 @@
   -webkit-text-size-adjust: 100%;
 }
 
+body {
+  overflow: hidden;
+}
+
 /**/
 .container {
   margin: 0;
@@ -116,3 +120,4 @@ button {
   box-shadow: 0 0 20px #eee;
   display: block;
 }
+
