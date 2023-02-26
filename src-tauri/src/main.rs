@@ -20,9 +20,9 @@ fn create_tray() -> SystemTray {
   let hide = CustomMenuItem::new("hide".to_string(), "Hide");
   let quit = CustomMenuItem::new("quit".to_string(), "Quit");
 
-    let auto_rotate = CustomMenuItem::new("auto_rotate".to_string(), "Auto Rotate");
-    let previous_photo = CustomMenuItem::new("previous_photo".to_string(), "Previous Photo");
-    let next_photo = CustomMenuItem::new("next_photo".to_string(), "Next Photo");
+  let auto_rotate = CustomMenuItem::new("auto_rotate".to_string(), "Auto Rotate");
+  let previous_photo = CustomMenuItem::new("previous_photo".to_string(), "Previous Photo");
+  let next_photo = CustomMenuItem::new("next_photo".to_string(), "Next Photo");
 
   let tray_menu = SystemTrayMenu::new()
     .add_item(auto_rotate)
@@ -51,12 +51,8 @@ fn handle_tray_event(app: &AppHandle, event: SystemTrayEvent) {
       window.show().unwrap();
     }
     SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
-    "previous_photo" => {
-
-            },
-    "next_photo" => {
-
-            },
+      "previous_photo" => {}
+      "next_photo" => {}
       "show" => {
         let window = app.get_window("main").unwrap();
         window.show().unwrap();
@@ -108,8 +104,7 @@ use tokio::sync::{mpsc, Mutex};
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
-  let (async_process_input_tx, async_process_input_rx) =
-    mpsc::channel::<AsyncProcessMessage>(32);
+  let (async_process_input_tx, async_process_input_rx) = mpsc::channel::<AsyncProcessMessage>(32);
 
   tauri::Builder::default()
     .manage(AsyncProcInputTx {
