@@ -1,5 +1,5 @@
 use crate::services::{bing, pexels, PhotoService, AsyncProcessMessage};
-use crate::{config, services};
+use crate::{cache, config, services};
 
 use tokio::sync::{mpsc, Mutex};
 
@@ -46,13 +46,12 @@ pub async fn get_bing_wallpaper_list(page: u8) -> Result<bing::Wallpaper, String
 }
 
 #[tauri::command]
-pub async fn get_bing_daily() -> Result<bing::Wallpaper, String> {
-  let bing = services::bing::Wallpaper::new(0, 1).await;
+pub async fn get_bing_daily() -> bing::Images {
+  let mut bing_daily = cache::CACHE.lock().await;
 
-  match bing {
-    Ok(bing) => Ok(bing),
-    Err(_) => Err("".to_string()),
-  }
+  let res = bing_daily.get_bing_daily().await;
+
+  res
 }
 
 

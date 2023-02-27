@@ -17,7 +17,7 @@ pub fn test_timer() {
   let rt = Runtime::new().unwrap();
   let _guard = rt.enter();
   task::spawn(async {
-    println!("task start ===>");
+    println!("task start ==>");
     time::sleep(time::Duration::from_secs(5)).await;
     println!("task over: {}", now());
   });

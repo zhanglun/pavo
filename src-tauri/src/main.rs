@@ -7,6 +7,7 @@ mod cmd;
 mod config;
 mod scheduler;
 mod services;
+mod cache;
 
 use cmd::AsyncProcInputTx;
 use services::AsyncProcessMessage;

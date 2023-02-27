@@ -1,6 +1,6 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_json::Number;
+// use serde_json::Number;
 use std::{
   env::var,
   fs,
@@ -22,12 +22,12 @@ pub struct Tooltips {
   pub walls: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Images {
-  pub bot: Number,
+  pub bot: usize,
   pub copyright: String,
   pub copyrightlink: String,
-  pub drk: Number,
+  pub drk: usize,
   pub enddate: String,
   pub fullstartdate: String,
   pub hs: Vec<String>,
@@ -35,7 +35,7 @@ pub struct Images {
   pub quiz: String,
   pub startdate: String,
   pub title: String,
-  pub top: Number,
+  pub top: usize,
   pub url: String,
   pub urlbase: String,
   pub wp: bool,

@@ -28,10 +28,9 @@ pub fn bing_daily() -> Html {
 
         spawn_local(async move {
           let res = invoke("get_bing_daily", to_value(&Param {}).unwrap()).await;
-          let images: Bingwallpaper = serde_wasm_bindgen::from_value(res).unwrap();
-          let images = images.json.images;
+          let image: Images = serde_wasm_bindgen::from_value(res).unwrap();
 
-          daily_image.set(images[0].clone());
+          daily_image.set(image);
         });
         || ()
       },
