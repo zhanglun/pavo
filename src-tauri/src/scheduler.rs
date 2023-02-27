@@ -34,6 +34,8 @@ pub struct Scheduler {
   pub auto_rotate: bool,
   pub randomly: bool,
   pub list: Vec<Images>,
+
+  pub rotating: bool,
 }
 
 impl Scheduler {
@@ -45,10 +47,12 @@ impl Scheduler {
       auto_rotate: cfg.auto_rotate,
       randomly: cfg.randomly,
       list: vec![],
+      rotating: false,
     }
   }
 
   pub async fn setup_list(&mut self) {
+    // TODO: initialize data according the user's config settings
     let json1 = bing::Wallpaper::new(0, 8).await;
     let json2 = bing::Wallpaper::new(8, 8).await;
 
@@ -62,11 +66,15 @@ impl Scheduler {
     self.list = list;
   }
 
-  pub async fn push_list(&mut self, image: Images) {
+  pub fn push_list(&mut self, image: Images) {
     self.list.push(image);
   }
 
-  pub async fn rotate_photo(&self) {
+  pub async fn rotate_photo(&mut self) {
+    if self.rotating == false {
+      ()
+    }
+
     let mut list = self.list.clone();
     let cache = list.clone();
 
@@ -102,6 +110,15 @@ impl Scheduler {
     }
   }
 
+  pub async fn start_rotate_photo(&mut self) {
+    self.rotating = true;
+    self.rotate_photo().await;
+  }
+
+  pub fn stop_rotate_photo(&mut self) {
+    self.rotating = false
+  }
+
   pub async fn create_interval() {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let _guard = rt.enter();
@@ -125,10 +142,11 @@ impl Scheduler {
         if let Some(output) = rx.recv().await {
           match output {
             AsyncProcessMessage::StartRotate => {
-              scheduler.rotate_photo().await;
+              scheduler.start_rotate_photo().await;
               println!("init output start 2 {:?}", output);
             }
             AsyncProcessMessage::StopRotate => {
+              scheduler.stop_rotate_photo();
               println!("init output stop 2 {:?}", output);
             }
           }
