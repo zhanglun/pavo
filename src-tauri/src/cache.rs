@@ -3,6 +3,8 @@ use crate::services;
 use crate::services::bing;
 
 use serde::{Deserialize, Serialize};
+
+use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
