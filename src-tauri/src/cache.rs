@@ -22,7 +22,7 @@ impl Cache {
   /// get cached list, save request
   pub fn get_cache_list() {}
 
-  /// get current photo which setted as wallpaper
+  /// get current photo which set as wallpaper
   pub fn get_current_photo() {}
 
   /// get photo list rotating
@@ -40,6 +40,18 @@ impl Cache {
     self.bing_daily = bing.json.images[0].clone();
 
     self.bing_daily.clone()
+  }
+
+  pub async fn get_bing_list(&mut self) -> Vec<bing::Images> {
+    let res1 = services::bing::Wallpaper::new(0, 8).await.unwrap();
+    let res2 = services::bing::Wallpaper::new(8, 8).await.unwrap();
+
+    let images1 = res1.json.images;
+    let images2 = res2.json.images;
+
+    self.bing_list = images1.into_iter().chain(images2.into_iter()).collect();
+
+    self.bing_list.clone()
   }
 }
 

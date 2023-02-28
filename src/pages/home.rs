@@ -74,16 +74,10 @@ pub fn home() -> Html {
       let images = _images.clone();
 
       spawn_local(async move {
-        let list: JsValue = invoke("get_bing_wallpaper_list", to_value(&BingQuery { page: 0 }).unwrap()).await;
-        let bing: Bingwallpaper = serde_wasm_bindgen::from_value(list).unwrap();
+        let res: JsValue = invoke("get_bing_wallpaper_list", to_value(&BingQuery { page: 0 }).unwrap()).await;
+        let image_list: Vec<Images> = serde_wasm_bindgen::from_value(res).unwrap();
 
-        let list2: JsValue = invoke("get_bing_wallpaper_list", to_value(&BingQuery { page: 1 }).unwrap()).await;
-        let bing2: Bingwallpaper = serde_wasm_bindgen::from_value(list2).unwrap();
-
-        let page1 = bing.json.images;
-        let page2 = bing2.json.images;
-
-        images.set(page1.into_iter().chain(page2.into_iter()).collect());
+        images.set(image_list);
       });
       || ()
     }, ());
