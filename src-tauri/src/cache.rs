@@ -1,16 +1,20 @@
 use crate::config;
 use crate::services;
 use crate::services::bing;
+use chrono::offset::Utc;
 
 use serde::{Deserialize, Serialize};
 
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 
+const BING_EXPIRE_TIME: i64 = 60;
+
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Cache {
   pub bing_daily: bing::Images,
   pub bing_list: Vec<bing::Images>,
+  pub bing_timestamp: i64,
 }
 
 impl Cache {
@@ -43,6 +47,14 @@ impl Cache {
   }
 
   pub async fn get_bing_list(&mut self) -> Vec<bing::Images> {
+    let now = Utc::now().timestamp();
+
+    if self.bing_list.len() > 0 && self.bing_timestamp - now < BING_EXPIRE_TIME {
+      println!("get list from cache");
+
+      return self.bing_list.clone();
+    }
+
     let res1 = services::bing::Wallpaper::new(0, 8).await.unwrap();
     let res2 = services::bing::Wallpaper::new(8, 8).await.unwrap();
 
@@ -51,8 +63,16 @@ impl Cache {
 
     self.bing_list = images1.into_iter().chain(images2.into_iter()).collect();
 
+    self.bing_timestamp = Utc::now().timestamp();
+
+    println!("timestamp: {:?}", self.bing_timestamp);
+
     self.bing_list.clone()
   }
 }
 
-pub static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| Mutex::new(Cache::default()));
+pub static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| Mutex::new(Cache {
+    bing_daily: bing::Images::default(),
+    bing_list: vec![],
+    bing_timestamp: Utc::now().timestamp(),
+}));

@@ -44,7 +44,6 @@ pub async fn get_bing_wallpaper_list(page: u8) -> Vec<bing::Images> {
 #[tauri::command]
 pub async fn get_bing_daily() -> bing::Images {
   let mut bing_daily = cache::CACHE.lock().await;
-
   let res = bing_daily.get_bing_daily().await;
 
   res
