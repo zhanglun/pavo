@@ -17,6 +17,10 @@ pub struct Cache {
   pub bing_timestamp: i64,
 }
 
+fn get_now_timestamp() -> i64 {
+  Utc::now().timestamp()
+}
+
 impl Cache {
   /// update cache list
   pub fn update_cache_list(&mut self) {
@@ -39,6 +43,12 @@ impl Cache {
   // cache service data
 
   pub async fn get_bing_daily(&mut self) -> bing::Images {
+    let now = get_now_timestamp();
+
+    if !self.bing_daily.url.is_empty() && self.bing_timestamp - now < BING_EXPIRE_TIME {
+      return self.bing_daily.clone();
+    }
+
     let bing = services::bing::Wallpaper::new(0, 1).await.unwrap();
 
     self.bing_daily = bing.json.images[0].clone();
@@ -46,10 +56,11 @@ impl Cache {
     self.bing_daily.clone()
   }
 
+  /// get bing photo list. return cached data if not expired.
   pub async fn get_bing_list(&mut self) -> Vec<bing::Images> {
     let now = Utc::now().timestamp();
 
-    if self.bing_list.len() > 0 && self.bing_timestamp - now < BING_EXPIRE_TIME {
+    if !self.bing_list.is_empty() && self.bing_timestamp - now < BING_EXPIRE_TIME {
       println!("get list from cache");
 
       return self.bing_list.clone();
@@ -69,10 +80,21 @@ impl Cache {
 
     self.bing_list.clone()
   }
+
+  /// update the time of last request to bing
+  pub fn update_bing_timestamp(&mut self) -> i64 {
+    let now = get_now_timestamp();
+
+    self.bing_timestamp = now;
+
+    now
+  }
 }
 
-pub static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| Mutex::new(Cache {
+pub static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| {
+  Mutex::new(Cache {
     bing_daily: bing::Images::default(),
     bing_list: vec![],
     bing_timestamp: Utc::now().timestamp(),
-}));
+  })
+});
