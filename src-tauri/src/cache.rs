@@ -81,6 +81,17 @@ impl Cache {
     self.bing_list.clone()
   }
 
+  /// update the time of last request to bing if 24 hours pasted
+  pub fn update_bing_timestamp_if_need(&mut self) -> i64 {
+    let now = get_now_timestamp();
+
+    if now - self.bing_timestamp > 24 * 60 * 60 {
+      self.update_bing_timestamp();
+    }
+
+    self.bing_timestamp
+  }
+
   /// update the time of last request to bing
   pub fn update_bing_timestamp(&mut self) -> i64 {
     let now = get_now_timestamp();

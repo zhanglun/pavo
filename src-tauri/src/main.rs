@@ -3,11 +3,11 @@
   windows_subsystem = "windows"
 )]
 
+mod cache;
 mod cmd;
 mod config;
 mod scheduler;
 mod services;
-mod cache;
 
 use cmd::AsyncProcInputTx;
 use services::AsyncProcessMessage;
@@ -104,6 +104,11 @@ use tokio::sync::{mpsc, Mutex};
 #[tokio::main]
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
+
+  tauri::async_runtime::spawn(async move {
+    let mut g_cache = cache::CACHE.lock().await;
+    g_cache.update_bing_timestamp();
+  });
 
   let (async_process_input_tx, async_process_input_rx) = mpsc::channel::<AsyncProcessMessage>(32);
 
