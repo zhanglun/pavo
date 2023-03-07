@@ -35,9 +35,7 @@ fn create_tray() -> SystemTray {
     .add_native_item(SystemTrayMenuItem::Separator)
     .add_item(quit);
 
-  let tray = SystemTray::new().with_menu(tray_menu);
-
-  tray
+  SystemTray::new().with_menu(tray_menu)
 }
 
 fn handle_tray_event(app: &AppHandle, event: SystemTrayEvent) {
@@ -95,6 +93,10 @@ fn handle_window_event(event: GlobalWindowEvent<Wry>) {
       //   },
       // );
     }
+    WindowEvent::Focused() {
+        let mut g_cache = cache::CACHE.lock().await;
+        g_cache.update_timestamp();
+    }
     _ => {}
   }
 }
@@ -107,7 +109,7 @@ async fn main() {
 
   tauri::async_runtime::spawn(async move {
     let mut g_cache = cache::CACHE.lock().await;
-    g_cache.update_bing_timestamp();
+    g_cache.update_timestamp();
   });
 
   let (async_process_input_tx, async_process_input_rx) = mpsc::channel::<AsyncProcessMessage>(32);

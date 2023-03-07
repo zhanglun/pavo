@@ -63,7 +63,7 @@ impl Pexels {
     &self,
     endpoint: &str,
     param: Option<Vec<(&str, String)>>,
-  ) -> Result<serde_json::Value, String> {
+  ) -> Result<PexlesJSON, String> {
     let mut builder = self.client.get(&(API_URL.to_owned() + endpoint));
 
     builder = match param {
@@ -75,13 +75,12 @@ impl Pexels {
       .header(reqwest::header::AUTHORIZATION, self.api_key.clone())
       .send()
       .await;
+
     // .expect(&format!("Failed to send request to {}", endpoint));
 
     match request {
       Ok(res) => {
-        println!("{:?}", res);
-        // Ok(serde_json::from_str("{}").unwrap())
-        Ok(serde_json::from_str(&res.text().await.unwrap()).unwrap())
+        Ok(res.json::<PexlesJSON>())
       }
       Err(e) => Err(String::from("Failed to read the response")),
     }
@@ -91,19 +90,18 @@ impl Pexels {
   //     self.get(&format!("{}{}", "v1/photos/", id), None).await
   //   }
 
-  pub async fn get_photo_curated(&self, per_page: u8, page: u8) -> serde_json::Value {
-    self.get(
-      "v1/curated",
-      Some(
-        [
-          ("per_page", per_page.to_string()),
-          ("page", page.to_string()),
-        ]
-        .to_vec(),
-      ),
-    ).await.unwrap()
-    // serde_json::to_value(Mock::pexel_curated()).unwrap()
-  }
+  // pub async fn get_photo_curated(&self, per_page: u8, page: u8) -> PexlesJSON {
+  //   self.get(
+  //     "v1/curated",
+  //     Some(
+  //       [
+  //         ("per_page", per_page.to_string()),
+  //         ("page", page.to_string()),
+  //       ]
+  //       .to_vec(),
+  //     ),
+  //   ).await.unwrap()
+  // }
 
   pub async fn get_photo_search(&self, per_page: u8, page: u8) -> serde_json::Value {
     self.get(
