@@ -45,13 +45,15 @@ impl Cache {
   pub async fn get_bing_daily(&mut self) -> bing::Images {
     let now = get_now_timestamp();
 
-    if !self.bing_daily.url.is_empty() && self.bing_timestamp - now < BING_EXPIRE_TIME {
+    if !self.bing_daily.url.is_empty() && now - self.bing_timestamp > BING_EXPIRE_TIME {
       return self.bing_daily.clone();
     }
 
     let bing = services::bing::Wallpaper::new(0, 1).await.unwrap();
 
     self.bing_daily = bing.json.images[0].clone();
+
+    self.bing_timestamp = now;
 
     self.bing_daily.clone()
   }
@@ -60,9 +62,7 @@ impl Cache {
   pub async fn get_bing_list(&mut self) -> Vec<bing::Images> {
     let now = Utc::now().timestamp();
 
-    if !self.bing_list.is_empty() && self.bing_timestamp - now < BING_EXPIRE_TIME {
-      println!("get list from cache");
-
+    if !self.bing_list.is_empty() && now - self.bing_timestamp > BING_EXPIRE_TIME {
       return self.bing_list.clone();
     }
 
