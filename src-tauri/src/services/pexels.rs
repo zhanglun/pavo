@@ -1,9 +1,9 @@
-use std::path::Path;
-use serde::{Serialize, Deserialize};
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use std::path::Path;
 
-use crate::config;
 use super::{download_file, mock::Mock};
+use crate::config;
 
 const API_URL: &'static str = "https://api.pexels.com/";
 
@@ -12,7 +12,6 @@ pub struct Pexels {
   api_key: String,
   client: Client,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PexlesJSON {
@@ -50,7 +49,6 @@ pub struct Photo {
   pub alt: String,
 }
 
-
 impl Pexels {
   pub fn new(api_key: String) -> Pexels {
     Pexels {
@@ -63,7 +61,7 @@ impl Pexels {
     &self,
     endpoint: &str,
     param: Option<Vec<(&str, String)>>,
-  ) -> Result<PexlesJSON, String> {
+  ) -> Result<PexlesJSON, Box<dyn std::error::Error>> {
     let mut builder = self.client.get(&(API_URL.to_owned() + endpoint));
 
     builder = match param {
@@ -71,52 +69,59 @@ impl Pexels {
       None => builder,
     };
 
-    let request = builder
+    let res = builder
       .header(reqwest::header::AUTHORIZATION, self.api_key.clone())
       .send()
-      .await;
+      .await?
+      .json::<PexlesJSON>()
+      .await?;
+
+    Ok(res)
 
     // .expect(&format!("Failed to send request to {}", endpoint));
 
-    match request {
-      Ok(res) => {
-        Ok(res.json::<PexlesJSON>())
-      }
-      Err(e) => Err(String::from("Failed to read the response")),
-    }
+    // match request {
+    //   Ok(res) => {
+    //     Ok(res)
+    //   }
+    //   Err(e) => Err(String::from("Failed to read the response")),
+    // }
   }
 
   //   pub fn photo_detail(&self, id: String) -> ::serde_json::Value {
   //     self.get(&format!("{}{}", "v1/photos/", id), None).await
   //   }
 
-  // pub async fn get_photo_curated(&self, per_page: u8, page: u8) -> PexlesJSON {
-  //   self.get(
-  //     "v1/curated",
-  //     Some(
-  //       [
-  //         ("per_page", per_page.to_string()),
-  //         ("page", page.to_string()),
-  //       ]
-  //       .to_vec(),
-  //     ),
-  //   ).await.unwrap()
-  // }
-
-  pub async fn get_photo_search(&self, per_page: u8, page: u8) -> serde_json::Value {
+  pub async fn get_photo_curated(&self, per_page: u8, page: u8) -> PexlesJSON {
     self.get(
-      "v1/search",
+      "v1/curated",
       Some(
         [
           ("per_page", per_page.to_string()),
           ("page", page.to_string()),
-          ("query", String::from("4k wallpaper")),
         ]
         .to_vec(),
       ),
     ).await.unwrap()
-    // serde_json::to_value(Mock::pexel_search()).unwrap()
   }
+
+  // pub async fn get_photo_search(&self, per_page: u8, page: u8) -> serde_json::Value {
+  //   self
+  //     .get(
+  //       "v1/search",
+  //       Some(
+  //         [
+  //           ("per_page", per_page.to_string()),
+  //           ("page", page.to_string()),
+  //           ("query", String::from("4k wallpaper")),
+  //         ]
+  //         .to_vec(),
+  //       ),
+  //     )
+  //     .await
+  //     .unwrap()
+  //   // serde_json::to_value(Mock::pexel_search()).unwrap()
+  // }
 
   pub fn get_filename(url: &str) -> &str {
     let s = url.find("pexels-").ok_or(0).unwrap();
@@ -129,7 +134,9 @@ impl Pexels {
     let filename = Pexels::get_filename(url);
     let app_folder = config::PavoConfig::get_app_folder().unwrap();
     let path = Path::new(&app_folder).join(&*filename);
-    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap()).await.unwrap();
+    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap())
+      .await
+      .unwrap();
 
     Ok(res)
   }
@@ -141,15 +148,13 @@ impl Pexels {
       Ok(a) => {
         wallpaper::set_from_path(a.as_str()).unwrap();
 
-        if cfg!(not(target_os="macos")) {
+        if cfg!(not(target_os = "macos")) {
           wallpaper::set_mode(wallpaper::Mode::Span).unwrap();
         }
 
         Ok(String::from("OK"))
       }
-      Err(e) => {
-        Err(e.to_string().into())
-      }
+      Err(e) => Err(e.to_string().into()),
     }
   }
 }

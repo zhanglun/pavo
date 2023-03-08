@@ -1,6 +1,8 @@
 use crate::services;
-use crate::services::bing;
-use crate::{config, services::pexels};
+use crate::{
+  config,
+  services::{bing, pexels},
+};
 use chrono::offset::Utc;
 
 use serde::{Deserialize, Serialize};
@@ -46,7 +48,7 @@ impl Cache {
   pub async fn get_bing_daily(&mut self) -> bing::Images {
     let now = get_now_timestamp();
 
-    if !self.bing_daily.url.is_empty() && now - self.timestamp > BING_EXPIRE_TIME {
+    if !self.bing_daily.url.is_empty() && now - self.timestamp < BING_EXPIRE_TIME {
       return self.bing_daily.clone();
     }
 
@@ -63,7 +65,7 @@ impl Cache {
   pub async fn get_bing_list(&mut self) -> Vec<bing::Images> {
     let now = Utc::now().timestamp();
 
-    if !self.bing_list.is_empty() && now - self.timestamp > BING_EXPIRE_TIME {
+    if !self.bing_list.is_empty() && now - self.timestamp < BING_EXPIRE_TIME {
       return self.bing_list.clone();
     }
 
@@ -82,21 +84,20 @@ impl Cache {
     self.bing_list.clone()
   }
 
-  pub async fn get_pexels_list(&mut self) -> Vec<pexles::Photo> {
+  pub async fn get_pexels_list(&mut self) -> Vec<pexels::Photo> {
     let now = Utc::now().timestamp();
 
-    if !self.pexels_list.is_empty() && now - self.timestamp > BING_EXPIRE_TIME {
+    if !self.pexels_list.is_empty() && now - self.timestamp < BING_EXPIRE_TIME {
       return self.pexels_list.clone();
     }
 
     let pexels_client =
       pexels::Pexels::new("s9GlfCrhK5qzYQTQjMipbIQ25spgFJnThF9n3uW73g9dge6eFzMJ7aeY".to_string());
-    let res: pexels::PexlesJSON = pexels_client.get_photo_curated(20, page).await;
+    let res: pexels::PexlesJSON = pexels_client.get_photo_curated(30, 1).await;
 
     self.pexels_list = res.photos;
 
     self.timestamp = Utc::now().timestamp();
-
 
     self.pexels_list.clone()
   }
@@ -127,5 +128,6 @@ pub static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| {
     bing_daily: bing::Images::default(),
     bing_list: vec![],
     timestamp: Utc::now().timestamp(),
+    pexels_list: vec![],
   })
 });

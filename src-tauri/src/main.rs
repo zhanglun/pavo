@@ -93,9 +93,13 @@ fn handle_window_event(event: GlobalWindowEvent<Wry>) {
       //   },
       // );
     }
-    WindowEvent::Focused() {
-        let mut g_cache = cache::CACHE.lock().await;
-        g_cache.update_timestamp();
+    WindowEvent::Focused(_) => {
+      println!("window focused!");
+
+      // tauri::async_runtime::spawn(async move {
+      //   let mut g_cache = cache::CACHE.lock().await;
+      //   g_cache.update_timestamp();
+      // });
     }
     _ => {}
   }
