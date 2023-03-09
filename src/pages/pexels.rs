@@ -48,11 +48,12 @@ pub fn pexels() -> Html {
 
       spawn_local(async move {
         let list:JsValue = invoke("get_pexels_curated_photos", to_value(&PexelQuery { page: page }).unwrap()).await;
-        let res: PexlesJSON = serde_wasm_bindgen::from_value(list).unwrap();
+        let res: Vec<Photo> = serde_wasm_bindgen::from_value(list).unwrap();
         let mut r = vec![];
 
         r.append(&mut (*photos).clone());
-        r.append(&mut res.photos.clone());
+        r.append(&mut res.clone());
+
         photos.set(r);
       });
       || ()
