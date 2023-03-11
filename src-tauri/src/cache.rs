@@ -75,7 +75,10 @@ impl Cache {
     let images1 = res1.json.images;
     let images2 = res2.json.images;
 
-    self.bing_list = images1.into_iter().chain(images2.into_iter()).collect();
+    self.bing_list = images1.into_iter().chain(images2.into_iter()).map(|mut i| {
+      i.url = i.url();
+      i
+    }).collect();
 
     self.timestamp = Utc::now().timestamp();
 

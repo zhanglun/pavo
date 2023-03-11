@@ -4,18 +4,25 @@ use serde::{Deserialize, Serialize};
 use std::thread;
 use tokio::{self, runtime::Runtime, sync::mpsc, task, time};
 
-use crate::config;
 use crate::services::bing::{self, Images};
 use crate::services::AsyncProcessMessage;
+use crate::{cache, config};
 
 #[allow(dead_code)]
 fn now() -> String {
   Local::now().format("%F %T").to_string()
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SchedulerPhoto {
+  url: String,
+  title: String,
+}
+
 pub fn test_timer() {
   let rt = Runtime::new().unwrap();
   let _guard = rt.enter();
+
   task::spawn(async {
     println!("task start ==>");
     time::sleep(time::Duration::from_secs(5)).await;
@@ -33,7 +40,7 @@ pub struct Scheduler {
   pub interval: u64,
   pub auto_rotate: bool,
   pub randomly: bool,
-  pub list: Vec<Images>,
+  pub list: Vec<SchedulerPhoto>,
 
   pub rotating: bool,
 }
@@ -52,21 +59,27 @@ impl Scheduler {
   }
 
   pub async fn setup_list(&mut self) {
-    // TODO: initialize data according the user's config settings
-    let json1 = bing::Wallpaper::new(0, 8).await;
-    let json2 = bing::Wallpaper::new(8, 8).await;
+    let user_config = config::PavoConfig::get_config();
+    println!("user_config: {:?}", user_config);
+    let mut cache = cache::CACHE.lock().await;
+    let bing_list = cache.get_pexels_list().await;
+    let list = bing_list.into_iter().map(|i| SchedulerPhoto {
+      url: i.url,
+      title: i.alt,
+    });
 
-    let list = json1.unwrap().json.images;
-    let list2 = json2.unwrap().json.images;
-    let list = list
-      .into_iter()
-      .chain(list2.clone().into_iter())
-      .collect::<Vec<bing::Images>>();
-
-    self.list = list;
+    if user_config.rotate_source.contains(&String::from("pexels")) {
+      let pexels_list = cache.get_bing_list().await;
+      self.list = list.chain(pexels_list.into_iter().map(|p| SchedulerPhoto {
+        url: p.url,
+        title: p.title,
+      })).collect();
+    } else {
+      self.list = list.collect();
+    }
   }
 
-  pub fn push_list(&mut self, image: Images) {
+  pub fn push_list(&mut self, image: SchedulerPhoto) {
     self.list.push(image);
   }
 
@@ -102,7 +115,7 @@ impl Scheduler {
 
       println!("{:?}", item.title);
 
-      bing::Wallpaper::set_wallpaper(&item.url()).await.unwrap();
+      bing::Wallpaper::set_wallpaper(&item.url).await.unwrap();
 
       if list.len() == 0 {
         list = cache.clone();

@@ -92,7 +92,7 @@ pub fn home() -> Html {
         {images.iter().map(|item| {
           html! {
             <Wallpaper
-              href={["https://www.bing.com", &item.url.clone()].concat()}
+              href={item.url.clone()}
               title={item.title.clone()}
               copyright={item.copyright.clone()}
               copyrightlink={["https://www.bing.com", &item.copyrightlink.clone()].concat()}
