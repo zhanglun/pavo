@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 
-const BING_EXPIRE_TIME: i64 = 60;
+const BING_EXPIRE_TIME: i64 = 60 * 60 * 12;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Cache {

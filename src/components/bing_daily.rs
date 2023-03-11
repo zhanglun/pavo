@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
-use crate::pages::home::{Bingwallpaper, Images};
+use crate::pages::home::{Images};
 
 #[wasm_bindgen]
 extern "C" {

@@ -54,15 +54,13 @@ impl Images {
   }
 
   pub fn get_filename(url: &str) -> &str {
+    println!("====>{:?}", url);
     let s = url.find("OHR.").ok_or(0).unwrap();
     let e = url.find("&rf=").ok_or(0).unwrap();
 
     &url[s..e]
   }
 
-  fn copyright(&self) -> &str {
-    self.copyright.as_str()
-  }
 
   fn directory(&self) -> String {
     [var("HOME").unwrap_or_default().as_str(), "/Pictures/Bing"].concat()
@@ -80,8 +78,7 @@ impl Images {
 
   pub fn set_wallpaper(&self) {
     let file = format!("{}/{}", self.directory(), self.filename());
-    println!("{}", file);
-    println!("{}", self.copyright());
+
     wallpaper::set_from_path(&file).unwrap();
   }
 }

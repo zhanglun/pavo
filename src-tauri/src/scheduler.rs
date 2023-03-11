@@ -1,11 +1,13 @@
 use chrono::Local;
 use rand::prelude::*;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::thread;
+use std::{path::Path, thread};
 use tokio::{self, runtime::Runtime, sync::mpsc, task, time};
 
-use crate::services::bing::{self, Images};
-use crate::services::AsyncProcessMessage;
+use crate::services::bing::{Images};
+use crate::services::pexels::Pexels;
+use crate::services::{download_file, AsyncProcessMessage};
 use crate::{cache, config};
 
 #[allow(dead_code)]
@@ -17,23 +19,9 @@ fn now() -> String {
 pub struct SchedulerPhoto {
   url: String,
   title: String,
+  filename: String,
 }
 
-pub fn test_timer() {
-  let rt = Runtime::new().unwrap();
-  let _guard = rt.enter();
-
-  task::spawn(async {
-    println!("task start ==>");
-    time::sleep(time::Duration::from_secs(5)).await;
-    println!("task over: {}", now());
-  });
-
-  thread::spawn(|| loop {
-    thread::sleep(time::Duration::from_secs(10));
-    println!("thread spawn");
-  });
-}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Scheduler {
@@ -60,27 +48,61 @@ impl Scheduler {
 
   pub async fn setup_list(&mut self) {
     let user_config = config::PavoConfig::get_config();
-    println!("user_config: {:?}", user_config);
     let mut cache = cache::CACHE.lock().await;
-    let bing_list = cache.get_pexels_list().await;
-    let list = bing_list.into_iter().map(|i| SchedulerPhoto {
-      url: i.url,
-      title: i.alt,
+    let bing_list = cache.get_bing_list().await;
+    let list = bing_list.into_iter().map(|p| SchedulerPhoto {
+      url: p.url.clone(),
+      title: p.title,
+      filename: Images::get_filename(&p.url).to_string(),
     });
 
     if user_config.rotate_source.contains(&String::from("pexels")) {
-      let pexels_list = cache.get_bing_list().await;
-      self.list = list.chain(pexels_list.into_iter().map(|p| SchedulerPhoto {
-        url: p.url,
-        title: p.title,
-      })).collect();
+      let pexels_list = cache.get_pexels_list().await;
+      self.list = list
+        .chain(pexels_list.into_iter().map(|p| SchedulerPhoto {
+          url: p.src.original.clone(),
+          title: p.alt,
+          filename: Pexels::get_filename(&p.src.original).to_string(),
+        }))
+        .collect();
     } else {
       self.list = list.collect();
     }
   }
 
-  pub fn push_list(&mut self, image: SchedulerPhoto) {
-    self.list.push(image);
+  pub async fn save_wallpaper(url: &str, filename: &str) -> Result<String, String> {
+    let app_folder = config::PavoConfig::get_app_folder().unwrap();
+    let path = Path::new(&app_folder).join(&*filename);
+    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap())
+      .await
+      .unwrap();
+
+    println!("{:?}", res);
+
+    Ok(res)
+  }
+
+  pub async fn set_wallpaper_from_local(a: String) -> String {
+    wallpaper::set_from_path(a.as_str()).unwrap();
+
+    if cfg!(not(target_os = "macos")) {
+      wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
+    }
+
+    a
+  }
+
+  pub async fn set_wallpaper(url: &str, filename: &str) -> Result<String, String> {
+    let a = Self::save_wallpaper(url, filename).await;
+
+    match a {
+      Ok(a) => {
+        Self::set_wallpaper_from_local(a).await;
+
+        Ok(String::from("OK"))
+      }
+      Err(e) => Err(e.to_string().into()),
+    }
   }
 
   pub async fn rotate_photo(&mut self) {
@@ -115,7 +137,9 @@ impl Scheduler {
 
       println!("{:?}", item.title);
 
-      bing::Wallpaper::set_wallpaper(&item.url).await.unwrap();
+      Self::set_wallpaper(&item.url, &item.filename)
+        .await
+        .unwrap();
 
       if list.len() == 0 {
         list = cache.clone();
