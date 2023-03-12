@@ -50,8 +50,12 @@ fn handle_tray_event(app: &AppHandle, event: SystemTrayEvent) {
       window.show().unwrap();
     }
     SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
-      "previous_photo" => {}
-      "next_photo" => {}
+      "previous_photo" => {
+        scheduler::Scheduler::previous_photo();
+      }
+      "next_photo" => {
+        scheduler::Scheduler::next_photo();
+      }
       "show" => {
         let window = app.get_window("main").unwrap();
         window.show().unwrap();

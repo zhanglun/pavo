@@ -31,7 +31,7 @@ pub struct Scheduler {
   pub list: Vec<SchedulerPhoto>,
 
   pub rotating: bool,
-  pub current_idx: u8,
+  pub current_idx: usize,
 }
 
 impl Scheduler {
@@ -107,17 +107,24 @@ impl Scheduler {
     }
   }
 
+  pub async fn update_current_photo(&mut self) {
+    let list = self.list.clone();
+    let idx = self.current_idx;
+    let item = &list[idx];
+
+      Self::set_wallpaper(&item.url, &item.filename)
+        .await
+        .unwrap();
+  }
+
   pub async fn rotate_photo(&mut self) {
     if self.rotating == false {
       ()
     }
 
-    let mut list = self.list.clone();
-    let cache = list.clone();
-
+    let list = self.list.clone();
     let rotate_interval = config::PavoConfig::get_interval();
     let mut interval = time::interval(time::Duration::from_secs(rotate_interval * 60));
-
     let mut cfg = config::PavoConfig::get_config();
 
     while list.len() > 0 && cfg.auto_rotate {
@@ -125,27 +132,14 @@ impl Scheduler {
 
       cfg = config::PavoConfig::get_config();
 
-      let mut item = list[0].clone();
-
       if cfg.randomly {
         let mut rng = rand::thread_rng();
-        let idx = rng.gen_range(0, list.len());
-
-        item = list[idx].clone();
-        list.remove(idx);
+        self.current_idx = rng.gen_range(0, list.len());
       } else {
-        item = list.pop().unwrap();
+        self.current_idx += 1;
       }
 
-      println!("{:?}", item.title);
-
-      Self::set_wallpaper(&item.url, &item.filename)
-        .await
-        .unwrap();
-
-      if list.len() == 0 {
-        list = cache.clone();
-      }
+      self.update_current_photo().await;
     }
   }
 
@@ -156,6 +150,12 @@ impl Scheduler {
 
   pub fn stop_rotate_photo(&mut self) {
     self.rotating = false
+  }
+
+  pub async fn previous_photo(&mut self) {
+  }
+
+  pub async fn next_photo(&mut self) {
   }
 
   pub async fn create_interval() {
