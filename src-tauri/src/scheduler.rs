@@ -31,6 +31,7 @@ pub struct Scheduler {
   pub list: Vec<SchedulerPhoto>,
 
   pub rotating: bool,
+  pub current_idx: u8,
 }
 
 impl Scheduler {
@@ -43,6 +44,7 @@ impl Scheduler {
       randomly: cfg.randomly,
       list: vec![],
       rotating: false,
+      current_idx: 0,
     }
   }
 

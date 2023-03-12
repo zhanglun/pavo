@@ -2,7 +2,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use super::{download_file, mock::Mock};
+use super::{download_file};
 use crate::config;
 
 const API_URL: &'static str = "https://api.pexels.com/";

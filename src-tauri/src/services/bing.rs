@@ -1,12 +1,7 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 // use serde_json::Number;
-use std::{
-  env::var,
-  fs,
-  io::{copy, Cursor},
-  path::Path,
-};
+use std::path::Path;
 
 use super::download_file;
 use crate::config;
@@ -47,39 +42,11 @@ impl Images {
     ["https://www.bing.com", &self.url].concat()
   }
 
-  pub fn filename(&self) -> &str {
-    let s = self.url.find("OHR.").ok_or(0).unwrap();
-    let e = self.url.find("&rf=").ok_or(0).unwrap();
-    &self.url[s..e]
-  }
-
   pub fn get_filename(url: &str) -> &str {
-    println!("====>{:?}", url);
     let s = url.find("OHR.").ok_or(0).unwrap();
     let e = url.find("&rf=").ok_or(0).unwrap();
 
     &url[s..e]
-  }
-
-
-  fn directory(&self) -> String {
-    [var("HOME").unwrap_or_default().as_str(), "/Pictures/Bing"].concat()
-  }
-
-  pub async fn save_wallpaper(&self) -> Result<()> {
-    fs::create_dir_all(self.directory())?;
-    let res = reqwest::get(self.url().as_str()).await?;
-    copy(
-      &mut Cursor::new(res.bytes().await?),
-      &mut fs::File::create(Path::new(&self.directory()).join(self.filename()))?,
-    )?;
-    Ok(())
-  }
-
-  pub fn set_wallpaper(&self) {
-    let file = format!("{}/{}", self.directory(), self.filename());
-
-    wallpaper::set_from_path(&file).unwrap();
   }
 }
 
@@ -159,7 +126,6 @@ impl Wallpaper {
       Err(e) => Err(e.to_string().into()),
     }
   }
-
 }
 
 fn get_url(index: u8, number: u8) -> String {
