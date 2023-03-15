@@ -68,7 +68,14 @@ fn handle_tray_event(
         });
       }
       "next_photo" => {
-        // scheduler::Scheduler::next_photo();
+        tokio::spawn(async move {
+          println!("next_photo");
+          // let async_proc_input_tx = sender.lock().await;
+          sender
+            .send(AsyncProcessMessage::NextPhoto)
+            .await
+            .map_err(|e| e.to_string());
+        });
       }
       "show" => {
         let window = app.get_window("main").unwrap();
@@ -137,7 +144,7 @@ async fn main() {
 
   tauri::Builder::default()
     .manage(AsyncProcInputTx {
-      sender: Mutex::new(async_process_input_tx.clone()),
+      sender: Mutex::new(async_process_input_tx),
     })
     .setup(|app| {
       // let app_handle = app.handle();

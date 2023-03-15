@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::{path::Path, thread};
 use tokio::{self, runtime::Runtime, sync::mpsc, task, time};
 
-use crate::services::bing::{Images};
+use crate::services::bing::Images;
 use crate::services::pexels::Pexels;
 use crate::services::{download_file, AsyncProcessMessage};
 use crate::{cache, config};
@@ -21,7 +21,6 @@ pub struct SchedulerPhoto {
   title: String,
   filename: String,
 }
-
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Scheduler {
@@ -111,9 +110,9 @@ impl Scheduler {
     let idx = cache.current_idx;
     let item = &list[idx];
 
-      Self::set_wallpaper(&item.url, &item.filename)
-        .await
-        .unwrap();
+    Self::set_wallpaper(&item.url, &item.filename)
+      .await
+      .unwrap();
   }
 
   pub async fn rotate_photo(&mut self) {
@@ -152,11 +151,9 @@ impl Scheduler {
     self.rotating = false
   }
 
-  pub async fn previous_photo(&mut self) {
-  }
+  pub async fn previous_photo(&mut self) {}
 
-  pub async fn next_photo(&mut self) {
-  }
+  pub async fn next_photo(&mut self) {}
 
   pub async fn create_interval() {
     let rt = tokio::runtime::Runtime::new().unwrap();
@@ -177,25 +174,27 @@ impl Scheduler {
       scheduler.setup_list().await;
       scheduler.rotate_photo().await;
 
-      loop {
-        if let Some(output) = rx.recv().await {
-          println!("output: {:?}", output);
+      while let Some(message) = rx.recv().await {
+        println!("GOT = {:?}", message);
+      }
 
-          match output {
-            AsyncProcessMessage::StartRotate => {
-              println!("init output start 2 {:?}", output);
-              scheduler.start_rotate_photo().await;
-            }
-            AsyncProcessMessage::StopRotate => {
-              println!("init output stop 2 {:?}", output);
-              scheduler.stop_rotate_photo();
-            }
-            AsyncProcessMessage::PreviousPhoto => {
-              println!("PreviousPhoto {:?}", output);
-            }
-            AsyncProcessMessage::NextPhoto => {
-              println!("NextPhoto {:?}", output);
-            }
+      while let Some(message) = rx.recv().await {
+        println!("output: {:?}", message);
+
+        match message {
+          AsyncProcessMessage::StartRotate => {
+            println!("init output start 2 {:?}", message);
+            scheduler.start_rotate_photo().await;
+          }
+          AsyncProcessMessage::StopRotate => {
+            println!("init output stop 2 {:?}", message);
+            scheduler.stop_rotate_photo();
+          }
+          AsyncProcessMessage::PreviousPhoto => {
+            println!("PreviousPhoto {:?}", message);
+          }
+          AsyncProcessMessage::NextPhoto => {
+            println!("NextPhoto {:?}", message);
           }
         }
       }
