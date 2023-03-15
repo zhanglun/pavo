@@ -18,6 +18,7 @@ pub struct Cache {
   pub bing_list: Vec<bing::Images>,
   pub timestamp: i64,
   pub pexels_list: Vec<pexels::Photo>,
+  pub current_idx: usize,
 }
 
 fn get_now_timestamp() -> i64 {
@@ -132,5 +133,6 @@ pub static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| {
     bing_list: vec![],
     timestamp: Utc::now().timestamp(),
     pexels_list: vec![],
+    current_idx: 0,
   })
 });

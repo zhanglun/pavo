@@ -2,6 +2,7 @@ use crate::services::{bing, pexels, AsyncProcessMessage, PhotoService};
 use crate::{cache, config, services};
 
 use tokio::sync::{mpsc, Mutex};
+use std::sync::Arc;
 
 pub struct AsyncProcInputTx {
   pub sender: Mutex<mpsc::Sender<AsyncProcessMessage>>,

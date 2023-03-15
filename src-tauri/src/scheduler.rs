@@ -31,7 +31,6 @@ pub struct Scheduler {
   pub list: Vec<SchedulerPhoto>,
 
   pub rotating: bool,
-  pub current_idx: usize,
 }
 
 impl Scheduler {
@@ -44,7 +43,6 @@ impl Scheduler {
       randomly: cfg.randomly,
       list: vec![],
       rotating: false,
-      current_idx: 0,
     }
   }
 
@@ -109,7 +107,8 @@ impl Scheduler {
 
   pub async fn update_current_photo(&mut self) {
     let list = self.list.clone();
-    let idx = self.current_idx;
+    let cache = cache::CACHE.lock().await;
+    let idx = cache.current_idx;
     let item = &list[idx];
 
       Self::set_wallpaper(&item.url, &item.filename)
@@ -126,6 +125,7 @@ impl Scheduler {
     let rotate_interval = config::PavoConfig::get_interval();
     let mut interval = time::interval(time::Duration::from_secs(rotate_interval * 60));
     let mut cfg = config::PavoConfig::get_config();
+    let mut cache = cache::CACHE.lock().await;
 
     while list.len() > 0 && cfg.auto_rotate {
       interval.tick().await;
@@ -134,9 +134,9 @@ impl Scheduler {
 
       if cfg.randomly {
         let mut rng = rand::thread_rng();
-        self.current_idx = rng.gen_range(0, list.len());
+        cache.current_idx = rng.gen_range(0, list.len());
       } else {
-        self.current_idx += 1;
+        cache.current_idx += 1;
       }
 
       self.update_current_photo().await;
@@ -179,14 +179,22 @@ impl Scheduler {
 
       loop {
         if let Some(output) = rx.recv().await {
+          println!("output: {:?}", output);
+
           match output {
             AsyncProcessMessage::StartRotate => {
-              scheduler.start_rotate_photo().await;
               println!("init output start 2 {:?}", output);
+              scheduler.start_rotate_photo().await;
             }
             AsyncProcessMessage::StopRotate => {
-              scheduler.stop_rotate_photo();
               println!("init output stop 2 {:?}", output);
+              scheduler.stop_rotate_photo();
+            }
+            AsyncProcessMessage::PreviousPhoto => {
+              println!("PreviousPhoto {:?}", output);
+            }
+            AsyncProcessMessage::NextPhoto => {
+              println!("NextPhoto {:?}", output);
             }
           }
         }

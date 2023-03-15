@@ -16,6 +16,9 @@ use tauri::{
   SystemTrayMenu, SystemTrayMenuItem, WindowEvent, Wry,
 };
 
+use std::sync::Arc;
+use tokio::sync::{mpsc, Mutex};
+
 fn create_tray() -> SystemTray {
   let show = CustomMenuItem::new("show".to_string(), "Show");
   let hide = CustomMenuItem::new("hide".to_string(), "Hide");
@@ -38,7 +41,11 @@ fn create_tray() -> SystemTray {
   SystemTray::new().with_menu(tray_menu)
 }
 
-fn handle_tray_event(app: &AppHandle, event: SystemTrayEvent) {
+fn handle_tray_event(
+  app: &AppHandle,
+  event: SystemTrayEvent,
+  sender: mpsc::Sender<AsyncProcessMessage>,
+) {
   match event {
     SystemTrayEvent::DoubleClick {
       tray_id,
@@ -51,10 +58,17 @@ fn handle_tray_event(app: &AppHandle, event: SystemTrayEvent) {
     }
     SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
       "previous_photo" => {
-        scheduler::Scheduler::previous_photo();
+        tokio::spawn(async move {
+          println!("previous_photo");
+          // let async_proc_input_tx = sender.lock().await;
+          sender
+            .send(AsyncProcessMessage::PreviousPhoto)
+            .await
+            .map_err(|e| e.to_string());
+        });
       }
       "next_photo" => {
-        scheduler::Scheduler::next_photo();
+        // scheduler::Scheduler::next_photo();
       }
       "show" => {
         let window = app.get_window("main").unwrap();
@@ -109,8 +123,6 @@ fn handle_window_event(event: GlobalWindowEvent<Wry>) {
   }
 }
 
-use tokio::sync::{mpsc, Mutex};
-
 #[tokio::main]
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
@@ -121,10 +133,11 @@ async fn main() {
   });
 
   let (async_process_input_tx, async_process_input_rx) = mpsc::channel::<AsyncProcessMessage>(32);
+  let tx = async_process_input_tx.clone();
 
   tauri::Builder::default()
     .manage(AsyncProcInputTx {
-      sender: Mutex::new(async_process_input_tx),
+      sender: Mutex::new(async_process_input_tx.clone()),
     })
     .setup(|app| {
       // let app_handle = app.handle();
@@ -134,7 +147,10 @@ async fn main() {
       Ok(())
     })
     .system_tray(create_tray())
-    .on_system_tray_event(handle_tray_event)
+    .on_system_tray_event(move |app, event| {
+      let tx = tx.clone();
+      handle_tray_event(app, event, tx);
+    })
     .invoke_handler(tauri::generate_handler![
       cmd::set_as_desktop,
       cmd::download,
