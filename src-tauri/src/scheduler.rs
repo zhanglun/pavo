@@ -30,12 +30,7 @@ pub struct Scheduler {
   pub list: Vec<SchedulerPhoto>,
 
   pub rotating: bool,
-<<<<<<< HEAD
-||||||| 6aa7752 (improvement: refactor rotate)
   pub current_idx: usize,
-=======
-  pub current_idx: u8,
->>>>>>> parent of 6aa7752 (improvement: refactor rotate)
 }
 
 impl Scheduler {
@@ -48,6 +43,7 @@ impl Scheduler {
       randomly: cfg.randomly,
       list: vec![],
       rotating: false,
+      current_idx: 0,
     }
   }
 
@@ -110,19 +106,6 @@ impl Scheduler {
     }
   }
 
-<<<<<<< HEAD
-  pub async fn update_current_photo(&mut self) {
-    let list = self.list.clone();
-    let cache = cache::CACHE.lock().await;
-    let idx = cache.current_idx;
-    let item = &list[idx];
-
-    Self::set_wallpaper(&item.url, &item.filename)
-      .await
-      .unwrap();
-  }
-
-||||||| 6aa7752 (improvement: refactor rotate)
   pub async fn update_current_photo(&mut self) {
     let list = self.list.clone();
     let idx = self.current_idx;
@@ -133,8 +116,6 @@ impl Scheduler {
         .unwrap();
   }
 
-=======
->>>>>>> parent of 6aa7752 (improvement: refactor rotate)
   pub async fn rotate_photo(&mut self) {
     if self.rotating == false {
       ()
@@ -158,24 +139,10 @@ impl Scheduler {
 
       if cfg.randomly {
         let mut rng = rand::thread_rng();
-<<<<<<< HEAD
-        cache.current_idx = rng.gen_range(0, list.len());
-||||||| 6aa7752 (improvement: refactor rotate)
-        self.current_idx = rng.gen_range(0, list.len());
-=======
-        let idx = rng.gen_range(0, list.len());
 
-        item = list[idx].clone();
-        list.remove(idx);
->>>>>>> parent of 6aa7752 (improvement: refactor rotate)
+        cache.current_idx = rng.gen_range(0, list.len());
       } else {
-<<<<<<< HEAD
         cache.current_idx += 1;
-||||||| 6aa7752 (improvement: refactor rotate)
-        self.current_idx += 1;
-=======
-        item = list.pop().unwrap();
->>>>>>> parent of 6aa7752 (improvement: refactor rotate)
       }
 
       println!("{:?}", item.title);
@@ -183,10 +150,6 @@ impl Scheduler {
       Self::set_wallpaper(&item.url, &item.filename)
         .await
         .unwrap();
-
-      if list.len() == 0 {
-        list = cache.clone();
-      }
     }
   }
 
@@ -199,20 +162,10 @@ impl Scheduler {
     self.rotating = false
   }
 
-<<<<<<< HEAD
   pub async fn previous_photo(&mut self) {}
 
   pub async fn next_photo(&mut self) {}
 
-||||||| 6aa7752 (improvement: refactor rotate)
-  pub async fn previous_photo(&mut self) {
-  }
-
-  pub async fn next_photo(&mut self) {
-  }
-
-=======
->>>>>>> parent of 6aa7752 (improvement: refactor rotate)
   pub async fn create_interval() {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let _guard = rt.enter();
