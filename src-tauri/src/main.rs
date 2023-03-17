@@ -57,6 +57,7 @@ fn handle_tray_event(
       window.show().unwrap();
     }
     SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
+<<<<<<< HEAD
       "previous_photo" => {
         tokio::spawn(async move {
           println!("previous_photo");
@@ -77,6 +78,17 @@ fn handle_tray_event(
             .map_err(|e| e.to_string());
         });
       }
+||||||| 6aa7752 (improvement: refactor rotate)
+      "previous_photo" => {
+        scheduler::Scheduler::previous_photo();
+      }
+      "next_photo" => {
+        scheduler::Scheduler::next_photo();
+      }
+=======
+      "previous_photo" => {}
+      "next_photo" => {}
+>>>>>>> parent of 6aa7752 (improvement: refactor rotate)
       "show" => {
         let window = app.get_window("main").unwrap();
         window.show().unwrap();
