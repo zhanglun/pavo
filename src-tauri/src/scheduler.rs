@@ -175,7 +175,7 @@ impl Scheduler {
       let mut scheduler = Scheduler::new();
 
       scheduler.setup_list().await;
-      scheduler.rotate_photo().await;
+      // scheduler.rotate_photo().await;
 
       loop {
         if let Some(output) = rx.recv().await {

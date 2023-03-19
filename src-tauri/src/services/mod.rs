@@ -22,6 +22,8 @@ pub enum PhotoService {
 pub enum AsyncProcessMessage {
   StartRotate,
   StopRotate,
+  PreviousPhoto,
+  NextPhoto,
 }
 
 pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<String, String> {

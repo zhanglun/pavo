@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::services::{bing, pexels, AsyncProcessMessage, PhotoService};
 use crate::{cache, config, services};
 
