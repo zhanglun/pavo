@@ -130,7 +130,7 @@ async fn main() {
   });
 
   let (async_process_input_tx, async_process_input_rx) = mpsc::channel::<AsyncProcessMessage>(32);
-  let tx1 = async_process_input_tx.clone();
+  let tx = async_process_input_tx.clone();
 
   tauri::Builder::default()
     .manage(AsyncProcInputTx {
@@ -145,7 +145,7 @@ async fn main() {
     })
     .system_tray(create_tray())
     .on_system_tray_event(move |app, event| {
-      let sender = tx1.clone();
+      let sender = tx.clone();
       handle_tray_event(app, event, sender)
     })
     .invoke_handler(tauri::generate_handler![

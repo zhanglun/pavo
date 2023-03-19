@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::{path::Path, thread};
 use tokio::{self, runtime::Runtime, sync::mpsc, task, time};
 
-use crate::services::bing::{Images};
+use crate::services::bing::Images;
 use crate::services::pexels::Pexels;
 use crate::services::{download_file, AsyncProcessMessage};
 use crate::{cache, config};
@@ -22,7 +22,6 @@ pub struct SchedulerPhoto {
   filename: String,
 }
 
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Scheduler {
   pub interval: u64,
@@ -31,7 +30,7 @@ pub struct Scheduler {
   pub list: Vec<SchedulerPhoto>,
 
   pub rotating: bool,
-  pub current_idx: u8,
+  pub current_idx: usize,
 }
 
 impl Scheduler {
@@ -107,6 +106,16 @@ impl Scheduler {
     }
   }
 
+  pub async fn update_current_photo(&mut self) {
+    let list = self.list.clone();
+    let idx = self.current_idx;
+    let item = &list[idx];
+
+      Self::set_wallpaper(&item.url, &item.filename)
+        .await
+        .unwrap();
+  }
+
   pub async fn rotate_photo(&mut self) {
     if self.rotating == false {
       ()
@@ -119,6 +128,7 @@ impl Scheduler {
     let mut interval = time::interval(time::Duration::from_secs(rotate_interval * 60));
 
     let mut cfg = config::PavoConfig::get_config();
+    let mut cache = cache::CACHE.lock().await;
 
     while list.len() > 0 && cfg.auto_rotate {
       interval.tick().await;
@@ -129,12 +139,10 @@ impl Scheduler {
 
       if cfg.randomly {
         let mut rng = rand::thread_rng();
-        let idx = rng.gen_range(0, list.len());
 
-        item = list[idx].clone();
-        list.remove(idx);
+        cache.current_idx = rng.gen_range(0, list.len());
       } else {
-        item = list.pop().unwrap();
+        cache.current_idx += 1;
       }
 
       println!("{:?}", item.title);
@@ -142,10 +150,6 @@ impl Scheduler {
       Self::set_wallpaper(&item.url, &item.filename)
         .await
         .unwrap();
-
-      if list.len() == 0 {
-        list = cache.clone();
-      }
     }
   }
 
@@ -157,6 +161,10 @@ impl Scheduler {
   pub fn stop_rotate_photo(&mut self) {
     self.rotating = false
   }
+
+  pub async fn previous_photo(&mut self) {}
+
+  pub async fn next_photo(&mut self) {}
 
   pub async fn create_interval() {
     let rt = tokio::runtime::Runtime::new().unwrap();
@@ -177,17 +185,23 @@ impl Scheduler {
       scheduler.setup_list().await;
       // scheduler.rotate_photo().await;
 
-      loop {
-        if let Some(output) = rx.recv().await {
-          match output {
-            AsyncProcessMessage::StartRotate => {
-              scheduler.start_rotate_photo().await;
-              println!("init output start 2 {:?}", output);
-            }
-            AsyncProcessMessage::StopRotate => {
-              scheduler.stop_rotate_photo();
-              println!("init output stop 2 {:?}", output);
-            }
+      while let Some(message) = rx.recv().await {
+        println!("output: {:?}", message);
+
+        match message {
+          AsyncProcessMessage::StartRotate => {
+            println!("init output start 2 {:?}", message);
+            // scheduler.start_rotate_photo().await;
+          }
+          AsyncProcessMessage::StopRotate => {
+            println!("init output stop 2 {:?}", message);
+            scheduler.stop_rotate_photo();
+          }
+          AsyncProcessMessage::PreviousPhoto => {
+            println!("PreviousPhoto {:?}", message);
+          }
+          AsyncProcessMessage::NextPhoto => {
+            println!("NextPhoto {:?}", message);
           }
         }
       }
