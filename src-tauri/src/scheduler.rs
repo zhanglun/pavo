@@ -111,9 +111,9 @@ impl Scheduler {
     let idx = self.current_idx;
     let item = &list[idx];
 
-      Self::set_wallpaper(&item.url, &item.filename)
-        .await
-        .unwrap();
+    Self::set_wallpaper(&item.url, &item.filename)
+      .await
+      .unwrap();
   }
 
   pub async fn rotate_photo(&mut self) {
@@ -130,27 +130,29 @@ impl Scheduler {
     let mut cfg = config::PavoConfig::get_config();
     let mut cache = cache::CACHE.lock().await;
 
-    while list.len() > 0 && cfg.auto_rotate {
-      interval.tick().await;
+    tokio::spawn(async move {
+      while list.len() > 0 && cfg.auto_rotate {
+        interval.tick().await;
 
-      cfg = config::PavoConfig::get_config();
+        cfg = config::PavoConfig::get_config();
 
-      let mut item = list[0].clone();
+        let mut item = list[0].clone();
 
-      if cfg.randomly {
-        let mut rng = rand::thread_rng();
+        if cfg.randomly {
+          let mut rng = rand::thread_rng();
 
-        cache.current_idx = rng.gen_range(0, list.len());
-      } else {
-        cache.current_idx += 1;
+          cache.current_idx = rng.gen_range(0, list.len());
+        } else {
+          cache.current_idx += 1;
+        }
+
+        println!("{:?}", item.title);
+
+        Self::set_wallpaper(&item.url, &item.filename)
+          .await
+          .unwrap();
       }
-
-      println!("{:?}", item.title);
-
-      Self::set_wallpaper(&item.url, &item.filename)
-        .await
-        .unwrap();
-    }
+    });
   }
 
   pub async fn start_rotate_photo(&mut self) {
@@ -183,7 +185,7 @@ impl Scheduler {
       let mut scheduler = Scheduler::new();
 
       scheduler.setup_list().await;
-      // scheduler.rotate_photo().await;
+      scheduler.rotate_photo().await;
 
       while let Some(message) = rx.recv().await {
         println!("output: {:?}", message);
@@ -191,7 +193,7 @@ impl Scheduler {
         match message {
           AsyncProcessMessage::StartRotate => {
             println!("init output start 2 {:?}", message);
-            // scheduler.start_rotate_photo().await;
+            scheduler.start_rotate_photo().await;
           }
           AsyncProcessMessage::StopRotate => {
             println!("init output stop 2 {:?}", message);
@@ -199,9 +201,11 @@ impl Scheduler {
           }
           AsyncProcessMessage::PreviousPhoto => {
             println!("PreviousPhoto {:?}", message);
+            scheduler.previous_photo().await;
           }
           AsyncProcessMessage::NextPhoto => {
             println!("NextPhoto {:?}", message);
+            scheduler.next_photo().await;
           }
         }
       }
