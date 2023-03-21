@@ -3,7 +3,7 @@ use rand::prelude::*;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{path::Path, thread};
-use tokio::{self, runtime::Runtime, sync::mpsc, task, time};
+use tokio::{self, sync::mpsc, task, time};
 
 use crate::services::bing::Images;
 use crate::services::pexels::Pexels;
@@ -167,18 +167,6 @@ impl Scheduler {
   pub async fn previous_photo(&mut self) {}
 
   pub async fn next_photo(&mut self) {}
-
-  pub async fn create_interval() {
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    let _guard = rt.enter();
-
-    task::spawn(async {
-      time::sleep(time::Duration::from_secs(3)).await;
-      println!("task over: {}", now());
-    });
-
-    thread::sleep(time::Duration::from_secs(4));
-  }
 
   pub fn init(mut rx: mpsc::Receiver<AsyncProcessMessage>) {
     tokio::spawn(async move {
