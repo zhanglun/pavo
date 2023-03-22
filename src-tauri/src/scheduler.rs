@@ -69,6 +69,9 @@ impl Scheduler {
     } else {
       self.list = list.collect();
     }
+
+    // FIXME: update cache templately
+    cache.update_cache_list(self.list.clone());
   }
 
   pub async fn save_wallpaper(url: &str, filename: &str) -> Result<String, String> {
@@ -121,36 +124,38 @@ impl Scheduler {
       ()
     }
 
-    let mut list = self.list.clone();
-    let cache = list.clone();
-
-    let rotate_interval = config::PavoConfig::get_interval();
-    let mut interval = time::interval(time::Duration::from_secs(rotate_interval * 60));
-
-    let mut cfg = config::PavoConfig::get_config();
-    let mut cache = cache::CACHE.lock().await;
-
     tokio::spawn(async move {
-      while list.len() > 0 && cfg.auto_rotate {
+      let rotate_interval = config::PavoConfig::get_interval();
+
+      println!("interval: {:?}", rotate_interval);
+
+      let mut interval = time::interval(time::Duration::from_secs(rotate_interval * 60));
+
+      let mut cfg = config::PavoConfig::get_config();
+      let mut cache = cache::CACHE.lock().await;
+
+      while cache.cache_list.len() > 0 && cfg.auto_rotate {
+        print!("WAITTING!");
+
         interval.tick().await;
 
         cfg = config::PavoConfig::get_config();
 
-        let mut item = list[0].clone();
-
         if cfg.randomly {
-          let mut rng = rand::thread_rng();
+          let item = cache.get_random_photo();
+          println!("CHANGE TO {:?} \n", &item);
 
-          cache.current_idx = rng.gen_range(0, list.len());
+          Self::set_wallpaper(&item.url, &item.filename)
+            .await
+            .unwrap();
         } else {
-          cache.current_idx += 1;
+          let item = cache.rotate_to_next();
+          println!("CHANGE TO {:?} \n", &item);
+
+          Self::set_wallpaper(&item.url, &item.filename)
+            .await
+            .unwrap();
         }
-
-        println!("{:?}", item.title);
-
-        Self::set_wallpaper(&item.url, &item.filename)
-          .await
-          .unwrap();
       }
     });
   }
@@ -164,9 +169,13 @@ impl Scheduler {
     self.rotating = false
   }
 
-  pub async fn previous_photo(&mut self) {}
+  pub async fn previous_photo(&mut self) {
+    let cache = cache::CACHE.lock().await;
+  }
 
-  pub async fn next_photo(&mut self) {}
+  pub async fn next_photo(&mut self) {
+    let cache = cache::CACHE.lock().await;
+  }
 
   pub fn init(mut rx: mpsc::Receiver<AsyncProcessMessage>) {
     tokio::spawn(async move {

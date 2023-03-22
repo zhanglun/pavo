@@ -1,3 +1,4 @@
+use crate::scheduler::SchedulerPhoto;
 use crate::services;
 use crate::{
   config,
@@ -5,6 +6,7 @@ use crate::{
 };
 use chrono::offset::Utc;
 
+use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use once_cell::sync::Lazy;
@@ -19,6 +21,7 @@ pub struct Cache {
   pub timestamp: i64,
   pub pexels_list: Vec<pexels::Photo>,
   pub current_idx: usize,
+  pub cache_list: Vec<SchedulerPhoto>,
 }
 
 fn get_now_timestamp() -> i64 {
@@ -27,8 +30,8 @@ fn get_now_timestamp() -> i64 {
 
 impl Cache {
   /// update cache list
-  pub fn update_cache_list(&mut self) {
-    let cfg = config::PavoConfig::get_config();
+  pub fn update_cache_list(&mut self, list: Vec<SchedulerPhoto>) {
+    self.cache_list = list;
   }
 
   /// get cached list, save request
@@ -38,11 +41,37 @@ impl Cache {
   pub fn get_current_photo() {}
 
   /// get photo list rotating
-  pub fn get_rotate_list() {}
+  pub fn get_rotate_list(self) -> Vec<SchedulerPhoto> {
+    self.cache_list
+  }
 
-  pub fn rotate_to_next() {}
+  pub fn rotate_to_next(&mut self) -> SchedulerPhoto {
+    if self.current_idx >= self.cache_list.len() - 1 {
+      self.current_idx = 0;
+    } else {
+      self.current_idx += 1;
+    }
 
-  pub fn rotate_to_previous() {}
+    self.cache_list[self.current_idx].clone()
+  }
+
+  pub fn rotate_to_previous(&mut self) -> SchedulerPhoto {
+    if self.current_idx <= 0 {
+      self.current_idx = self.cache_list.len() - 1;
+    } else {
+      self.current_idx -= 1;
+    }
+
+    self.cache_list[self.current_idx].clone()
+  }
+
+  pub fn get_random_photo(&mut self) -> SchedulerPhoto {
+    let mut rng = rand::thread_rng();
+
+    self.current_idx = rng.gen_range(0, self.cache_list.len());
+
+    self.cache_list[self.current_idx].clone()
+  }
 
   // cache service data
 
@@ -76,10 +105,14 @@ impl Cache {
     let images1 = res1.json.images;
     let images2 = res2.json.images;
 
-    self.bing_list = images1.into_iter().chain(images2.into_iter()).map(|mut i| {
-      i.url = i.url();
-      i
-    }).collect();
+    self.bing_list = images1
+      .into_iter()
+      .chain(images2.into_iter())
+      .map(|mut i| {
+        i.url = i.url();
+        i
+      })
+      .collect();
 
     self.timestamp = Utc::now().timestamp();
 
@@ -134,5 +167,6 @@ pub static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| {
     timestamp: Utc::now().timestamp(),
     pexels_list: vec![],
     current_idx: 0,
+    cache_list: vec![],
   })
 });

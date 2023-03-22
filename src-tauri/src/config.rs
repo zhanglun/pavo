@@ -135,6 +135,7 @@ impl PavoConfig {
 
   pub fn get_interval() -> u64 {
     let data = Self::get_config();
+    println!("data: {:?}", data);
 
     data.interval.clone()
   }

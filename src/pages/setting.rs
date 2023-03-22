@@ -122,6 +122,9 @@ pub fn setting() -> Html {
   };
 
   let interval_options = vec![
+    (1, "Every 1 Minutes"),
+    (5, "Every 5 Minutes"),
+    (10, "Every 10 Minutes"),
     (15, "Every 15 Minutes"),
     (30, "Every 30 Minutes"),
     (60, "Every Hour"),
