@@ -58,13 +58,13 @@ fn handle_tray_event(
       "previous_photo" => {
         let tx = sender.clone();
         tokio::spawn(async move {
-          tx.send(AsyncProcessMessage::PreviousPhoto).await;
+          tx.send(AsyncProcessMessage::PreviousPhoto).await.unwrap();
         });
       }
       "next_photo" => {
         let tx = sender.clone();
         tokio::spawn(async move {
-          tx.send(AsyncProcessMessage::PreviousPhoto).await;
+          tx.send(AsyncProcessMessage::NextPhoto).await.unwrap();
         });
       }
       "show" => {

@@ -174,7 +174,13 @@ impl Scheduler {
   }
 
   pub async fn next_photo(&mut self) {
-    let cache = cache::CACHE.lock().await;
+    let mut cache = cache::CACHE.lock().await;
+    let item = cache.rotate_to_next();
+    println!("CHANGE TO {:?} \n", &item);
+
+    Self::set_wallpaper(&item.url, &item.filename)
+      .await
+      .unwrap();
   }
 
   pub fn init(mut rx: mpsc::Receiver<AsyncProcessMessage>) {
