@@ -3,7 +3,7 @@ use rand::prelude::*;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{path::Path, thread};
-use tokio::{self, sync::mpsc, task, time};
+use tokio::{self, sync::mpsc, time};
 
 use crate::services::bing::Images;
 use crate::services::pexels::Pexels;
@@ -170,7 +170,13 @@ impl Scheduler {
   }
 
   pub async fn previous_photo(&mut self) {
-    let cache = cache::CACHE.lock().await;
+    let mut cache = cache::CACHE.lock().await;
+    let item = cache.rotate_to_previous();
+    println!("CHANGE TO {:?} \n", &item);
+
+    Self::set_wallpaper(&item.url, &item.filename)
+      .await
+      .unwrap();
   }
 
   pub async fn next_photo(&mut self) {
