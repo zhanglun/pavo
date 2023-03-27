@@ -5,6 +5,12 @@
 
 A wallpaper application.
 
+## Screenshot
+
+<p align="center">
+<img src="./screenshot.jpeg" width="80%" />
+</p>
+
 ## How to develop
 
 ### install dependencies
