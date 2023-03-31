@@ -17,7 +17,7 @@ tauri-build = { version = "1.2", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.4"
-tauri = { version = "1.2", features = ["dialog", "fs-read-file", "shell-open", "system-tray"] }
+tauri = { version = "1.2", features = ["dialog", "fs-read-file", "shell-open", "system-tray", "updater"] }
 reqwest = { version = "0.11", features = ["json", "socks", "stream"] }
 tokio = { version = "1.25.0", features = ["full", "time"] }
 toml = "0.7.1"

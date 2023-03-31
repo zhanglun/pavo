@@ -109,16 +109,6 @@ impl Scheduler {
     }
   }
 
-  pub async fn update_current_photo(&mut self) {
-    let list = self.list.clone();
-    let idx = self.current_idx;
-    let item = &list[idx];
-
-    Self::set_wallpaper(&item.url, &item.filename)
-      .await
-      .unwrap();
-  }
-
   pub async fn rotate_photo(&mut self) {
     if self.rotating == false {
       ()
