@@ -1,13 +1,9 @@
 use crate::scheduler::SchedulerPhoto;
 use crate::services;
-use crate::{
-  config,
-  services::{bing, pexels},
-};
-use rand::{Rng, distributions::Uniform};
+use crate::services::{bing, pexels};
 use chrono::offset::Utc;
+use rand::{distributions::Uniform, Rng};
 
-use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use once_cell::sync::Lazy;
