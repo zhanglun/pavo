@@ -4,6 +4,7 @@ use crate::{
   config,
   services::{bing, pexels},
 };
+use rand::{Rng, distributions::Uniform};
 use chrono::offset::Utc;
 
 use rand::prelude::*;
@@ -68,7 +69,8 @@ impl Cache {
   pub fn get_random_photo(&mut self) -> SchedulerPhoto {
     let mut rng = rand::thread_rng();
 
-    self.current_idx = rng.gen_range(0, self.cache_list.len());
+    // self.current_idx = rng.gen_range(0, self.cache_list.len());
+    self.current_idx = rng.sample(Uniform::new_inclusive(0, self.cache_list.len()));
 
     self.cache_list[self.current_idx].clone()
   }
