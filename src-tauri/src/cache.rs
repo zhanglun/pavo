@@ -98,7 +98,7 @@ impl Cache {
     }
 
     let res1 = services::bing::Wallpaper::new(0, 8).await.unwrap();
-    let res2 = services::bing::Wallpaper::new(8, 8).await.unwrap();
+    let res2 = services::bing::Wallpaper::new(7, 8).await.unwrap();
 
     let images1 = res1.json.images;
     let images2 = res2.json.images;

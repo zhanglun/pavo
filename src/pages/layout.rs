@@ -51,14 +51,14 @@ pub fn layout() -> Html {
                       </span>
                   </a>
                 </div>
-                <div class="flex items-center justify-center p-2">
-                  <a class="text-center text-base text-black hover:text-white hover:bg-medirian-2 p-2 rounded-lg"
-                     href={"/pexels"}>
-                    <span class="w-6 h-6 block">
-                    {"P"}
-                    </span>
-                  </a>
-                </div>
+                // <div class="flex items-center justify-center p-2">
+                //   <a class="text-center text-base text-black hover:text-white hover:bg-medirian-2 p-2 rounded-lg"
+                //      href={"/pexels"}>
+                //     <span class="w-6 h-6 block">
+                //     {"P"}
+                //     </span>
+                //   </a>
+                // </div>
             </div>
             <div class="flex items-center justify-center p-2">
               <a class="text-base text-black hover:text-white hover:bg-medirian-2 p-2 rounded-lg" href={"/setting"}>

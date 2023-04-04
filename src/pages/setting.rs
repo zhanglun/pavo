@@ -198,15 +198,15 @@ pub fn setting() -> Html {
                 />
                 {"Bing"}
               </label>
-              <label id="pexels">
-                <input
-                  type="checkbox"
-                  value={PhotoService::Pexels.as_str()}
-                  checked={(*state_config.rotate_source.clone()).contains(&PhotoService::Pexels.as_str().to_string())}
-                  onchange={handle_change_source.clone()}
-                />
-                {"Pexels"}
-              </label>
+              // <label id="pexels">
+              //   <input
+              //     type="checkbox"
+              //     value={PhotoService::Pexels.as_str()}
+              //     checked={(*state_config.rotate_source.clone()).contains(&PhotoService::Pexels.as_str().to_string())}
+              //     onchange={handle_change_source.clone()}
+              //   />
+              //   {"Pexels"}
+              // </label>
             </div>
           </div>
           <div>
