@@ -58,30 +58,17 @@ jobs:
           cargo install trunk
           rustup target add wasm32-unknown-unknown
 
+      - name: view needs.release.outputs.release_id
+        run: echo ${{ needs.release.outputs.release_id }}
+
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.PAVO_TOKEN }}
         with:
-          tagName: 'v__VERSION__' # This only works if your workflow triggers on new tags.
-          releaseName: 'Pavo v__VERSION__' # tauri-action replaces \_\_VERSION\_\_ with the app version.
-          releaseBody: 'See the assets to download and install this version.'
+          # tagName: 'v__VERSION__' # This only works if your workflow triggers on new tags.
+          # releaseName: 'Pavo v__VERSION__' # tauri-action replaces \_\_VERSION\_\_ with the app version.
+          # releaseBody: 'See the assets to download and install this version.'
           releaseId: ${{ needs.release.outputs.release_id }}
-          releaseDraft: false
-          prerelease: true
-
-  update_json:
-    needs: release
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set Node.js Env
-        uses: actions/setup-node@v3
-        with:
-          node-version: 'lts/*'
-      - name: Create file
-        working-directory: ./
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAVO_TOKEN }}
-        run: |
-          node ./scripts/updater.mjs --info ${{ needs.release.outputs }}
+          # releaseDraft: false
+          # prerelease: true
