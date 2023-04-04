@@ -9,18 +9,36 @@ env:
 
 jobs:
   release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      release_id: ${{ steps.release.outputs.id }}
+    steps:
+      - name: Create Release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAVO_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+  build:
+    name: Build and Upload Release Asset
     strategy:
       fail-fast: false
       matrix:
         platform: [macos-latest, ubuntu-20.04, windows-latest]
     runs-on: ${{ matrix.platform }}
+    needs: release
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-20.04'
-        # You can remove libayatana-appindicator3-dev if you don't use the system tray feature.
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev
@@ -33,20 +51,6 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
-      - name: Sync Pnpm version
-        uses: pnpm/action-setup@v2
-        with:
-          version: 6.32.9
-      - name: Sync node version and setup cache
-        uses: actions/setup-node@v3
-        with:
-          node-version: 'lts/*'
-          cache: 'pnpm'
-
-      - name: Install app dependencies and build web
-        # Remove `&& yarn build` if you build your frontend in `beforeBuildCommand`
-        run: pnpm install
-
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
         env:
@@ -55,6 +59,7 @@ jobs:
           tagName: 'v__VERSION__' # This only works if your workflow triggers on new tags.
           releaseName: 'Pavo v__VERSION__' # tauri-action replaces \_\_VERSION\_\_ with the app version.
           releaseBody: 'See the assets to download and install this version.'
+          releaseId: ${{ needs.release.outputs.release_id }}
           releaseDraft: false
           prerelease: true
 
