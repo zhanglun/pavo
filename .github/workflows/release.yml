@@ -51,6 +51,13 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
+      - name: Cargo Install
+        run: |
+          rustup upgrade
+          cargo install tauri-cli
+          cargo install trunk
+          rustup target add wasm32-unknown-unknown
+
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
         env:
