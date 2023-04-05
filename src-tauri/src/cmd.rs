@@ -81,7 +81,6 @@ pub async fn set_auto_rotate(
   rotate: bool,
   state: tauri::State<'_, AsyncProcInputTx>,
 ) -> Result<(), ()> {
-  println!("auto rotate {:?}", rotate);
   let pavo_config = config::PavoConfig::get_config();
 
   pavo_config.set_auto_rotate(rotate);

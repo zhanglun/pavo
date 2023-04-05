@@ -65,6 +65,7 @@ fn handle_tray_event(
         let tx = sender.clone();
         tokio::spawn(async move {
           tx.send(AsyncProcessMessage::NextPhoto).await.unwrap();
+          println!("send");
         });
       }
       "show" => {

@@ -1,8 +1,7 @@
 use chrono::Local;
-use rand::prelude::*;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::{path::Path, thread};
+use std::path::Path;
 use tokio::{self, sync::mpsc, time};
 
 use crate::services::bing::Images;
@@ -57,6 +56,8 @@ impl Scheduler {
       filename: Images::get_filename(&p.url).to_string(),
     });
 
+    println!("user_config.rotate_source {:?}", user_config.rotate_source);
+
     if user_config.rotate_source.contains(&String::from("pexels")) {
       let pexels_list = cache.get_pexels_list().await;
       self.list = list
@@ -69,6 +70,8 @@ impl Scheduler {
     } else {
       self.list = list.collect();
     }
+
+    println!("self.list.len {:?}", self.list.len());
 
     // FIXME: update cache templately
     cache.update_cache_list(self.list.clone());
@@ -114,7 +117,9 @@ impl Scheduler {
       ()
     }
 
-    tokio::spawn(async move {
+    tauri::async_runtime::spawn(async move {
+      println!("TOKIO SPAWN!!!!");
+
       let rotate_interval = config::PavoConfig::get_interval();
 
       println!("interval: {:?}", rotate_interval);
@@ -128,6 +133,8 @@ impl Scheduler {
         print!("WAITTING!");
 
         interval.tick().await;
+
+        print!("AFTER WAITTING!");
 
         cfg = config::PavoConfig::get_config();
 
@@ -172,6 +179,7 @@ impl Scheduler {
   pub async fn next_photo(&mut self) {
     let mut cache = cache::CACHE.lock().await;
     let item = cache.rotate_to_next();
+
     println!("CHANGE TO {:?} \n", &item);
 
     Self::set_wallpaper(&item.url, &item.filename)
@@ -186,25 +194,27 @@ impl Scheduler {
       scheduler.setup_list().await;
       scheduler.rotate_photo().await;
 
-      while let Some(message) = rx.recv().await {
-        println!("output: {:?}", message);
+      loop {
+        if let Some(message) = rx.recv().await {
+          println!("output: {:?}", message);
 
-        match message {
-          AsyncProcessMessage::StartRotate => {
-            println!("init output start 2 {:?}", message);
-            scheduler.start_rotate_photo().await;
-          }
-          AsyncProcessMessage::StopRotate => {
-            println!("init output stop 2 {:?}", message);
-            scheduler.stop_rotate_photo();
-          }
-          AsyncProcessMessage::PreviousPhoto => {
-            println!("PreviousPhoto {:?}", message);
-            scheduler.previous_photo().await;
-          }
-          AsyncProcessMessage::NextPhoto => {
-            println!("NextPhoto {:?}", message);
-            scheduler.next_photo().await;
+          match message {
+            AsyncProcessMessage::StartRotate => {
+              println!("init output start 2 {:?}", message);
+              scheduler.start_rotate_photo().await;
+            }
+            AsyncProcessMessage::StopRotate => {
+              println!("init output stop 2 {:?}", message);
+              scheduler.stop_rotate_photo();
+            }
+            AsyncProcessMessage::PreviousPhoto => {
+              println!("PreviousPhoto {:?}", message);
+              scheduler.previous_photo().await;
+            }
+            AsyncProcessMessage::NextPhoto => {
+              println!("NextPhoto {:?}", message);
+              scheduler.next_photo().await;
+            }
           }
         }
       }
