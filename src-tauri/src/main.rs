@@ -22,12 +22,12 @@ fn create_tray() -> SystemTray {
   let hide = CustomMenuItem::new("hide".to_string(), "Hide");
   let quit = CustomMenuItem::new("quit".to_string(), "Quit");
 
-  let auto_rotate = CustomMenuItem::new("auto_rotate".to_string(), "Auto Rotate");
+  // let auto_rotate = CustomMenuItem::new("auto_rotate".to_string(), "Auto Rotate");
   let previous_photo = CustomMenuItem::new("previous_photo".to_string(), "Previous Photo");
   let next_photo = CustomMenuItem::new("next_photo".to_string(), "Next Photo");
 
   let tray_menu = SystemTrayMenu::new()
-    .add_item(auto_rotate)
+    // .add_item(auto_rotate)
     .add_item(previous_photo)
     .add_item(next_photo)
     .add_native_item(SystemTrayMenuItem::Separator)
@@ -127,11 +127,44 @@ async fn main() {
 
   tauri::async_runtime::spawn(async move {
     let mut g_cache = cache::CACHE.lock().await;
-    g_cache.update_timestamp();
+    g_cache.update_timestamp_if_need();
   });
 
-  let (async_process_input_tx, async_process_input_rx) = mpsc::channel::<AsyncProcessMessage>(32);
+  let (async_process_input_tx, mut async_process_input_rx) =
+    mpsc::channel::<AsyncProcessMessage>(32);
   let tx = async_process_input_tx.clone();
+
+  let mut scheduler = scheduler::Scheduler::new();
+
+  scheduler.setup_list().await;
+  scheduler.rotate_photo().await;
+
+  tauri::async_runtime::spawn(async move {
+    loop {
+      if let Some(message) = async_process_input_rx.recv().await {
+        println!("output: {:?}", message);
+
+        match message {
+          AsyncProcessMessage::StartRotate => {
+            println!("init output start 2 {:?}", message);
+            scheduler.start_rotate_photo().await;
+          }
+          AsyncProcessMessage::StopRotate => {
+            println!("init output stop 2 {:?}", message);
+            scheduler.stop_rotate_photo();
+          }
+          AsyncProcessMessage::PreviousPhoto => {
+            println!("PreviousPhoto {:?}", message);
+            scheduler.previous_photo().await;
+          }
+          AsyncProcessMessage::NextPhoto => {
+            println!("NextPhoto {:?}", message);
+            scheduler.next_photo().await;
+          }
+        }
+      }
+    }
+  });
 
   tauri::Builder::default()
     .manage(AsyncProcInputTx {
@@ -140,7 +173,7 @@ async fn main() {
     .setup(|app| {
       // let app_handle = app.handle();
 
-      scheduler::Scheduler::init(async_process_input_rx);
+      // scheduler::Scheduler::init(async_process_input_rx);
 
       Ok(())
     })

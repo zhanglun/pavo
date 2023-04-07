@@ -118,40 +118,35 @@ impl Scheduler {
     }
 
     tauri::async_runtime::spawn(async move {
-      println!("TOKIO SPAWN!!!!");
-
       let rotate_interval = config::PavoConfig::get_interval();
-
-      println!("interval: {:?}", rotate_interval);
-
       let mut interval = time::interval(time::Duration::from_secs(rotate_interval * 60));
 
-      let mut cfg = config::PavoConfig::get_config();
-      let mut cache = cache::CACHE.lock().await;
-
-      while cache.cache_list.len() > 0 && cfg.auto_rotate {
-        print!("WAITTING!");
+      loop {
+        print!("WAITTING!\n");
 
         interval.tick().await;
 
-        print!("AFTER WAITTING!");
+        let mut cfg = config::PavoConfig::get_config();
+        let mut cache = cache::CACHE.lock().await;
 
-        cfg = config::PavoConfig::get_config();
+        if cache.cache_list.len() > 0 && cfg.auto_rotate {
+          cfg = config::PavoConfig::get_config();
 
-        if cfg.randomly {
-          let item = cache.get_random_photo();
-          println!("CHANGE TO {:?} \n", &item);
+          if cfg.randomly {
+            let item = cache.get_random_photo();
+            println!("CHANGE TO {:?} \n", &item);
 
-          Self::set_wallpaper(&item.url, &item.filename)
-            .await
-            .unwrap();
-        } else {
-          let item = cache.rotate_to_next();
-          println!("CHANGE TO {:?} \n", &item);
+            Self::set_wallpaper(&item.url, &item.filename)
+              .await
+              .unwrap();
+          } else {
+            let item = cache.rotate_to_next();
+            println!("CHANGE TO {:?} \n", &item);
 
-          Self::set_wallpaper(&item.url, &item.filename)
-            .await
-            .unwrap();
+            Self::set_wallpaper(&item.url, &item.filename)
+              .await
+              .unwrap();
+          }
         }
       }
     });
@@ -159,7 +154,7 @@ impl Scheduler {
 
   pub async fn start_rotate_photo(&mut self) {
     self.rotating = true;
-    self.rotate_photo().await;
+    // self.rotate_photo().await;
   }
 
   pub fn stop_rotate_photo(&mut self) {
@@ -185,39 +180,5 @@ impl Scheduler {
     Self::set_wallpaper(&item.url, &item.filename)
       .await
       .unwrap();
-  }
-
-  pub fn init(mut rx: mpsc::Receiver<AsyncProcessMessage>) {
-    tokio::spawn(async move {
-      let mut scheduler = Scheduler::new();
-
-      scheduler.setup_list().await;
-      scheduler.rotate_photo().await;
-
-      loop {
-        if let Some(message) = rx.recv().await {
-          println!("output: {:?}", message);
-
-          match message {
-            AsyncProcessMessage::StartRotate => {
-              println!("init output start 2 {:?}", message);
-              scheduler.start_rotate_photo().await;
-            }
-            AsyncProcessMessage::StopRotate => {
-              println!("init output stop 2 {:?}", message);
-              scheduler.stop_rotate_photo();
-            }
-            AsyncProcessMessage::PreviousPhoto => {
-              println!("PreviousPhoto {:?}", message);
-              scheduler.previous_photo().await;
-            }
-            AsyncProcessMessage::NextPhoto => {
-              println!("NextPhoto {:?}", message);
-              scheduler.next_photo().await;
-            }
-          }
-        }
-      }
-    });
   }
 }
