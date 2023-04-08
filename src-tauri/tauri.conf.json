@@ -7,8 +7,8 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "pavo",
-    "version": "0.0.0"
+    "productName": "Pavo",
+    "version": "0.0.1"
   },
   "tauri": {
     "systemTray": {
@@ -72,7 +72,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "pavo",
+        "title": "Pavo",
         "width": 900
       }
     ]

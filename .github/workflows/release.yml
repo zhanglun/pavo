@@ -14,15 +14,19 @@ jobs:
     runs-on: ubuntu-20.04
     outputs:
       release_id: ${{ steps.create-release.outputs.result }}
+
     steps:
-      - uses: actions/checkout@v3
-      - name: setup node
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 16
-      - name: get version
+
+      - name: Get version
         run: echo "PACKAGE_VERSION=$(node -p "require('./src-tauri/tauri.conf.json').package.version")" >> $GITHUB_ENV
-      - name: create release
+      - name: Create release
         id: create-release
         uses: actions/github-script@v6
         with:
@@ -30,8 +34,8 @@ jobs:
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: `Pavo-v${process.env.PACKAGE_VERSION}`,
-              name: `Pavo v${process.env.PACKAGE_VERSION}`,
+              tag_name: `v${process.env.PACKAGE_VERSION}`,
+              name: ` v${process.env.PACKAGE_VERSION}`,
               body: 'Take a look at the assets to download and install this app.',
               draft: true,
               prerelease: false
@@ -76,8 +80,11 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.PAVO_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD : ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          releaseId: ${{ needs.release.outputs.release_id }}
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+
   publish-release:
     permissions:
       contents: write
