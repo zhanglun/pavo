@@ -11,6 +11,21 @@
     } else {
       document.documentElement.classList.remove('dark')
     }
+
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", function (e) {
+        console.log(e)
+        const colorScheme = e.matches ? "dark" : "light";
+
+        console.log(colorScheme);
+
+        if (colorScheme === "dark") {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+      });
   </script>
   <link data-trunk rel="css" href="assets/styles.css" />
   <link data-trunk rel="copy-dir" href="public" />
