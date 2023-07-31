@@ -174,6 +174,11 @@ async fn main() {
       // let app_handle = app.handle();
 
       // scheduler::Scheduler::init(async_process_input_rx);
+      #[cfg(target_os = "windows")]
+      {
+        println!("asdfasdfasdf");
+        app.tray_handle().set_icon(tauri::Icon::Raw(include_bytes!("../icons/win-icon.png").to_vec())).unwrap();
+      }
 
       Ok(())
     })
