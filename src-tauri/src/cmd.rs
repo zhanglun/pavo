@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::services::{bing, pexels, AsyncProcessMessage, PhotoService};
+use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{cache, config, services};
 
 use tokio::sync::{mpsc, Mutex};
@@ -15,11 +15,6 @@ pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, 
 
   match service {
     PhotoService::Bing => Ok(bing::Wallpaper::set_wallpaper(url).await.unwrap()),
-    PhotoService::Pexels => Ok(pexels::Pexels::set_wallpaper(url).await.unwrap()),
-    PhotoService::Unsplash => {
-      bing::Wallpaper::set_wallpaper(url).await.unwrap();
-      Ok(String::from("asdf"))
-    }
   }
 }
 

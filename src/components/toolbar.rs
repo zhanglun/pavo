@@ -20,16 +20,12 @@ struct SetAsDesktopArgs<'a> {
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub enum PhotoService {
   Bing,
-  Pexels,
-  Unsplash,
 }
 
 impl PhotoService {
   pub fn as_str(&self) -> &'static str {
     match self {
       PhotoService::Bing => "bing",
-      PhotoService::Pexels => "pexels",
-      PhotoService::Unsplash => "unsplash"
     }
   }
 }

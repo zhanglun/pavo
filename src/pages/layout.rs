@@ -2,17 +2,12 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::pages::home::Home;
-use crate::pages::pexels::Pexels;
 use crate::pages::setting::Setting;
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum Route {
   #[at("/")]
   Home,
-  #[at("/unsplash")]
-  Unsplash,
-  #[at("/pexels")]
-  Pexels,
   #[at("/setting")]
   Setting,
   #[not_found]
@@ -23,8 +18,6 @@ pub enum Route {
 fn switch(routes: Route) -> Html {
   match routes {
     Route::Home => html! { <Home /> },
-    Route::Unsplash => html! { <h1>{"Unsplsh"}</h1> },
-    Route::Pexels => html! { <Pexels /> },
     Route::Setting => html! { <Setting /> },
     // s9GlfCrhK5qzYQTQjMipbIQ25spgFJnThF9n3uW73g9dge6eFzMJ7aeY
     Route::NotFound => html! { <h1>{ "404" }</h1> },
