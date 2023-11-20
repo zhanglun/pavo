@@ -35,23 +35,16 @@ pub fn layout() -> Html {
         <div class="fixed left-0 top-0 w-[58px] h-full bg-white dark:bg-[unset]">
           <nav class="h-full flex flex-col justify-between">
             <div class="flex flex-col">
-                <div class="flex items-center justify-center p-2">
-                    <a class="text-center text-base text-black hover:text-white dark:text-white hover:bg-medirian-2 p-2 rounded-lg"
-                        href={"/"}
-                    >
-                      <span class="w-6 h-6 block">
-                        {"B"}
-                      </span>
-                  </a>
-                </div>
-                // <div class="flex items-center justify-center p-2">
-                //   <a class="text-center text-base text-black hover:text-white hover:bg-medirian-2 p-2 rounded-lg"
-                //      href={"/pexels"}>
-                //     <span class="w-6 h-6 block">
-                //     {"P"}
-                //     </span>
-                //   </a>
-                // </div>
+              <div class="flex items-center justify-center p-2">
+                <a
+                  class="text-center text-base text-black hover:text-white dark:text-white hover:bg-medirian-2 p-2 rounded-lg"
+                  href={"/"}
+                >
+                  <span class="w-6 h-6 block">
+                    {"B"}
+                  </span>
+                </a>
+              </div>
             </div>
             <div class="flex items-center justify-center p-2">
               <a class="text-base text-black hover:text-white dark:text-white hover:bg-medirian-2 p-2 rounded-lg" href={"/setting"}>

@@ -5,7 +5,6 @@ use std::path::Path;
 use tokio::{self, sync::mpsc, time};
 
 use crate::services::bing::Images;
-use crate::services::pexels::Pexels;
 use crate::services::{download_file, AsyncProcessMessage};
 use crate::{cache, config};
 
@@ -58,22 +57,12 @@ impl Scheduler {
 
     println!("user_config.rotate_source {:?}", user_config.rotate_source);
 
-    if user_config.rotate_source.contains(&String::from("pexels")) {
-      let pexels_list = cache.get_pexels_list().await;
-      self.list = list
-        .chain(pexels_list.into_iter().map(|p| SchedulerPhoto {
-          url: p.src.original.clone(),
-          title: p.alt,
-          filename: Pexels::get_filename(&p.src.original).to_string(),
-        }))
-        .collect();
-    } else {
-      self.list = list.collect();
-    }
+
+    self.list = list.collect();
 
     println!("self.list.len {:?}", self.list.len());
 
-    // FIXME: update cache templately
+    // FIXME: update cache templatly
     cache.update_cache_list(self.list.clone());
   }
 
