@@ -65,7 +65,7 @@ impl Cache {
     let mut rng = rand::thread_rng();
 
     // self.current_idx = rng.gen_range(0, self.cache_list.len());
-    self.current_idx = rng.sample(Uniform::new_inclusive(0, self.cache_list.len()));
+    self.current_idx = rng.sample(Uniform::new_inclusive(0, self.cache_list.len() - 1));
 
     self.cache_list[self.current_idx].clone()
   }
