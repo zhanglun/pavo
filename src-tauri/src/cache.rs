@@ -1,6 +1,6 @@
 use crate::scheduler::SchedulerPhoto;
 use crate::services;
-use crate::services::{bing, pexels};
+use crate::services::{bing};
 use chrono::offset::Utc;
 use rand::{distributions::Uniform, Rng};
 
@@ -16,7 +16,6 @@ pub struct Cache {
   pub bing_daily: bing::Images,
   pub bing_list: Vec<bing::Images>,
   pub timestamp: i64,
-  pub pexels_list: Vec<pexels::Photo>,
   pub current_idx: usize,
   pub cache_list: Vec<SchedulerPhoto>,
 }
@@ -66,7 +65,7 @@ impl Cache {
     let mut rng = rand::thread_rng();
 
     // self.current_idx = rng.gen_range(0, self.cache_list.len());
-    self.current_idx = rng.sample(Uniform::new_inclusive(0, self.cache_list.len()));
+    self.current_idx = rng.sample(Uniform::new_inclusive(0, self.cache_list.len() - 1));
 
     self.cache_list[self.current_idx].clone()
   }
@@ -119,24 +118,6 @@ impl Cache {
     self.bing_list.clone()
   }
 
-  pub async fn get_pexels_list(&mut self) -> Vec<pexels::Photo> {
-    let now = Utc::now().timestamp();
-
-    if !self.pexels_list.is_empty() && now - self.timestamp < BING_EXPIRE_TIME {
-      return self.pexels_list.clone();
-    }
-
-    let pexels_client =
-      pexels::Pexels::new("s9GlfCrhK5qzYQTQjMipbIQ25spgFJnThF9n3uW73g9dge6eFzMJ7aeY".to_string());
-    let res: pexels::PexlesJSON = pexels_client.get_photo_curated(30, 1).await;
-
-    self.pexels_list = res.photos;
-
-    self.timestamp = Utc::now().timestamp();
-
-    self.pexels_list.clone()
-  }
-
   /// update the time of last request to bing if 24 hours pasted
   pub fn update_timestamp_if_need(&mut self) -> i64 {
     let now = get_now_timestamp();
@@ -163,7 +144,6 @@ pub static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| {
     bing_daily: bing::Images::default(),
     bing_list: vec![],
     timestamp: Utc::now().timestamp(),
-    pexels_list: vec![],
     current_idx: 0,
     cache_list: vec![],
   })

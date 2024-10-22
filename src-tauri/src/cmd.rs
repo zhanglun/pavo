@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::services::{bing, pexels, AsyncProcessMessage, PhotoService};
+use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{cache, config, services};
 
 use tokio::sync::{mpsc, Mutex};
@@ -15,11 +15,6 @@ pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, 
 
   match service {
     PhotoService::Bing => Ok(bing::Wallpaper::set_wallpaper(url).await.unwrap()),
-    PhotoService::Pexels => Ok(pexels::Pexels::set_wallpaper(url).await.unwrap()),
-    PhotoService::Unsplash => {
-      bing::Wallpaper::set_wallpaper(url).await.unwrap();
-      Ok(String::from("asdf"))
-    }
   }
 }
 
@@ -27,11 +22,6 @@ pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, 
 pub async fn download(url: &str, service: PhotoService) -> Result<String, String> {
   match service {
     PhotoService::Bing => Ok(bing::Wallpaper::save_wallpaper(url, None).await.unwrap()),
-    PhotoService::Pexels => Ok(pexels::Pexels::save_photo(url).await.unwrap()),
-    PhotoService::Unsplash => {
-      bing::Wallpaper::set_wallpaper(url).await.unwrap();
-      Ok(String::from("asdf"))
-    }
   }
 }
 
@@ -49,23 +39,6 @@ pub async fn get_bing_daily() -> bing::Images {
   let res = bing_daily.get_bing_daily().await;
 
   res
-}
-
-#[tauri::command]
-pub async fn get_pexels_curated_photos(page: u8) -> Vec<pexels::Photo> {
-  if page == 1 {
-    println!("page: {:?}", page);
-    let mut cache = cache::CACHE.lock().await;
-    let res = cache.get_pexels_list().await;
-
-    res
-  } else {
-    let pexels_client =
-      pexels::Pexels::new("s9GlfCrhK5qzYQTQjMipbIQ25spgFJnThF9n3uW73g9dge6eFzMJ7aeY".to_string());
-    let res = pexels_client.get_photo_curated(30, page).await;
-
-    res.photos
-  }
 }
 
 #[tauri::command]

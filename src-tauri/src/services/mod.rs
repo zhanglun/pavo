@@ -8,14 +8,9 @@ use std::io::{Seek, Write};
 use crate::services::bing::Images;
 
 pub mod bing;
-pub mod mock;
-pub mod pexels;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub enum PhotoService {
   Bing,
-  Pexels,
-  Unsplash,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

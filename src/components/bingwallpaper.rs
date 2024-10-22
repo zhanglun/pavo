@@ -16,6 +16,7 @@ extern "C" {
 pub struct Wallpaper {
   title: String,
   href: String,
+  startdate: String,
   copyright: String,
 }
 
@@ -28,6 +29,7 @@ pub struct Props {
   #[prop_or_default]
   pub title: String,
   pub href: String,
+  pub startdate: String,
   pub copyright: String,
   pub copyrightlink: String,
 }
@@ -51,6 +53,7 @@ impl Component for Wallpaper {
     Self {
       title: String::from(&ctx.props().title),
       href: String::from(&ctx.props().href),
+      startdate: String::from(&ctx.props().startdate),
       copyright: String::from(&ctx.props().copyright),
     }
   }
@@ -105,8 +108,9 @@ impl Component for Wallpaper {
         ">
           <div class="grid gap-2">
             <div class="flex justify-between items-center">
-              <div class="text-base font-semibold">
-                {ctx.props().title.clone()}
+              <div class="text-base grid gap-2 grid-flow-col">
+                <span class="font-semibold">{ctx.props().title.clone()}</span>
+                <span class="font-normal">{ctx.props().startdate.clone()}</span>
               </div>
               <Toolbar
                 service={PhotoService::Bing}

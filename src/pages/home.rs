@@ -94,6 +94,7 @@ pub fn home() -> Html {
             <Wallpaper
               href={item.url.clone()}
               title={item.title.clone()}
+              startdate={item.startdate.clone()}
               copyright={item.copyright.clone()}
               copyrightlink={["https://www.bing.com", &item.copyrightlink.clone()].concat()}
             />

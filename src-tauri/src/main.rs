@@ -177,6 +177,11 @@ async fn main() {
       // let app_handle = app.handle();
 
       // scheduler::Scheduler::init(async_process_input_rx);
+      #[cfg(target_os = "windows")]
+      {
+        println!("asdfasdfasdf");
+        app.tray_handle().set_icon(tauri::Icon::Raw(include_bytes!("../icons/win-icon.png").to_vec())).unwrap();
+      }
 
       Ok(())
     })
@@ -191,7 +196,6 @@ async fn main() {
       cmd::view_photo,
       cmd::get_bing_wallpaper_list,
       cmd::get_bing_daily,
-      cmd::get_pexels_curated_photos,
       cmd::get_config,
       cmd::set_auto_rotate,
       cmd::set_interval,

@@ -2,17 +2,12 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::pages::home::Home;
-use crate::pages::pexels::Pexels;
 use crate::pages::setting::Setting;
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum Route {
   #[at("/")]
   Home,
-  #[at("/unsplash")]
-  Unsplash,
-  #[at("/pexels")]
-  Pexels,
   #[at("/setting")]
   Setting,
   #[not_found]
@@ -23,8 +18,6 @@ pub enum Route {
 fn switch(routes: Route) -> Html {
   match routes {
     Route::Home => html! { <Home /> },
-    Route::Unsplash => html! { <h1>{"Unsplsh"}</h1> },
-    Route::Pexels => html! { <Pexels /> },
     Route::Setting => html! { <Setting /> },
     // s9GlfCrhK5qzYQTQjMipbIQ25spgFJnThF9n3uW73g9dge6eFzMJ7aeY
     Route::NotFound => html! { <h1>{ "404" }</h1> },
@@ -42,23 +35,16 @@ pub fn layout() -> Html {
         <div class="fixed left-0 top-0 w-[58px] h-full bg-white dark:bg-[unset]">
           <nav class="h-full flex flex-col justify-between">
             <div class="flex flex-col">
-                <div class="flex items-center justify-center p-2">
-                    <a class="text-center text-base text-black hover:text-white dark:text-white hover:bg-medirian-2 p-2 rounded-lg"
-                        href={"/"}
-                    >
-                      <span class="w-6 h-6 block">
-                        {"B"}
-                      </span>
-                  </a>
-                </div>
-                // <div class="flex items-center justify-center p-2">
-                //   <a class="text-center text-base text-black hover:text-white hover:bg-medirian-2 p-2 rounded-lg"
-                //      href={"/pexels"}>
-                //     <span class="w-6 h-6 block">
-                //     {"P"}
-                //     </span>
-                //   </a>
-                // </div>
+              <div class="flex items-center justify-center p-2">
+                <a
+                  class="text-center text-base text-black hover:text-white dark:text-white hover:bg-medirian-2 p-2 rounded-lg"
+                  href={"/"}
+                >
+                  <span class="w-6 h-6 block">
+                    {"B"}
+                  </span>
+                </a>
+              </div>
             </div>
             <div class="flex items-center justify-center p-2">
               <a class="text-base text-black hover:text-white dark:text-white hover:bg-medirian-2 p-2 rounded-lg" href={"/setting"}>
