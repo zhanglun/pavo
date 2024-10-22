@@ -5,7 +5,6 @@
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420"
   },
-<<<<<<< HEAD
   "bundle": {
     "active": true,
     "category": "DeveloperTool",
@@ -23,16 +22,6 @@
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
       "timestampUrl": ""
-=======
-  "package": {
-    "productName": "Pavo",
-    "version": "0.0.4"
-  },
-  "tauri": {
-    "systemTray": {
-      "iconPath": "icons/tray.png",
-      "iconAsTemplate": true
->>>>>>> b098fe483a575e5838bd54298b392e2cd62489fd
     },
     "longDescription": "",
     "macOS": {
