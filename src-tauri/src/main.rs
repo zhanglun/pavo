@@ -51,7 +51,7 @@ fn handle_tray_event(
       size,
       ..
     } => {
-      let window = app.get_window("main").unwrap();
+      let window = app.get_webview_window("main").unwrap();
       window.show().unwrap();
     }
     SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
@@ -69,11 +69,11 @@ fn handle_tray_event(
         });
       }
       "show" => {
-        let window = app.get_window("main").unwrap();
+        let window = app.get_webview_window("main").unwrap();
         window.show().unwrap();
       }
       "hide" => {
-        let window = app.get_window("main").unwrap();
+        let window = app.get_webview_window("main").unwrap();
         window.hide().unwrap();
       }
       "quit" => {
@@ -167,6 +167,9 @@ async fn main() {
   });
 
   tauri::Builder::default()
+    .plugin(tauri_plugin_updater::Builder::new().build())
+    .plugin(tauri_plugin_fs::init())
+    .plugin(tauri_plugin_shell::init())
     .manage(AsyncProcInputTx {
       sender: Mutex::new(async_process_input_tx),
     })
@@ -177,11 +180,11 @@ async fn main() {
 
       Ok(())
     })
-    .system_tray(create_tray())
-    .on_system_tray_event(move |app, event| {
-      let sender = tx.clone();
-      handle_tray_event(app, event, sender)
-    })
+    //.system_tray(create_tray())
+    //.on_system_tray_event(move |app, event| {
+    //  let sender = tx.clone();
+    //  handle_tray_event(app, event, sender)
+    //})
     .invoke_handler(tauri::generate_handler![
       cmd::set_as_desktop,
       cmd::download,
@@ -195,7 +198,7 @@ async fn main() {
       cmd::set_randomly,
       cmd::set_rotate_source,
     ])
-    .on_window_event(handle_window_event)
+    //.on_window_event(handle_window_event)
     .run(tauri::generate_context!())
     .expect("error while running Pavo");
 }

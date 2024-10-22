@@ -2,7 +2,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use super::{download_file};
+use super::download_file;
 use crate::config;
 
 const API_URL: &'static str = "https://api.pexels.com/";
@@ -93,16 +93,19 @@ impl Pexels {
   //   }
 
   pub async fn get_photo_curated(&self, per_page: u8, page: u8) -> PexlesJSON {
-    self.get(
-      "v1/curated",
-      Some(
-        [
-          ("per_page", per_page.to_string()),
-          ("page", page.to_string()),
-        ]
-        .to_vec(),
-      ),
-    ).await.unwrap()
+    self
+      .get(
+        "v1/curated",
+        Some(
+          [
+            ("per_page", per_page.to_string()),
+            ("page", page.to_string()),
+          ]
+          .to_vec(),
+        ),
+      )
+      .await
+      .unwrap()
   }
 
   // pub async fn get_photo_search(&self, per_page: u8, page: u8) -> serde_json::Value {

@@ -2,71 +2,55 @@
   "build": {
     "beforeDevCommand": "trunk serve",
     "beforeBuildCommand": "trunk build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist",
-    "withGlobalTauri": true
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
   },
-  "package": {
-    "productName": "Pavo",
-    "version": "0.0.2"
-  },
-  "tauri": {
-    "systemTray": {
-      "iconPath": "icons/tray.png",
-      "iconAsTemplate": true
+  "bundle": {
+    "active": true,
+    "category": "DeveloperTool",
+    "copyright": "",
+    "targets": "all",
+    "externalBin": [],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
     },
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      },
-      "fs": {
-        "readFile": true
-      }
+    "longDescription": "",
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null
     },
-    "bundle": {
-      "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
+    "resources": [],
+    "shortDescription": "",
+    "linux": {
       "deb": {
         "depends": []
-      },
-      "externalBin": [],
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "com.pavo.dev",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [],
-      "shortDescription": "",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
       }
     },
-    "security": {
-      "csp": null
-    },
+    "createUpdaterArtifacts": "v1Compatible"
+  },
+  "productName": "Pavo",
+  "mainBinaryName": "Pavo",
+  "version": "0.0.2",
+  "identifier": "com.pavo.dev",
+  "plugins": {
     "updater": {
-      "active": true,
-      "endpoints": [],
-      "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ4NTM0QTQyMjU3QTRCNTEKUldSUlMzb2xRa3BUMklqK2lWSDhITG1xbVFLd09YeDUwbUp1aldySHAva3AyaW9WRnBMRmRWRWsK"
-    },
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ4NTM0QTQyMjU3QTRCNTEKUldSUlMzb2xRa3BUMklqK2lWSDhITG1xbVFLd09YeDUwbUp1aldySHAva3AyaW9WRnBMRmRWRWsK",
+      "endpoints": []
+    }
+  },
+  "app": {
     "windows": [
       {
         "fullscreen": false,
@@ -75,6 +59,14 @@
         "title": "Pavo",
         "width": 900
       }
-    ]
+    ],
+    "withGlobalTauri": true,
+    "trayIcon": {
+      "iconPath": "icons/tray.png",
+      "iconAsTemplate": true
+    },
+    "security": {
+      "csp": null
+    }
   }
 }

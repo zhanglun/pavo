@@ -1,7 +1,8 @@
-use std::path::{Path};
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{Error, ErrorKind};
-use serde::{Serialize, Deserialize};
+use std::path::Path;
+use dirs;
 use tauri;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -22,28 +23,24 @@ impl PavoConfig {
     }
   }
 
-  pub fn create_app_folder () -> Result<String, Error> {
-    let home_dir = tauri::api::path::home_dir();
+  pub fn create_app_folder() -> Result<String, Error> {
+    let home_dir = dirs::home_dir();
 
     match home_dir {
       Some(home_dir) => {
         let app_config_dir = Path::new(&home_dir).join(".pavo");
 
         match fs::create_dir_all(app_config_dir.clone()) {
-          Ok(_) => {
-            Ok(app_config_dir.clone().to_str().unwrap().to_string())
-          },
-          Err(e) => Err(e)
+          Ok(_) => Ok(app_config_dir.clone().to_str().unwrap().to_string()),
+          Err(e) => Err(e),
         }
       }
-      None => {
-       Err(Error::new(ErrorKind::NotFound, "home dir is not fount"))
-      }
+      None => Err(Error::new(ErrorKind::NotFound, "home dir is not fount")),
     }
   }
 
   pub fn get_app_folder() -> Result<String, (usize, String)> {
-    let home_dir = tauri::api::path::home_dir();
+    let home_dir = dirs::home_dir();
 
     match home_dir {
       Some(home_dir) => {
@@ -55,9 +52,7 @@ impl PavoConfig {
           Ok(Self::create_app_folder().unwrap())
         }
       }
-      None => {
-        Err((2, "no home dir".to_string()))
-      }
+      None => Err((2, "no home dir".to_string())),
     }
   }
 
@@ -89,7 +84,7 @@ impl PavoConfig {
 
     let data: PavoConfig = match toml::from_str(&content) {
       Ok(data) => PavoConfig { ..data },
-      Err(_) => PavoConfig::new()
+      Err(_) => PavoConfig::new(),
     };
 
     data

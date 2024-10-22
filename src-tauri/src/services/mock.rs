@@ -1,13 +1,11 @@
-use std::{fs, env};
+use std::{env, fs};
 
-use super::pexels::{Photo, PhotoSrcSet, PexlesJSON};
+use super::pexels::{PexlesJSON, Photo, PhotoSrcSet};
 
-pub struct Mock {
-
-}
+pub struct Mock {}
 
 impl Mock {
-  pub fn pexel_curated () -> PexlesJSON {
+  pub fn pexel_curated() -> PexlesJSON {
     PexlesJSON {
       next_page: "https://api.pexels.com/v1/curated/?page=2&per_page=20".to_string(),
       page: 1,
@@ -458,7 +456,7 @@ Photo {
     }
   }
 
-  pub fn pexel_search () -> PexlesJSON {
+  pub fn pexel_search() -> PexlesJSON {
     println!("{:?}", env::current_dir().unwrap());
     let file_path = "./src/services/landscape.json";
 
