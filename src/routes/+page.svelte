@@ -3,7 +3,7 @@
   import Bing from '../pages/bing.svelte';
   import Settings from '../pages/settings.svelte';
 </script>
-<Tabs tabStyle="underline" contentClass="p-4 mt-4">
+<Tabs tabStyle="underline" contentClass="p-4">
   <TabItem open title="Bing" >
     <Bing />
   </TabItem>

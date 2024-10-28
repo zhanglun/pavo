@@ -8,12 +8,12 @@
 
   </script>
   <div class="relative cursor-pointer">
-    <div class="relative rounded-2xl overflow-hidden group w-full aspect-[1.78] bg-medirian-1">
-      <img class="w-full rounded-2xl transition-all group-hover:scale-125" src={url} title={title}
+    <div class="relative rounded overflow-hidden group w-full aspect-[1.78] bg-medirian-1">
+      <img class="w-full rounded transition-all group-hover:scale-125" src={url} title={title}
         onclick={view_photo} />
       <div class="
             p-2 bg-gradient-to-r from-black/50 to-black/0
-            rounded-2xl
+            rounded
             overflow-hidden
             absolute left-0 right-0 bottom-0 top-0
           ">

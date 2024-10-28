@@ -35,8 +35,8 @@ declare module '$env/static/private' {
 	export const npm_package_scripts_tauri: string;
 	export const NODE: string;
 	export const NVM_CD_FLAGS: string;
-	export const INIT_CWD: string;
 	export const npm_package_devDependencies_typescript: string;
+	export const INIT_CWD: string;
 	export const TERM: string;
 	export const SHELL: string;
 	export const JETBRAINSCLIENT_VM_OPTIONS: string;
@@ -64,8 +64,8 @@ declare module '$env/static/private' {
 	export const npm_package_license: string;
 	export const COMMAND_MODE: string;
 	export const ALACRITTY_SOCKET: string;
-	export const PNPM_SCRIPT_SRC_DIR: string;
 	export const npm_package_devDependencies__sveltejs_adapter_static: string;
+	export const PNPM_SCRIPT_SRC_DIR: string;
 	export const SSH_AUTH_SOCK: string;
 	export const PHPSTORM_VM_OPTIONS: string;
 	export const ALACRITTY_LOG: string;
@@ -82,6 +82,7 @@ declare module '$env/static/private' {
 	export const LSCOLORS: string;
 	export const PATH: string;
 	export const DEVECOSTUDIO_VM_OPTIONS: string;
+	export const CARGO_HOME: string;
 	export const LaunchInstanceID: string;
 	export const __CFBundleIdentifier: string;
 	export const TAURI_UPDATER_PLUGIN_CONFIG: string;
@@ -95,6 +96,7 @@ declare module '$env/static/private' {
 	export const npm_lifecycle_event: string;
 	export const IDEA_VM_OPTIONS: string;
 	export const CLION_VM_OPTIONS: string;
+	export const CARGO: string;
 	export const npm_package_name: string;
 	export const npm_package_devDependencies__sveltejs_vite_plugin_svelte: string;
 	export const NODE_PATH: string;
@@ -103,6 +105,7 @@ declare module '$env/static/private' {
 	export const WEBSTORM_VM_OPTIONS: string;
 	export const TAURI_ENV_ARCH: string;
 	export const npm_package_devDependencies_flowbite_svelte: string;
+	export const RUSTUP_TOOLCHAIN: string;
 	export const DATASPELL_VM_OPTIONS: string;
 	export const npm_config_node_gyp: string;
 	export const XPC_SERVICE_NAME: string;
@@ -116,6 +119,8 @@ declare module '$env/static/private' {
 	export const npm_package_type: string;
 	export const sass_binary_site: string;
 	export const HOMEBREW_PREFIX: string;
+	export const RUSTUP_HOME: string;
+	export const RUST_RECURSION_COUNT: string;
 	export const MACOSX_DEPLOYMENT_TARGET: string;
 	export const LOGNAME: string;
 	export const LESS: string;
@@ -177,8 +182,8 @@ declare module '$env/dynamic/private' {
 		npm_package_scripts_tauri: string;
 		NODE: string;
 		NVM_CD_FLAGS: string;
-		INIT_CWD: string;
 		npm_package_devDependencies_typescript: string;
+		INIT_CWD: string;
 		TERM: string;
 		SHELL: string;
 		JETBRAINSCLIENT_VM_OPTIONS: string;
@@ -206,8 +211,8 @@ declare module '$env/dynamic/private' {
 		npm_package_license: string;
 		COMMAND_MODE: string;
 		ALACRITTY_SOCKET: string;
-		PNPM_SCRIPT_SRC_DIR: string;
 		npm_package_devDependencies__sveltejs_adapter_static: string;
+		PNPM_SCRIPT_SRC_DIR: string;
 		SSH_AUTH_SOCK: string;
 		PHPSTORM_VM_OPTIONS: string;
 		ALACRITTY_LOG: string;
@@ -224,6 +229,7 @@ declare module '$env/dynamic/private' {
 		LSCOLORS: string;
 		PATH: string;
 		DEVECOSTUDIO_VM_OPTIONS: string;
+		CARGO_HOME: string;
 		LaunchInstanceID: string;
 		__CFBundleIdentifier: string;
 		TAURI_UPDATER_PLUGIN_CONFIG: string;
@@ -237,6 +243,7 @@ declare module '$env/dynamic/private' {
 		npm_lifecycle_event: string;
 		IDEA_VM_OPTIONS: string;
 		CLION_VM_OPTIONS: string;
+		CARGO: string;
 		npm_package_name: string;
 		npm_package_devDependencies__sveltejs_vite_plugin_svelte: string;
 		NODE_PATH: string;
@@ -245,6 +252,7 @@ declare module '$env/dynamic/private' {
 		WEBSTORM_VM_OPTIONS: string;
 		TAURI_ENV_ARCH: string;
 		npm_package_devDependencies_flowbite_svelte: string;
+		RUSTUP_TOOLCHAIN: string;
 		DATASPELL_VM_OPTIONS: string;
 		npm_config_node_gyp: string;
 		XPC_SERVICE_NAME: string;
@@ -258,6 +266,8 @@ declare module '$env/dynamic/private' {
 		npm_package_type: string;
 		sass_binary_site: string;
 		HOMEBREW_PREFIX: string;
+		RUSTUP_HOME: string;
+		RUST_RECURSION_COUNT: string;
 		MACOSX_DEPLOYMENT_TARGET: string;
 		LOGNAME: string;
 		LESS: string;
