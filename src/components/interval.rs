@@ -17,7 +17,7 @@ extern "C" {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
-  auto_rotate: bool,
+  auto_shuffle: bool,
   randomly: bool,
   interval: usize,
 }

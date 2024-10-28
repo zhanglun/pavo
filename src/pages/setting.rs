@@ -21,15 +21,15 @@ extern "C" {
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
-  auto_rotate: bool,
-  rotate_source: Vec<String>,
+  auto_shuffle: bool,
+  shuffle_source: Vec<String>,
   randomly: bool,
   interval: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct RotateParams {
-  rotate: bool,
+pub struct ShuffleParams {
+  shuffle: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,22 +46,22 @@ pub struct SourceParams {
 #[function_component(Setting)]
 pub fn setting() -> Html {
   let state_config = use_state(|| PavoConfig::default() );
-  let ref_auto_rotate = use_node_ref();
-  let state_auto_rotate: UseStateHandle<bool> = use_state(|| false);
-  let handle_auto_rotate = {
-    let ref_auto_rotate = ref_auto_rotate.clone();
-    let state_auto_rotate: UseStateHandle<bool> = state_auto_rotate.clone();
+  let ref_auto_shuffle = use_node_ref();
+  let state_auto_shuffle: UseStateHandle<bool> = use_state(|| false);
+  let handle_auto_shuffle = {
+    let ref_auto_shuffle = ref_auto_shuffle.clone();
+    let state_auto_shuffle: UseStateHandle<bool> = state_auto_shuffle.clone();
 
     Callback::from(move |_| {
-      let checkbox = ref_auto_rotate.cast::<HtmlInputElement>();
+      let checkbox = ref_auto_shuffle.cast::<HtmlInputElement>();
 
       if let Some(checkbox) = checkbox {
-        state_auto_rotate.set(checkbox.checked());
+        state_auto_shuffle.set(checkbox.checked());
         spawn_local(async move {
           invoke(
-            "set_auto_rotate",
-            serde_wasm_bindgen::to_value(&RotateParams {
-              rotate: checkbox.checked(),
+            "set_auto_shuffle",
+            serde_wasm_bindgen::to_value(&ShuffleParams {
+              shuffle: checkbox.checked(),
             })
             .unwrap(),
           )
@@ -108,7 +108,7 @@ pub fn setting() -> Html {
 
           spawn_local(async move {
             invoke(
-              "set_rotate_source",
+              "set_shuffle_source",
               serde_wasm_bindgen::to_value(&SourceParams {
                 source: input.value(),
                 checked: input.checked(),
@@ -136,7 +136,7 @@ pub fn setting() -> Html {
   let state_interval: UseStateHandle<usize> = use_state(|| 30);
 
   {
-    let state_auto_rotate = state_auto_rotate.clone();
+    let state_auto_shuffle = state_auto_shuffle.clone();
     let state_randomly = state_randomly.clone();
     let state_interval = state_interval.clone();
     let state_config = state_config.clone();
@@ -149,7 +149,7 @@ pub fn setting() -> Html {
 
           console_log!(serde_wasm_bindgen::to_value(&config).unwrap());
 
-          state_auto_rotate.set(config.auto_rotate);
+          state_auto_shuffle.set(config.auto_shuffle);
           state_randomly.set(config.randomly);
           state_interval.set(config.interval);
           state_config.set(config);
@@ -167,14 +167,14 @@ pub fn setting() -> Html {
       <div>
         <form>
           <div>
-            <label id="rotate">
+            <label id="shuffle">
             <input
-              ref={ref_auto_rotate}
+              ref={ref_auto_shuffle}
               type="checkbox"
-              onchange={handle_auto_rotate}
-              checked={*state_auto_rotate}
+              onchange={handle_auto_shuffle}
+              checked={*state_auto_shuffle}
             />
-            {"Auto Rotate"}
+            {"Auto Shuffle"}
             </label>
             <label id="random">
             <input

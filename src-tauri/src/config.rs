@@ -7,8 +7,8 @@ use tauri;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
-  pub auto_rotate: bool,
-  pub rotate_source: Vec<String>,
+  pub auto_shuffle: bool,
+  pub shuffle_source: Vec<String>,
   pub randomly: bool,
   pub interval: u64,
 }
@@ -16,8 +16,8 @@ pub struct PavoConfig {
 impl PavoConfig {
   pub fn new() -> Self {
     Self {
-      auto_rotate: false,
-      rotate_source: vec![],
+      auto_shuffle: false,
+      shuffle_source: vec![],
       randomly: false,
       interval: 30,
     }
@@ -90,10 +90,10 @@ impl PavoConfig {
     data
   }
 
-  pub fn set_auto_rotate(&self, auto_rotate: bool) -> Self {
+  pub fn set_auto_shuffle(&self, auto_shuffle: bool) -> Self {
     let mut data = Self::get_config();
 
-    data.auto_rotate = auto_rotate;
+    data.auto_shuffle = auto_shuffle;
 
     Self::write_config(data.clone());
 
@@ -112,13 +112,13 @@ impl PavoConfig {
     data
   }
 
-  pub fn set_rotate_source(&self, source: String, checked: bool) -> Self {
+  pub fn set_shuffle_source(&self, source: String, checked: bool) -> Self {
     let mut data = Self::get_config();
 
     if checked {
-      data.rotate_source.push(source);
+      data.shuffle_source.push(source);
     } else {
-      data.rotate_source.retain(|x| *x != source);
+      data.shuffle_source.retain(|x| *x != source);
     }
 
     println!("data; {:?}", data);

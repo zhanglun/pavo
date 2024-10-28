@@ -23,7 +23,7 @@ pub struct SchedulerPhoto {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Scheduler {
   pub interval: u64,
-  pub auto_rotate: bool,
+  pub auto_shuffle: bool,
   pub randomly: bool,
   pub list: Vec<SchedulerPhoto>,
 
@@ -37,7 +37,7 @@ impl Scheduler {
 
     Self {
       interval: cfg.interval,
-      auto_rotate: cfg.auto_rotate,
+      auto_shuffle: cfg.auto_shuffle,
       randomly: cfg.randomly,
       list: vec![],
       rotating: false,
@@ -55,7 +55,7 @@ impl Scheduler {
       filename: Images::get_filename(&p.url).to_string(),
     });
 
-    println!("user_config.rotate_source {:?}", user_config.rotate_source);
+    println!("user_config.shuffle_source {:?}", user_config.shuffle_source);
 
 
     self.list = list.collect();
@@ -101,14 +101,14 @@ impl Scheduler {
     }
   }
 
-  pub async fn rotate_photo(&mut self) {
+  pub async fn shuffle_photo(&mut self) {
     if self.rotating == false {
       ()
     }
 
     tauri::async_runtime::spawn(async move {
-      let rotate_interval = config::PavoConfig::get_interval();
-      let mut interval = time::interval(time::Duration::from_secs(rotate_interval * 60));
+      let shuffle_interval = config::PavoConfig::get_interval();
+      let mut interval = time::interval(time::Duration::from_secs(shuffle_interval * 60));
 
       loop {
         print!("WAITTING!\n");
@@ -118,7 +118,7 @@ impl Scheduler {
         let mut cfg = config::PavoConfig::get_config();
         let mut cache = cache::CACHE.lock().await;
 
-        if cache.cache_list.len() > 0 && cfg.auto_rotate {
+        if cache.cache_list.len() > 0 && cfg.auto_shuffle {
           cfg = config::PavoConfig::get_config();
 
           if cfg.randomly {
@@ -129,7 +129,7 @@ impl Scheduler {
               .await
               .unwrap();
           } else {
-            let item = cache.rotate_to_next();
+            let item = cache.shuffle_to_next();
             println!("CHANGE TO {:?} \n", &item);
 
             Self::set_wallpaper(&item.url, &item.filename)
@@ -141,18 +141,18 @@ impl Scheduler {
     });
   }
 
-  pub async fn start_rotate_photo(&mut self) {
+  pub async fn start_shuffle_photo(&mut self) {
     self.rotating = true;
-    // self.rotate_photo().await;
+    // self.shuffle_photo().await;
   }
 
-  pub fn stop_rotate_photo(&mut self) {
+  pub fn stop_shuffle_photo(&mut self) {
     self.rotating = false
   }
 
   pub async fn previous_photo(&mut self) {
     let mut cache = cache::CACHE.lock().await;
-    let item = cache.rotate_to_previous();
+    let item = cache.shuffle_to_previous();
     println!("CHANGE TO {:?} \n", &item);
 
     Self::set_wallpaper(&item.url, &item.filename)
@@ -162,7 +162,7 @@ impl Scheduler {
 
   pub async fn next_photo(&mut self) {
     let mut cache = cache::CACHE.lock().await;
-    let item = cache.rotate_to_next();
+    let item = cache.shuffle_to_next();
 
     println!("CHANGE TO {:?} \n", &item);
 

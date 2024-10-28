@@ -15,8 +15,8 @@ pub enum PhotoService {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum AsyncProcessMessage {
-  StartRotate,
-  StopRotate,
+  StartShuffle,
+  StopShuffle,
   PreviousPhoto,
   NextPhoto,
 }

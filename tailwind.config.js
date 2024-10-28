@@ -1,8 +1,6 @@
 module.exports = {
-  darkMode: 'class',
-  content: [
-    './src/**/*.rs',
-  ],
+  darkMode: 'selector',
+  content: ['./src/**/*.{html,js,svelte,ts}', './node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}'],
   theme: {
     colors: ({ colors }) => {
       return {
@@ -44,5 +42,6 @@ module.exports = {
     },
   },
   plugins: [
+    require('flowbite/plugin')
   ]
 }

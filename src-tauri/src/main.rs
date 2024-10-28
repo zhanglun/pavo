@@ -19,12 +19,12 @@ use tokio::sync::{mpsc, Mutex};
 //  let hide = CustomMenuItem::new("hide".to_string(), "Hide");
 //  let quit = CustomMenuItem::new("quit".to_string(), "Quit");
 //
-//  // let auto_rotate = CustomMenuItem::new("auto_rotate".to_string(), "Auto Rotate");
+//  // let auto_shuffle = CustomMenuItem::new("auto_shuffle".to_string(), "Auto Shuffle");
 //  let previous_photo = CustomMenuItem::new("previous_photo".to_string(), "Previous Photo");
 //  let next_photo = CustomMenuItem::new("next_photo".to_string(), "Next Photo");
 //
 //  let tray_menu = SystemTrayMenu::new()
-//    // .add_item(auto_rotate)
+//    // .add_item(auto_shuffle)
 //    .add_item(previous_photo)
 //    .add_item(next_photo)
 //    .add_native_item(SystemTrayMenuItem::Separator)
@@ -134,7 +134,7 @@ async fn main() {
   let mut scheduler = scheduler::Scheduler::new();
 
   scheduler.setup_list().await;
-  scheduler.rotate_photo().await;
+  scheduler.shuffle_photo().await;
 
   tauri::async_runtime::spawn(async move {
     loop {
@@ -142,13 +142,13 @@ async fn main() {
         println!("output: {:?}", message);
 
         match message {
-          AsyncProcessMessage::StartRotate => {
+          AsyncProcessMessage::StartShuffle => {
             println!("init output start 2 {:?}", message);
-            scheduler.start_rotate_photo().await;
+            scheduler.start_shuffle_photo().await;
           }
-          AsyncProcessMessage::StopRotate => {
+          AsyncProcessMessage::StopShuffle => {
             println!("init output stop 2 {:?}", message);
-            scheduler.stop_rotate_photo();
+            scheduler.stop_shuffle_photo();
           }
           AsyncProcessMessage::PreviousPhoto => {
             println!("PreviousPhoto {:?}", message);
@@ -201,10 +201,10 @@ async fn main() {
       cmd::get_bing_wallpaper_list,
       cmd::get_bing_daily,
       cmd::get_config,
-      cmd::set_auto_rotate,
+      cmd::set_auto_shuffle,
       cmd::set_interval,
       cmd::set_randomly,
-      cmd::set_rotate_source,
+      cmd::set_shuffle_source,
     ])
     //.on_window_event(handle_window_event)
     .run(tauri::generate_context!())

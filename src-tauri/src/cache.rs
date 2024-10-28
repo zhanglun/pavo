@@ -37,11 +37,11 @@ impl Cache {
   pub fn get_current_photo() {}
 
   /// get photo list rotating
-  pub fn get_rotate_list(self) -> Vec<SchedulerPhoto> {
+  pub fn get_shuffle_list(self) -> Vec<SchedulerPhoto> {
     self.cache_list
   }
 
-  pub fn rotate_to_next(&mut self) -> SchedulerPhoto {
+  pub fn shuffle_to_next(&mut self) -> SchedulerPhoto {
     if self.current_idx >= self.cache_list.len() - 1 {
       self.current_idx = 0;
     } else {
@@ -51,7 +51,7 @@ impl Cache {
     self.cache_list[self.current_idx].clone()
   }
 
-  pub fn rotate_to_previous(&mut self) -> SchedulerPhoto {
+  pub fn shuffle_to_previous(&mut self) -> SchedulerPhoto {
     if self.current_idx <= 0 {
       self.current_idx = self.cache_list.len() - 1;
     } else {

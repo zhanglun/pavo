@@ -50,24 +50,24 @@ pub async fn get_config() -> serde_json::Value {
 
 #[tauri::command]
 #[allow(unused)]
-pub async fn set_auto_rotate(
-  rotate: bool,
+pub async fn set_auto_shuffle(
+  shuffle: bool,
   state: tauri::State<'_, AsyncProcInputTx>,
 ) -> Result<(), ()> {
   let pavo_config = config::PavoConfig::get_config();
 
-  pavo_config.set_auto_rotate(rotate);
+  pavo_config.set_auto_shuffle(shuffle);
 
   let async_proc_input_tx = state.sender.lock().await;
 
-  if rotate {
+  if shuffle {
     async_proc_input_tx
-      .send(AsyncProcessMessage::StartRotate)
+      .send(AsyncProcessMessage::StartShuffle)
       .await
       .map_err(|e| e.to_string());
   } else {
     async_proc_input_tx
-      .send(AsyncProcessMessage::StopRotate)
+      .send(AsyncProcessMessage::StopShuffle)
       .await
       .map_err(|e| e.to_string());
   }
@@ -92,10 +92,10 @@ pub async fn set_randomly(randomly: bool) {
 }
 
 #[tauri::command]
-pub async fn set_rotate_source(source: String, checked: bool) {
+pub async fn set_shuffle_source(source: String, checked: bool) {
   let pavo_config = config::PavoConfig::get_config();
 
-  pavo_config.set_rotate_source(source, checked);
+  pavo_config.set_shuffle_source(source, checked);
 }
 
 #[tauri::command]
