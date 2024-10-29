@@ -45,10 +45,10 @@ impl Scheduler {
     }
   }
 
-  pub async fn setup_list(&mut self) {
+  pub async fn setup_list(&mut self, country: Option<String>) {
     let user_config = config::PavoConfig::get_config();
     let mut cache = cache::CACHE.lock().await;
-    let bing_list = cache.get_bing_list().await;
+    let bing_list = cache.get_bing_list(country).await;
     let list = bing_list.into_iter().map(|p| SchedulerPhoto {
       url: p.url.clone(),
       title: p.title,

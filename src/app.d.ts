@@ -10,9 +10,25 @@ declare global {
     interface UserConfig {
       auto_shuffle: boolean;
       interval: number;
-
     }
   }
+  type BingImage = {
+    bot: number;
+    copyright: string;
+    copyrightlink: string;
+    drk: number;
+    enddate: string;
+    fullstartdate: string;
+    hs: string[];
+    hsh: string;
+    quiz: string;
+    startdate: string;
+    title: string;
+    top: number;
+    url: string;
+    urlbase: string;
+    wp: boolean;
+  };
 }
 
 export {};

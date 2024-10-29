@@ -133,7 +133,7 @@ async fn main() {
 
   let mut scheduler = scheduler::Scheduler::new();
 
-  scheduler.setup_list().await;
+  scheduler.setup_list(None).await;
   scheduler.shuffle_photo().await;
 
   tauri::async_runtime::spawn(async move {

@@ -56,9 +56,9 @@ pub struct WallpaperRes {
 }
 
 impl WallpaperRes {
-  pub async fn new(index: u8, number: u8) -> Result<WallpaperRes> {
+  pub async fn new(index: u8, number: u8, mkt: Option<String>) -> Result<WallpaperRes> {
     Ok(
-      reqwest::get(get_url(index, number).as_str())
+      reqwest::get(get_url(index, number, mkt).as_str())
         .await?
         .json::<WallpaperRes>()
         .await?,
@@ -77,8 +77,8 @@ pub struct Wallpaper {
 }
 
 impl Wallpaper {
-  pub async fn new(index: u8, number: u8) -> Result<Wallpaper> {
-    let json = WallpaperRes::new(index, number).await?;
+  pub async fn new(index: u8, number: u8, mkt: Option<String>) -> Result<Wallpaper> {
+    let json = WallpaperRes::new(index, number, mkt).await?;
     Ok(Wallpaper {
       index,
       number,
@@ -127,15 +127,19 @@ impl Wallpaper {
   }
 }
 
-fn get_url(index: u8, number: u8) -> String {
-  let url = [
-    BING_URL,
-    "&idx=",
-    &index.to_string(),
-    "&n=",
-    &number.to_string(),
-  ]
-  .join("");
+fn get_url(index: u8, number: u8, mkt: Option<String>) -> String {
+  print!("🚀 ~ file: bing.rs:131 ~ fnget_url ~ mkt: {:?}", mkt);
+  let num = number.to_string();
+  let idx = index.to_string();
+  let mut url_parts = vec![BING_URL, "&idx=", &idx, "&n=", &num];
+  let mut mkt_str = String::new();
+
+  if let Some(mkt_val) = mkt {
+    mkt_str = format!("&mkt={}", mkt_val);
+    url_parts.push(&mkt_str);
+  }
+
+  let url = url_parts.concat();
 
   println!("url: {:?}", url);
 

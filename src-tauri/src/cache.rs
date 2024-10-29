@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use crate::scheduler::SchedulerPhoto;
 use crate::services;
-use crate::services::{bing};
+use crate::services::bing;
 use chrono::offset::Utc;
 use rand::{distributions::Uniform, Rng};
 
@@ -14,9 +16,10 @@ const BING_EXPIRE_TIME: i64 = 60 * 60 * 12;
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Cache {
   pub bing_daily: bing::Images,
-  pub bing_list: Vec<bing::Images>,
+  pub bing_list: HashMap<String, Vec<bing::Images>>,
   pub timestamp: i64,
   pub current_idx: usize,
+  pub current_lang: String,
   pub cache_list: Vec<SchedulerPhoto>,
 }
 
@@ -72,14 +75,14 @@ impl Cache {
 
   // cache service data
 
-  pub async fn get_bing_daily(&mut self) -> bing::Images {
+  pub async fn get_bing_daily(&mut self, country: Option<String>) -> bing::Images {
     let now = get_now_timestamp();
 
     if !self.bing_daily.url.is_empty() && now - self.timestamp < BING_EXPIRE_TIME {
       return self.bing_daily.clone();
     }
 
-    let bing = services::bing::Wallpaper::new(0, 1).await.unwrap();
+    let bing = services::bing::Wallpaper::new(0, 1, country).await.unwrap();
 
     self.bing_daily = bing.json.images[0].clone();
 
@@ -89,20 +92,36 @@ impl Cache {
   }
 
   /// get bing photo list. return cached data if not expired.
-  pub async fn get_bing_list(&mut self) -> Vec<bing::Images> {
+  pub async fn get_bing_list(&mut self, country: Option<String>) -> Vec<bing::Images> {
     let now = Utc::now().timestamp();
+    let mut lang = self.current_lang.clone();
 
-    if !self.bing_list.is_empty() && now - self.timestamp < BING_EXPIRE_TIME {
-      return self.bing_list.clone();
+    if let Some(country) = country.clone() {
+      println!("country ===> {:?}", country);
+      lang = country;
     }
 
-    let res1 = services::bing::Wallpaper::new(0, 8).await.unwrap();
-    let res2 = services::bing::Wallpaper::new(7, 8).await.unwrap();
+    let mut list = vec![];
+
+    if let Some(l) = self.bing_list.get(&lang) {
+      list = l.clone();
+    }
+
+    println!("list: {:?}", list.len() > 0 && now - self.timestamp < BING_EXPIRE_TIME );
+
+    if list.len() > 0 && now - self.timestamp < BING_EXPIRE_TIME {
+      return list.clone();
+    }
+
+    let res1 = services::bing::Wallpaper::new(0, 8, country.clone())
+      .await
+      .unwrap();
+    let res2 = services::bing::Wallpaper::new(7, 8, country).await.unwrap();
 
     let images1 = res1.json.images;
     let images2 = res2.json.images;
 
-    self.bing_list = images1
+    let res: Vec<bing::Images> = images1
       .into_iter()
       .chain(images2.into_iter())
       .map(|mut i| {
@@ -115,7 +134,11 @@ impl Cache {
 
     println!("timestamp: {:?}", self.timestamp);
 
-    self.bing_list.clone()
+    if self.bing_list.get(&lang).is_none() {
+      self.bing_list.insert(lang.to_string(), res.clone());
+    }
+
+    res.clone()
   }
 
   /// update the time of last request to bing if 24 hours pasted
@@ -142,9 +165,10 @@ impl Cache {
 pub static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| {
   Mutex::new(Cache {
     bing_daily: bing::Images::default(),
-    bing_list: vec![],
+    bing_list: HashMap::new(),
     timestamp: Utc::now().timestamp(),
     current_idx: 0,
     cache_list: vec![],
+    current_lang: "en-US".to_string(),
   })
 });

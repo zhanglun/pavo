@@ -26,17 +26,18 @@ pub async fn download(url: &str, service: PhotoService) -> Result<String, String
 }
 
 #[tauri::command]
-pub async fn get_bing_wallpaper_list(_page: u8) -> Vec<bing::Images> {
+pub async fn get_bing_wallpaper_list(_page: u8, country: String) -> Vec<bing::Images> {
+  println!("🚀 ~ file: cmd.rs:30 ~ pubfnget_bing_wallpaper_list ~ country: {:?}", country);
   let mut cache = cache::CACHE.lock().await;
-  let res = cache.get_bing_list().await;
+  let res = cache.get_bing_list(Some(country)).await;
 
   res
 }
 
 #[tauri::command]
-pub async fn get_bing_daily() -> bing::Images {
+pub async fn get_bing_daily(country: Option<String>) -> bing::Images {
   let mut bing_daily = cache::CACHE.lock().await;
-  let res = bing_daily.get_bing_daily().await;
+  let res = bing_daily.get_bing_daily(country).await;
 
   res
 }
