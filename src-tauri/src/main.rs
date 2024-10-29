@@ -8,10 +8,11 @@ mod cmd;
 mod config;
 mod scheduler;
 mod services;
+mod tray;
 
 use cmd::AsyncProcInputTx;
 use services::AsyncProcessMessage;
-use tauri::{AppHandle, Manager, tray::TrayIconBuilder, WindowEvent};
+use tauri::{tray::TrayIconBuilder, AppHandle, Manager, WindowEvent};
 use tokio::sync::{mpsc, Mutex};
 
 //fn create_tray() -> SystemTray {
@@ -171,7 +172,7 @@ async fn main() {
       sender: Mutex::new(async_process_input_tx),
     })
     .setup(|app| {
-      // let app_handle = app.handle();
+      let app_handle = app.handle();
 
       // scheduler::Scheduler::init(async_process_input_rx);
       #[cfg(target_os = "windows")]
@@ -183,11 +184,8 @@ async fn main() {
         //  ))
         //  .unwrap();
       }
-      let tray = TrayIconBuilder::new()
-        .icon_as_template(false)
-        //.icon(tauri::Image::from_path(include_bytes!("./icons/tray.png").to_vec()))
-        .tooltip("test tray icon builder")
-        .build(app)?;
+
+      tray::create_tray(app_handle)?;
 
       Ok(())
     })
