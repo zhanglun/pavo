@@ -53,28 +53,24 @@
   ];
 
   let images = $state<BingImage[]>([]);
+  let loading = $state<boolean>(true);
   let selectCountry = $state(navigator.language);
 
   function getBingWallpaper() {
-    console.log(
-      "🚀 ~ file: bing.svelte:38 ~ getBingWallpaper ~ selectCountry:",
-      selectCountry,
-    );
+    loading = true
 
     invoke("get_bing_wallpaper_list", { page: 0, country: selectCountry }).then(
       (res) => {
-        console.log("🚀 ~ file: bing.svelte:66 ~ getBingWallpaper ~ res:", res)
         images = res as BingImage[];
+        console.log("🚀 ~ file: bing.svelte:65 ~ getBingWallpaper ~ images:", images)
+        loading = false
       },
     );
   }
 
   function switchCountry(country: string) {
     selectCountry = country;
-    console.log(
-      "🚀 ~ file: bing.svelte:39 ~ switchCountry ~ selectCountry:",
-      selectCountry,
-    );
+
     getBingWallpaper();
   }
 
@@ -98,7 +94,7 @@
       </Badge>
     {/each}
   </div>
-  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-4">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-4 {loading ? 'opacity-70': ''}">
     {#each images as image}
       <BingWallpaper {...image} />
     {/each}

@@ -65,7 +65,7 @@
   }
 </script>
 
-<div>
+<div class="flex gap-2 flex-col">
   <div class="flex gap-2">
     <Checkbox
       bind:checked={config.auto_shuffle}
@@ -75,15 +75,16 @@
     >
   </div>
   <div>
-    <Label
-      >Select interval <Select
-        bind:value={config.interval}
-        on:change={(e) => updateConfigInterval("interval", e.target.value)}
-      >
-        {#each interval_options as option}
-          <option value={option.value}>{option.label}</option>
-        {/each}
-      </Select>
-    </Label>
+    <Label for="interval" class="mb-2">Interval</Label>
+    <Select
+      id="interval"
+      size="sm"
+      bind:value={config.interval}
+      on:change={(e) => updateConfigInterval("interval", e.target.value)}
+    >
+      {#each interval_options as option}
+        <option value={option.value}>{option.label}</option>
+      {/each}
+    </Select>
   </div>
 </div>

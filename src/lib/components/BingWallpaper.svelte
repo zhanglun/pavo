@@ -1,8 +1,8 @@
-<script>
-  // @ts-nocheck
+<script lang="ts">
+  import Toolbar from "./Toolbar.svelte";
 
   // your script goes here
-  let { title, url, startdate = "hahah", copyright } = $props();
+  let { title, url, startdate, copyright, copyrightlink } = $props<BingImage>();
 
   function view_photo() {}
 </script>
@@ -15,7 +15,7 @@
     <img
       class="w-full rounded transition-all group-hover:scale-125"
       src={url}
-      {title}
+      alt={title}
     />
     <div
       class="
@@ -41,8 +41,7 @@
           <span class="font-semibold">{title}</span>
           <span class="font-normal">{startdate}</span>
         </div>
-        <!--<Toolbar service={PhotoService::Bing} url={ctx.props().href.clone()}-->
-        <!--  href={ctx.props().copyrightlink.clone()} />-->
+        <Toolbar service={"Bing"} {url} href={copyrightlink} />
       </div>
       <div class="text-sm">{copyright}</div>
     </div>

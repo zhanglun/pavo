@@ -107,8 +107,6 @@ impl Cache {
       list = l.clone();
     }
 
-    println!("list: {:?}", list.len() > 0 && now - self.timestamp < BING_EXPIRE_TIME );
-
     if list.len() > 0 && now - self.timestamp < BING_EXPIRE_TIME {
       return list.clone();
     }
