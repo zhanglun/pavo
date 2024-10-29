@@ -8,6 +8,14 @@ use crate::config;
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UrlParams {
+  pub index: u8,
+  pub number: u8,
+  pub mkt: Option<String>,
+  pub hdr: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tooltips {
   pub loading: String,
   pub next: String,
@@ -66,7 +74,7 @@ impl WallpaperRes {
   }
 }
 
-const BING_URL: &str = "https://www.bing.com/HPImageArchive.aspx?&format=js&nc=1612409408851&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160";
+const BING_URL: &str = "https://www.bing.com/HPImageArchive.aspx?&format=js&uhd=1&uhdwidth=3840&uhdheight=2160";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Wallpaper {
@@ -128,7 +136,6 @@ impl Wallpaper {
 }
 
 fn get_url(index: u8, number: u8, mkt: Option<String>) -> String {
-  print!("🚀 ~ file: bing.rs:131 ~ fnget_url ~ mkt: {:?}", mkt);
   let num = number.to_string();
   let idx = index.to_string();
   let mut url_parts = vec![BING_URL, "&idx=", &idx, "&n=", &num];

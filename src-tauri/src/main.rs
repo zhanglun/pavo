@@ -184,7 +184,9 @@ async fn main() {
         //  .unwrap();
       }
       let tray = TrayIconBuilder::new()
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon_as_template(false)
+        //.icon(tauri::Image::from_path(include_bytes!("./icons/tray.png").to_vec()))
+        .tooltip("test tray icon builder")
         .build(app)?;
 
       Ok(())
