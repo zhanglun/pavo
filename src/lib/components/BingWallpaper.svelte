@@ -2,7 +2,7 @@
   import Toolbar from "./Toolbar.svelte";
 
   // your script goes here
-  let { title, url, startdate, copyright, copyrightlink } = $props<BingImage>();
+  let { title, url, startdate, copyright, copyrightlink }: BingImage = $props();
 
   function view_photo() {}
 </script>

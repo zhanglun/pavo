@@ -12,7 +12,6 @@ mod tray;
 
 use cmd::AsyncProcInputTx;
 use services::AsyncProcessMessage;
-use tauri::{tray::TrayIconBuilder, AppHandle, Manager, WindowEvent};
 use tokio::sync::{mpsc, Mutex};
 
 //fn create_tray() -> SystemTray {

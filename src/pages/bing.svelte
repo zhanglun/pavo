@@ -78,7 +78,7 @@
 </script>
 
 <div class="grid gap-2">
-  <div class="flex gap-1 flex-wrap">
+  <div class="flex gap-1 flex-wrap mb-2">
     {#each country as country}
       <Badge
         large
