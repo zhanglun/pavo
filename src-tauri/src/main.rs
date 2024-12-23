@@ -121,7 +121,7 @@ use tokio::sync::{mpsc, Mutex};
 use tauri::Manager;
 use tauri::{
   menu::{Menu, MenuBuilder, MenuItem, MenuItemBuilder},
-  tray::{ClickType, TrayIconBuilder},
+  tray::{TrayIconBuilder},
 };
 
 #[tokio::main]
@@ -203,22 +203,22 @@ async fn main() {
           }
           _ => {}
         })
-        .on_tray_icon_event(|tray_icon, event| match event {
-          TrayIconEvent::Click {
-            button: MouseButton::Left,
-            button_state: MouseButtonState::Up,
-            ..
-          } => {
-            // let app = tray::app_handle();
-            // if let Some(window) = app.get_webview_window("main") {
-            //   if let Ok(()) = window.show() {
-            //     // visible.set_text("Hide");
-            //   }
-            //   let _ = window.set_focus();
-            // }
-          }
-          _ => {}
-        })
+        // .on_tray_icon_event(|tray_icon, event| match event {
+        //   TrayIconEvent::Click {
+        //     button: MouseButton::Left,
+        //     button_state: MouseButtonState::Up,
+        //     ..
+        //   } => {
+        //     // let app = tray::app_handle();
+        //     // if let Some(window) = app.get_webview_window("main") {
+        //     //   if let Ok(()) = window.show() {
+        //     //     // visible.set_text("Hide");
+        //     //   }
+        //     //   let _ = window.set_focus();
+        //     // }
+        //   }
+        //   _ => {}
+        // })
         .build(app);
 
       Ok(())
