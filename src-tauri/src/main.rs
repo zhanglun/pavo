@@ -118,6 +118,12 @@ use tokio::sync::{mpsc, Mutex};
 //  }
 //}
 
+use tauri::Manager;
+use tauri::{
+  menu::{Menu, MenuBuilder, MenuItem, MenuItemBuilder},
+  tray::{ClickType, TrayIconBuilder},
+};
+
 #[tokio::main]
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
@@ -171,28 +177,52 @@ async fn main() {
       sender: Mutex::new(async_process_input_tx),
     })
     .setup(|app| {
-      let app_handle = app.handle();
+      let quit = MenuItemBuilder::new("Quit").id("quit").build(app).unwrap();
+      let hide = MenuItemBuilder::new("Hide").id("hide").build(app).unwrap();
+      let show = MenuItemBuilder::new("Show").id("show").build(app).unwrap();
+      // we could opt handle an error case better than calling unwrap
+      let menu = MenuBuilder::new(app)
+        .items(&[&quit, &hide, &show])
+        .build()
+        .unwrap();
 
-      // scheduler::Scheduler::init(async_process_input_rx);
-      #[cfg(target_os = "windows")]
-      {
-        //app
-        //  .tray_handle()
-        //  .set_icon(tauri::Icon::Raw(
-        //    include_bytes!("../icons/win-icon.png").to_vec(),
-        //  ))
-        //  .unwrap();
-      }
-
-      tray::create_tray(app_handle)?;
+      let _ = TrayIconBuilder::new()
+        .icon(app.default_window_icon().unwrap().clone())
+        .menu(&menu)
+        .on_menu_event(|app, event| match event.id().as_ref() {
+          "quit" => app.exit(0),
+          "hide" => {
+            dbg!("menu item hide clicked");
+            let window = app.get_webview_window("main").unwrap();
+            window.hide().unwrap();
+          }
+          "show" => {
+            dbg!("menu item show clicked");
+            let window = app.get_webview_window("main").unwrap();
+            window.show().unwrap();
+          }
+          _ => {}
+        })
+        .on_tray_icon_event(|tray_icon, event| match event {
+          TrayIconEvent::Click {
+            button: MouseButton::Left,
+            button_state: MouseButtonState::Up,
+            ..
+          } => {
+            // let app = tray::app_handle();
+            // if let Some(window) = app.get_webview_window("main") {
+            //   if let Ok(()) = window.show() {
+            //     // visible.set_text("Hide");
+            //   }
+            //   let _ = window.set_focus();
+            // }
+          }
+          _ => {}
+        })
+        .build(app);
 
       Ok(())
     })
-    //.system_tray(create_tray())
-    //.on_system_tray_event(move |app, event| {
-    //  let sender = tx.clone();
-    //  handle_tray_event(app, event, sender)
-    //})
     .invoke_handler(tauri::generate_handler![
       cmd::set_as_desktop,
       cmd::download,

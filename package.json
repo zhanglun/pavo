@@ -21,7 +21,7 @@
     "@sveltejs/kit": "^2.7.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tailwindcss/typography": "^0.5.15",
-    "@tauri-apps/cli": "^2",
+    "@tauri-apps/cli": "^2.1.0",
     "autoprefixer": "^10.4.20",
     "flowbite": "^2.5.2",
     "flowbite-svelte": "^0.47.2",
