@@ -51,14 +51,13 @@
 
   getUserConfig();
 
-  function updateConfigShuffle(key, value) {
-    //config[key] = value
+  function updateConfigShuffle(key: string, value: boolean) {
     invoke("set_auto_shuffle", { shuffle: value }).then((res) => {
       console.log(res);
     });
   }
 
-  function updateConfigInterval(key, value) {
+  function updateConfigInterval(key: string, value: string) {
     invoke("set_interval", { interval: parseInt(value) }).then((res) => {
       console.log(res);
     });
@@ -70,17 +69,27 @@
     <Checkbox
       bind:checked={config.auto_shuffle}
       bind:value={config.auto_shuffle}
-      on:change={(e) => updateConfigShuffle("shuffle", e.target.checked)}
-      >Shuffle</Checkbox
+      on:change={(e) => {
+        if (e.target) {
+          const checked = (e.target as HTMLInputElement).checked;
+          updateConfigShuffle("shuffle", checked);
+        }
+      }}>Shuffle</Checkbox
     >
   </div>
-  <div>
+  <div class="flex justify-between items-center">
     <Label for="interval" class="mb-2">Interval</Label>
     <Select
       id="interval"
       size="sm"
+      class="w-1/2"
       bind:value={config.interval}
-      on:change={(e) => updateConfigInterval("interval", e.target.value)}
+      on:change={(e) => {
+        if (e.target) {
+          const value = (e.target as HTMLSelectElement).value;
+          updateConfigInterval("interval", value);
+        }
+      }}
     >
       {#each interval_options as option}
         <option value={option.value}>{option.label}</option>

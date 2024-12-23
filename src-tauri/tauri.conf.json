@@ -54,10 +54,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 800,
         "resizable": true,
         "title": "Pavo",
-        "width": 900
+        "width": 380
       }
     ],
     "withGlobalTauri": true,

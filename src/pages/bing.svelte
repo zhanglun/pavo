@@ -1,8 +1,10 @@
 <!-- svelte-ignore a11y_autofocus -->
 <script lang="ts">
-  import { Badge } from "flowbite-svelte";
+  import { Badge, Hr } from "flowbite-svelte";
   import { invoke } from "@tauri-apps/api/core";
   import BingWallpaper from "../lib/components/BingWallpaper.svelte";
+  import QuoteSolid from "flowbite-svelte-icons/QuoteSolid.svelte"
+  import Skeleton from "$lib/components/Skeleton.svelte";
 
   const country = [
     {
@@ -94,9 +96,21 @@
       </Badge>
     {/each}
   </div>
-  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-4 {loading ? 'opacity-70': ''}">
+  <div class="mt-5 {loading ? 'opacity-70': ''}">
+    {#if loading}
+    {#each images as image}
+      <Skeleton />
+      <Hr classHr="my-8 w-64 h-1" icon>
+        <QuoteSolid class="w-6 h-6 text-gray-700 dark:text-gray-300" />
+      </Hr>
+    {/each}
+    {:else}
     {#each images as image}
       <BingWallpaper {...image} />
+      <Hr classHr="my-8 w-64 h-1" icon>
+        <QuoteSolid class="w-6 h-6 text-gray-700 dark:text-gray-300" />
+      </Hr>
     {/each}
+    {/if}
   </div>
 </div>

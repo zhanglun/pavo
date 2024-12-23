@@ -3,6 +3,7 @@
 
   // your script goes here
   let { title, url, startdate, copyright, copyrightlink }: BingImage = $props();
+  console.log("🚀 ~ file: BingWallpaper.svelte:6 ~ startdate:", startdate)
 
   function view_photo() {}
 </script>
@@ -28,22 +29,24 @@
   </div>
   <div
     class="
-          grid gap-2 mt-4
+          grid gap-2 mt-3
           grid-flow-row
           sm:grid-flow-col
           lg:grid-flow-row
           xl:grid-flow-col
         "
   >
-    <div class="grid gap-2">
+    <div class="grid gap-1">
       <div class="flex justify-between items-center">
-        <div class="text-base grid gap-2 grid-flow-col">
-          <span class="font-semibold">{title}</span>
-          <span class="font-normal">{startdate}</span>
-        </div>
+        <div class="font-semibold">{title}</div>
         <Toolbar service={"Bing"} {url} href={copyrightlink} />
       </div>
-      <div class="text-sm">{copyright}</div>
+      <div class="text-xs text-neutral-700">
+        <span class="font-normal text-xs text-right text-neutral-700"
+          >{`${startdate.slice(0, 4)}-${startdate.slice(4, 6)}-${startdate.slice(6, 8)}`}</span
+        >
+        {copyright}
+      </div>
     </div>
   </div>
 </div>
