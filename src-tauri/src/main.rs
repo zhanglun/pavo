@@ -118,11 +118,14 @@ use tokio::sync::{mpsc, Mutex};
 //  }
 //}
 
-use tauri::Manager;
 use tauri::{
+  Manager,
+  image::Image,
   menu::{Menu, MenuBuilder, MenuItem, MenuItemBuilder},
-  tray::{TrayIconBuilder},
+  tray::TrayIconBuilder,
 };
+use std::path::PathBuf;
+use tauri::tray::{TrayIcon, Icon};
 
 #[tokio::main]
 async fn main() {
@@ -182,12 +185,13 @@ async fn main() {
       let show = MenuItemBuilder::new("Show").id("show").build(app).unwrap();
       // we could opt handle an error case better than calling unwrap
       let menu = MenuBuilder::new(app)
-        .items(&[&quit, &hide, &show])
+        .items(&[&show, &hide, &quit])
         .build()
         .unwrap();
 
       let _ = TrayIconBuilder::new()
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon_as_template(true)
+        .icon(tauri::Icon::Raw(include_bytes!("../icons/tray.png").to_vec()).unwrap())
         .menu(&menu)
         .on_menu_event(|app, event| match event.id().as_ref() {
           "quit" => app.exit(0),

@@ -61,10 +61,6 @@
       }
     ],
     "withGlobalTauri": true,
-    "trayIcon": {
-      "iconPath": "icons/tray.png",
-      "iconAsTemplate": true
-    },
     "security": {
       "csp": null
     }

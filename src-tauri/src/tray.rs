@@ -4,6 +4,7 @@ use tauri::{
   tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
   AppHandle,
 };
+use tauri::image::Image;
 
 pub fn create_tray(app: &AppHandle) -> Result<(), tauri::Error> {
   let show = MenuItem::with_id(app, "show".to_string(), "Show", true, None::<&str>)?;
@@ -15,8 +16,10 @@ pub fn create_tray(app: &AppHandle) -> Result<(), tauri::Error> {
 
   // let menu = Menu::with_items(app, &[&show, &hide, &quit])?;
 
-  TrayIconBuilder::new()
+  let _ = TrayIconBuilder::new()
     .menu(&menu)
+    .icon_as_template(true)
+    .icon(Image::from_path("../icons/tray.png").unwrap())
     .on_tray_icon_event(|tray, event| match event {
       TrayIconEvent::Click {
         button: MouseButton::Left,
