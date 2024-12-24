@@ -120,12 +120,9 @@ use tokio::sync::{mpsc, Mutex};
 
 use tauri::{
   Manager,
-  image::Image,
   menu::{Menu, MenuBuilder, MenuItem, MenuItemBuilder},
   tray::TrayIconBuilder,
 };
-use std::path::PathBuf;
-use tauri::tray::{TrayIcon, Icon};
 
 #[tokio::main]
 async fn main() {
@@ -189,9 +186,11 @@ async fn main() {
         .build()
         .unwrap();
 
+       let icon_path = app.path().resolve("icons/tray.png", tauri::path::BaseDirectory::Resource)?;
+
       let _ = TrayIconBuilder::new()
         .icon_as_template(true)
-        .icon(tauri::Icon::Raw(include_bytes!("../icons/tray.png").to_vec()).unwrap())
+        .icon(tauri::image::Image::from_path(icon_path).unwrap())
         .menu(&menu)
         .on_menu_event(|app, event| match event.id().as_ref() {
           "quit" => app.exit(0),
