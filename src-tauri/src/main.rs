@@ -177,52 +177,7 @@ async fn main() {
       sender: Mutex::new(async_process_input_tx),
     })
     .setup(|app| {
-      let quit = MenuItemBuilder::new("Quit").id("quit").build(app).unwrap();
-      let hide = MenuItemBuilder::new("Hide").id("hide").build(app).unwrap();
-      let show = MenuItemBuilder::new("Show").id("show").build(app).unwrap();
-      // we could opt handle an error case better than calling unwrap
-      let menu = MenuBuilder::new(app)
-        .items(&[&show, &hide, &quit])
-        .build()
-        .unwrap();
-
-       let icon_path = app.path().resolve("icons/tray.png", tauri::path::BaseDirectory::Resource)?;
-
-      let _ = TrayIconBuilder::new()
-        .icon_as_template(true)
-        .icon(tauri::image::Image::from_path(icon_path).unwrap())
-        .menu(&menu)
-        .on_menu_event(|app, event| match event.id().as_ref() {
-          "quit" => app.exit(0),
-          "hide" => {
-            dbg!("menu item hide clicked");
-            let window = app.get_webview_window("main").unwrap();
-            window.hide().unwrap();
-          }
-          "show" => {
-            dbg!("menu item show clicked");
-            let window = app.get_webview_window("main").unwrap();
-            window.show().unwrap();
-          }
-          _ => {}
-        })
-        // .on_tray_icon_event(|tray_icon, event| match event {
-        //   TrayIconEvent::Click {
-        //     button: MouseButton::Left,
-        //     button_state: MouseButtonState::Up,
-        //     ..
-        //   } => {
-        //     // let app = tray::app_handle();
-        //     // if let Some(window) = app.get_webview_window("main") {
-        //     //   if let Ok(()) = window.show() {
-        //     //     // visible.set_text("Hide");
-        //     //   }
-        //     //   let _ = window.set_focus();
-        //     // }
-        //   }
-        //   _ => {}
-        // })
-        .build(app);
+      tray::create_tray(app);
 
       Ok(())
     })
