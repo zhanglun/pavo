@@ -15,8 +15,8 @@ pub enum PhotoService {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum AsyncProcessMessage {
-  StartRotate,
-  StopRotate,
+  StartShuffle,
+  StopShuffle,
   PreviousPhoto,
   NextPhoto,
 }
@@ -89,10 +89,10 @@ pub fn view_photo(handle: tauri::AppHandle, href: String) {
 
   println!("{:?}", label);
 
-  let view_window = tauri::WindowBuilder::new(
+  let view_window = tauri::webview::WebviewWindowBuilder::new(
     &handle,
     label,
-    tauri::WindowUrl::External(href.parse().unwrap()),
+    tauri::WebviewUrl::External(href.parse().unwrap()),
   )
   .build()
   .unwrap();

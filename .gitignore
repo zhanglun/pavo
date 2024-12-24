@@ -5,3 +5,7 @@
 .idea
 .vscode
 .vs
+node_modules
+build
+.svelte-kit
+.svelte-kit/generated/server/internal.js

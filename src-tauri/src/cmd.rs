@@ -26,17 +26,18 @@ pub async fn download(url: &str, service: PhotoService) -> Result<String, String
 }
 
 #[tauri::command]
-pub async fn get_bing_wallpaper_list(_page: u8) -> Vec<bing::Images> {
+pub async fn get_bing_wallpaper_list(_page: u8, country: String) -> Vec<bing::Images> {
+  println!("🚀 ~ file: cmd.rs:30 ~ pubfnget_bing_wallpaper_list ~ country: {:?}", country);
   let mut cache = cache::CACHE.lock().await;
-  let res = cache.get_bing_list().await;
+  let res = cache.get_bing_list(Some(country)).await;
 
   res
 }
 
 #[tauri::command]
-pub async fn get_bing_daily() -> bing::Images {
+pub async fn get_bing_daily(country: Option<String>) -> bing::Images {
   let mut bing_daily = cache::CACHE.lock().await;
-  let res = bing_daily.get_bing_daily().await;
+  let res = bing_daily.get_bing_daily(country).await;
 
   res
 }
@@ -50,24 +51,24 @@ pub async fn get_config() -> serde_json::Value {
 
 #[tauri::command]
 #[allow(unused)]
-pub async fn set_auto_rotate(
-  rotate: bool,
+pub async fn set_auto_shuffle(
+  shuffle: bool,
   state: tauri::State<'_, AsyncProcInputTx>,
 ) -> Result<(), ()> {
   let pavo_config = config::PavoConfig::get_config();
 
-  pavo_config.set_auto_rotate(rotate);
+  pavo_config.set_auto_shuffle(shuffle);
 
   let async_proc_input_tx = state.sender.lock().await;
 
-  if rotate {
+  if shuffle {
     async_proc_input_tx
-      .send(AsyncProcessMessage::StartRotate)
+      .send(AsyncProcessMessage::StartShuffle)
       .await
       .map_err(|e| e.to_string());
   } else {
     async_proc_input_tx
-      .send(AsyncProcessMessage::StopRotate)
+      .send(AsyncProcessMessage::StopShuffle)
       .await
       .map_err(|e| e.to_string());
   }
@@ -92,10 +93,10 @@ pub async fn set_randomly(randomly: bool) {
 }
 
 #[tauri::command]
-pub async fn set_rotate_source(source: String, checked: bool) {
+pub async fn set_shuffle_source(source: String, checked: bool) {
   let pavo_config = config::PavoConfig::get_config();
 
-  pavo_config.set_rotate_source(source, checked);
+  pavo_config.set_shuffle_source(source, checked);
 }
 
 #[tauri::command]

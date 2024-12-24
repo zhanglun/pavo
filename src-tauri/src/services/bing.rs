@@ -8,6 +8,14 @@ use crate::config;
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UrlParams {
+  pub index: u8,
+  pub number: u8,
+  pub mkt: Option<String>,
+  pub hdr: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tooltips {
   pub loading: String,
   pub next: String,
@@ -56,9 +64,9 @@ pub struct WallpaperRes {
 }
 
 impl WallpaperRes {
-  pub async fn new(index: u8, number: u8) -> Result<WallpaperRes> {
+  pub async fn new(index: u8, number: u8, mkt: Option<String>) -> Result<WallpaperRes> {
     Ok(
-      reqwest::get(get_url(index, number).as_str())
+      reqwest::get(get_url(index, number, mkt).as_str())
         .await?
         .json::<WallpaperRes>()
         .await?,
@@ -66,7 +74,7 @@ impl WallpaperRes {
   }
 }
 
-const BING_URL: &str = "https://www.bing.com/HPImageArchive.aspx?&format=js&nc=1612409408851&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160";
+const BING_URL: &str = "https://www.bing.com/HPImageArchive.aspx?&format=js&uhd=1&uhdwidth=3840&uhdheight=2160";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Wallpaper {
@@ -77,8 +85,8 @@ pub struct Wallpaper {
 }
 
 impl Wallpaper {
-  pub async fn new(index: u8, number: u8) -> Result<Wallpaper> {
-    let json = WallpaperRes::new(index, number).await?;
+  pub async fn new(index: u8, number: u8, mkt: Option<String>) -> Result<Wallpaper> {
+    let json = WallpaperRes::new(index, number, mkt).await?;
     Ok(Wallpaper {
       index,
       number,
@@ -127,15 +135,18 @@ impl Wallpaper {
   }
 }
 
-fn get_url(index: u8, number: u8) -> String {
-  let url = [
-    BING_URL,
-    "&idx=",
-    &index.to_string(),
-    "&n=",
-    &number.to_string(),
-  ]
-  .join("");
+fn get_url(index: u8, number: u8, mkt: Option<String>) -> String {
+  let num = number.to_string();
+  let idx = index.to_string();
+  let mut url_parts = vec![BING_URL, "&idx=", &idx, "&n=", &num];
+  let mut mkt_str = String::new();
+
+  if let Some(mkt_val) = mkt {
+    mkt_str = format!("&mkt={}", mkt_val);
+    url_parts.push(&mkt_str);
+  }
+
+  let url = url_parts.concat();
 
   println!("url: {:?}", url);
 
