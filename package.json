@@ -1,7 +1,7 @@
 {
-  "name": "pavov2",
-  "version": "0.1.0",
-  "description": "",
+  "name": "pavo",
+  "version": "0.0.5",
+  "description": "bing daily wallpaper",
   "type": "module",
   "scripts": {
     "dev": "vite dev",

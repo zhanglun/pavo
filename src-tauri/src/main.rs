@@ -121,7 +121,6 @@ use tokio::sync::{mpsc, Mutex};
 use tauri::{
   Manager,
   menu::{Menu, MenuBuilder, MenuItem, MenuItemBuilder},
-  tray::TrayIconBuilder,
 };
 
 #[tokio::main]

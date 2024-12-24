@@ -1,6 +1,6 @@
 [package]
 name = "pavo"
-version = "0.0.0"
+version = "0.0.5"
 description = "wallpaper"
 authors = ["you"]
 license = ""

@@ -2461,14 +2461,14 @@ checksum = "d61c5ce1153ab5b689d0c074c4e7fc613e942dfb7dd9eea5ab202d2ad91fe361"
 
 [[package]]
 name = "pavo"
-version = "0.0.0"
+version = "0.0.5"
 dependencies = [
  "chrono",
  "dirs 5.0.1",
  "futures-util",
  "indicatif",
  "once_cell",
- "rand 0.8.5",
+ "rand 0.7.3",
  "reqwest 0.11.27",
  "serde",
  "serde-wasm-bindgen",
