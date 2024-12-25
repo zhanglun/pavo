@@ -40,7 +40,7 @@
         "depends": []
       }
     },
-    "createUpdaterArtifacts": "v1Compatible"
+    "createUpdaterArtifacts": "true"
   },
   "productName": "Pavo",
   "mainBinaryName": "Pavo",
@@ -48,7 +48,7 @@
   "identifier": "com.pavo.dev",
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ4NTM0QTQyMjU3QTRCNTEKUldSUlMzb2xRa3BUMklqK2lWSDhITG1xbVFLd09YeDUwbUp1aldySHAva3AyaW9WRnBMRmRWRWsK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ5OEI3RDFENEFCREY4NkIKUldScitMMUtIWDJMU2E0b1ZkK0VhWFY5eUplVWlIWXZITjg3VUJIdFByTW1oNUNZRnFLQzZkTUsK",
       "endpoints": []
     }
   },
