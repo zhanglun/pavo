@@ -40,7 +40,7 @@
         "depends": []
       }
     },
-    "createUpdaterArtifacts": "true"
+    "createUpdaterArtifacts": true
   },
   "productName": "Pavo",
   "mainBinaryName": "Pavo",
