@@ -40,7 +40,7 @@
         "depends": []
       }
     },
-    "createUpdaterArtifacts": "true"
+    "createUpdaterArtifacts": "v1Compatible"
   },
   "productName": "Pavo",
   "mainBinaryName": "Pavo",
@@ -49,7 +49,9 @@
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ5OEI3RDFENEFCREY4NkIKUldScitMMUtIWDJMU2E0b1ZkK0VhWFY5eUplVWlIWXZITjg3VUJIdFByTW1oNUNZRnFLQzZkTUsK",
-      "endpoints": []
+      "endpoints": [
+        "https://github.com/zhanglun/pavo/releases/latest/download/latest.json"
+      ]
     }
   },
   "app": {
