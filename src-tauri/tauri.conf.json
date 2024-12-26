@@ -48,7 +48,7 @@
   "identifier": "com.pavo.dev",
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ5OEI3RDFENEFCREY4NkIKUldScitMMUtIWDJMU2E0b1ZkK0VhWFY5eUplVWlIWXZITjg3VUJIdFByTW1oNUNZRnFLQzZkTUsK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRCMDVFRTJENTUxRjVBRTQKUldUa1doOVZMZTRGUzI0L2o1Z09PWHdadU1admFkSTRuQk1EUkNZa1l0eHNvWWp5RDMvd3lPVFEK",
       "endpoints": [
         "https://github.com/zhanglun/pavo/releases/latest/download/latest.json"
       ]
