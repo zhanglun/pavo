@@ -178,6 +178,14 @@ async fn main() {
     .setup(|app| {
       tray::create_tray(app);
 
+      use pavo::update;
+
+      let handle = app.handle().clone();
+
+      tauri::async_runtime::spawn(async move {
+        update(handle).await.unwrap();
+      });
+
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![
