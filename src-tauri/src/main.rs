@@ -118,11 +118,6 @@ use tokio::sync::{mpsc, Mutex};
 //  }
 //}
 
-use tauri::{
-  Manager,
-  menu::{Menu, MenuBuilder, MenuItem, MenuItemBuilder},
-};
-
 #[tokio::main]
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
@@ -175,8 +170,9 @@ async fn main() {
     .manage(AsyncProcInputTx {
       sender: Mutex::new(async_process_input_tx),
     })
-    .setup(|app| {
-      tray::create_tray(app);
+    .setup(move |app| {
+      let sender = tx.clone();
+      tray::create_tray(app, sender);
 
       use pavo::update;
 
