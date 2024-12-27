@@ -10,7 +10,10 @@ use crate::cmd::AsyncProcInputTx;
 use crate::services::AsyncProcessMessage;
 use tokio::sync::{mpsc, Mutex};
 
-pub fn create_tray(app: &mut App, sender: mpsc::Sender<AsyncProcessMessage>) -> Result<(), tauri::Error> {
+pub fn create_tray(
+  app: &mut App,
+  sender: mpsc::Sender<AsyncProcessMessage>,
+) -> Result<(), tauri::Error> {
   let quit = MenuItemBuilder::new("Quit").id("quit").build(app).unwrap();
   let show = MenuItemBuilder::new("Show").id("show").build(app).unwrap();
   let hide = MenuItemBuilder::new("Hide").id("hide").build(app).unwrap();
@@ -25,15 +28,18 @@ pub fn create_tray(app: &mut App, sender: mpsc::Sender<AsyncProcessMessage>) -> 
     .build(app)
     .unwrap();
 
-  let about = MenuItemBuilder::new("About Pavo").id("about")
-  .build(app)
-  .unwrap();
-  let check_for_update = MenuItemBuilder::new("Check for Updates").id("check_for_updates")
-  .build(app)
-  .unwrap();
-  let settings = MenuItemBuilder::new("Settings...").id("setting")
-  .build(app)
-  .unwrap();
+  let about = MenuItemBuilder::new("About Pavo")
+    .id("about")
+    .build(app)
+    .unwrap();
+  let check_for_update = MenuItemBuilder::new("Check for Updates")
+    .id("check_for_updates")
+    .build(app)
+    .unwrap();
+  let settings = MenuItemBuilder::new("Settings...")
+    .id("setting")
+    .build(app)
+    .unwrap();
 
   let menu = MenuBuilder::new(app)
     .items(&[&previous_photo, &next_photo])
@@ -109,6 +115,9 @@ pub fn create_tray(app: &mut App, sender: mpsc::Sender<AsyncProcessMessage>) -> 
           tx.send(AsyncProcessMessage::NextPhoto).await.unwrap();
           println!("send");
         });
+      }
+      "about" => {
+        // app.emit("go-to-about", ());
       }
       "quit" => {
         println!("quit menu item was clicked");
