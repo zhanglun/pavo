@@ -25,10 +25,24 @@ pub fn create_tray(app: &mut App, sender: mpsc::Sender<AsyncProcessMessage>) -> 
     .build(app)
     .unwrap();
 
+  let about = MenuItemBuilder::new("About Pavo").id("about")
+  .build(app)
+  .unwrap();
+  let check_for_update = MenuItemBuilder::new("Check for Updates").id("check_for_updates")
+  .build(app)
+  .unwrap();
+  let settings = MenuItemBuilder::new("Settings...").id("setting")
+  .build(app)
+  .unwrap();
+
   let menu = MenuBuilder::new(app)
     .items(&[&previous_photo, &next_photo])
     .separator()
-    .items(&[&show, &hide, &quit])
+    .items(&[&show, &hide])
+    .separator()
+    .items(&[&about, &check_for_update, &settings])
+    .separator()
+    .items(&[&quit])
     .build()
     .unwrap();
 
