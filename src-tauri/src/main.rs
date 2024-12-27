@@ -11,11 +11,11 @@ mod services;
 mod tray;
 
 use cmd::AsyncProcInputTx;
+use log;
 use services::AsyncProcessMessage;
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
 use tokio::sync::{mpsc, Mutex};
-use log;
 
 fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
   match event {
@@ -82,6 +82,12 @@ async fn main() {
   });
 
   tauri::Builder::default()
+    .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+      let _ = app.get_webview_window("main")
+        .expect("no main window")
+        .set_focus();
+      })
+    )
     .plugin(
       tauri_plugin_log::Builder::new()
         .target(tauri_plugin_log::Target::new(
