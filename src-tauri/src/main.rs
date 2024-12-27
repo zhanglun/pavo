@@ -15,6 +15,7 @@ use services::AsyncProcessMessage;
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
 use tokio::sync::{mpsc, Mutex};
+use log;
 
 fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
   match event {
@@ -81,7 +82,17 @@ async fn main() {
   });
 
   tauri::Builder::default()
-    .plugin(tauri_plugin_log::Builder::new().build())
+    .plugin(
+      tauri_plugin_log::Builder::new()
+        .target(tauri_plugin_log::Target::new(
+          tauri_plugin_log::TargetKind::Folder {
+            path: std::path::PathBuf::from(config::PavoConfig::get_app_folder().unwrap() + "/logs"),
+            file_name: None,
+          },
+        ))
+        .level(log::LevelFilter::Info)
+        .build(),
+    )
     .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_shell::init())

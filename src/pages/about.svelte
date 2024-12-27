@@ -25,12 +25,10 @@
   </div>
   <div class="text-xl text-center">{name}</div>
   <div class="text-sm mt-6 flex gap-3 items-center justify-center">
-    <span>version {version}</span><span><CheckCircleSolid stroke-width="1.5" size="sm" color="green"/></span>
+    <span>version {version}</span><span
+      ><CheckCircleSolid stroke-width="1.5" size="sm" color="green" /></span
+    >
   </div>
-  <!-- <div>
-    <div>System Info</div>
-    <div></div>
-  </div> -->
   <div class="text-sm font-light flex gap-2 items-center justify-center mt-5">
     <A class="hover:underline" href="https://github.com/zhanglun/pavo"
       >Github Repo</A
