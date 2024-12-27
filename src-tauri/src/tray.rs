@@ -67,6 +67,15 @@ pub fn create_tray(
         ..
       } => {
         println!("left click pressed and released");
+        if cfg!(target_os  = "windows") {
+
+        let app = tray.app_handle();
+
+        if let Some(window) = app.get_webview_window("main") {
+          let _ = window.show();
+          let _ = window.set_focus();
+        }
+        }
       }
       // A double click happened on the tray icon. Windows Only
       TrayIconEvent::DoubleClick {
@@ -87,6 +96,7 @@ pub fn create_tray(
         // println!("unhandled event {event:?}");
       }
     })
+    .menu_on_left_click(false)
     .on_menu_event(move |app, event| match event.id.as_ref() {
       "show" => {
         let app = app.app_handle();
