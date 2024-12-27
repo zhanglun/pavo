@@ -12,33 +12,18 @@ mod tray;
 
 use cmd::AsyncProcInputTx;
 use services::AsyncProcessMessage;
+use tauri::Manager;
+use tauri_plugin_log::{Target, TargetKind};
 use tokio::sync::{mpsc, Mutex};
 
-fn handle_window_event(event: GlobalWindowEvent<Wry>) {
-  let window = event.window();
-  let app = window.app_handle();
-
-  match event.event() {
-    WindowEvent::CloseRequested { api, .. } => {
+fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
+  match event {
+    tauri::WindowEvent::CloseRequested { api, .. } => {
       let window = window.clone();
       api.prevent_close();
       window.hide().unwrap();
-      // ask the user if he wants to quit
-      // ask(
-      //   Some(&window),
-      //   "Tauri API",
-      //   "Are you sure that you want to close this window?",
-      //   |answer| {
-      //     if answer {
-      //       // .close() cannot be called on the main thread
-      //       std::thread::spawn(move || {
-      //         window.close().unwrap();
-      //       });
-      //     }
-      //   },
-      // );
     }
-    WindowEvent::Focused(_) => {
+    tauri::WindowEvent::Focused(_) => {
       println!("window focused!");
 
       // tauri::async_runtime::spawn(async move {
