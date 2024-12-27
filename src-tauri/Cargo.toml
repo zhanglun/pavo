@@ -30,6 +30,7 @@ once_cell = "1.17.0"
 tauri-plugin-shell = "2"
 tauri-plugin-fs = "2"
 dirs = "5.0.1"
+tauri-plugin-log = "2"
 
 [features]
 # by default Tauri runs in production mode
