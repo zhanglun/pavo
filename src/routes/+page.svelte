@@ -13,18 +13,19 @@
         current = "About";
       });
     };
-
   });
 </script>
 
-<Tabs tabStyle="underline" contentClass="p-4">
-  <TabItem open title="Bing">
-    <Bing />
-  </TabItem>
-  <TabItem title="Settings">
-    <Settings />
-  </TabItem>
-  <TabItem title="About">
-    <About />
-  </TabItem>
-</Tabs>
+<div class="w-full h-full flex flex-col">
+  <Tabs tabStyle="underline" contentClass="p-4 pr-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-stable">
+    <TabItem open title="Bing">
+      <Bing />
+    </TabItem>
+    <TabItem title="Settings">
+      <Settings />
+    </TabItem>
+    <TabItem title="About">
+      <About />
+    </TabItem>
+  </Tabs>
+</div>

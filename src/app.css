@@ -2,3 +2,14 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+#app {
+  height: 100vh;
+  background-color: white;
+  border-radius: 8px;
+}
+
+@layer components {
+  .scrollbar-stable {
+    scrollbar-gutter: stable;
+  }
+}
