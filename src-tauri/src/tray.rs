@@ -80,13 +80,18 @@ pub fn create_tray(
             let app = tray.app_handle();
 
             if let Some(window) = app.get_webview_window("main") {
-              let _ = window.move_window(Position::TrayCenter);
-
               print!("window visible? {}", window.is_visible().unwrap());
 
               if window.is_visible().unwrap() {
                 let _ = window.hide();
               } else {
+                let _ = window.move_window(Position::TrayCenter);
+                // let current_position = window.outer_position().unwrap();
+                // let offset_position = tauri::PhysicalPosition {
+                //   x: current_position.x - 288,
+                //     y: current_position.y - 12,
+                // };
+                // let _ = window.set_position(tauri::Position::Physical(offset_position));
                 let _ = window.show();
                 let _ = window.set_focus();
               }

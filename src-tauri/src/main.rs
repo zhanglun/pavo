@@ -24,13 +24,17 @@ fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
       api.prevent_close();
       window.hide().unwrap();
     }
-    tauri::WindowEvent::Focused(_) => {
-      println!("window focused!");
+    tauri::WindowEvent::Focused(flag) => {
+      println!("window focused! {:?}", flag);
 
       // tauri::async_runtime::spawn(async move {
       //   let mut g_cache = cache::CACHE.lock().await;
       //   g_cache.update_timestamp();
       // });
+
+      // if !flag {
+      //   window.hide().unwrap();
+      // }
     }
     _ => {}
   }
@@ -104,15 +108,12 @@ async fn main() {
     .plugin(tauri_plugin_positioner::init())
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_shell::init())
-    // .on_system_tray_event(|app, event| {
-    //   tauri_plugin_positioner::on_tray_event(app, &event);
-    // })
     .manage(AsyncProcInputTx {
       sender: Mutex::new(async_process_input_tx),
     })
     .setup(move |app| {
       let sender = tx.clone();
-      tray::create_tray(app, sender);
+      let _ = tray::create_tray(app, sender);
 
       use pavo::update;
 
