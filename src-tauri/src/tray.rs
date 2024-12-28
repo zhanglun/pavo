@@ -1,4 +1,5 @@
 use tauri::image::Image;
+use tauri_plugin_positioner::{WindowExt, Position};
 use tauri::{
   menu::{Menu, MenuItem},
   menu::{MenuBuilder, MenuItemBuilder},
@@ -60,40 +61,56 @@ pub fn create_tray(
     .menu(&menu)
     .icon_as_template(true)
     .icon(Image::from_path(icon_path).unwrap())
-    .on_tray_icon_event(|tray, event| match event {
-      TrayIconEvent::Click {
-        button: MouseButton::Left,
-        button_state: MouseButtonState::Up,
-        ..
-      } => {
-        println!("left click pressed and released");
-        if cfg!(target_os  = "windows") {
+    // .on_tray_icon_event(|tray_handle, event| {
+    //   tauri_plugin_positioner::on_tray_event(tray_handle.app_handle(), &event);
+    // })
+    .on_tray_icon_event(|tray, event| {
+      tauri_plugin_positioner::on_tray_event(tray.app_handle(), &event);
 
-        let app = tray.app_handle();
+      match event {
 
-        if let Some(window) = app.get_webview_window("main") {
-          let _ = window.show();
-          let _ = window.set_focus();
-        }
-        }
-      }
-      // A double click happened on the tray icon. Windows Only
-      TrayIconEvent::DoubleClick {
-        id,
-        position,
-        rect,
-        button,
-      } => {
-        println!("double click");
-        let app = tray.app_handle();
+        TrayIconEvent::Click {
+          button: MouseButton::Left,
+          button_state: MouseButtonState::Up,
+          ..
+        } => {
+          println!("left click pressed and released");
+          if cfg!(target_os = "windows") {
 
-        if let Some(window) = app.get_webview_window("main") {
-          let _ = window.show();
-          let _ = window.set_focus();
+            let app = tray.app_handle();
+
+            if let Some(window) = app.get_webview_window("main") {
+              let _ = window.move_window(Position::TrayCenter);
+
+              print!("window visible? {}", window.is_visible().unwrap());
+
+              if window.is_visible().unwrap() {
+                let _ = window.hide();
+              } else {
+                let _ = window.show();
+                let _ = window.set_focus();
+              }
+            }
+          }
         }
-      }
-      _ => {
-        // println!("unhandled event {event:?}");
+        // A double click happened on the tray icon. Windows Only
+        TrayIconEvent::DoubleClick {
+          id,
+          position,
+          rect,
+          button,
+        } => {
+          println!("double click");
+          let app = tray.app_handle();
+
+          if let Some(window) = app.get_webview_window("main") {
+            let _ = window.show();
+            let _ = window.set_focus();
+          }
+        }
+        _ => {
+          // println!("unhandled event {event:?}");
+        }
       }
     })
     .menu_on_left_click(false)

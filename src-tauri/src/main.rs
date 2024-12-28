@@ -82,12 +82,13 @@ async fn main() {
   });
 
   tauri::Builder::default()
+    .plugin(tauri_plugin_positioner::init())
     .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
-      let _ = app.get_webview_window("main")
+      let _ = app
+        .get_webview_window("main")
         .expect("no main window")
         .set_focus();
-      })
-    )
+    }))
     .plugin(
       tauri_plugin_log::Builder::new()
         .target(tauri_plugin_log::Target::new(
@@ -100,8 +101,12 @@ async fn main() {
         .build(),
     )
     .plugin(tauri_plugin_updater::Builder::new().build())
+    .plugin(tauri_plugin_positioner::init())
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_shell::init())
+    // .on_system_tray_event(|app, event| {
+    //   tauri_plugin_positioner::on_tray_event(app, &event);
+    // })
     .manage(AsyncProcInputTx {
       sender: Mutex::new(async_process_input_tx),
     })
