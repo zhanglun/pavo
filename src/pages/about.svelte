@@ -30,11 +30,11 @@
     >
   </div>
   <div class="text-sm font-light flex gap-2 items-center justify-center mt-5">
-    <A class="hover:underline" href="https://github.com/zhanglun/pavo"
+    <A class="hover:underline" href="https://github.com/zhanglun/pavo" target="_blank"
       >Github Repo</A
     >
     <span class="w-[1px] h-3 bg-gray-200"></span>
-    <A class="hover:underline" href="https://github.com/zhanglun/pavo/issues"
+    <A class="hover:underline" href="https://github.com/zhanglun/pavo/issues" target="_blank"
       >Report Issue</A
     >
   </div>
