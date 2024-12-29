@@ -44,7 +44,7 @@
   },
   "productName": "Pavo",
   "mainBinaryName": "Pavo",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "identifier": "com.pavo.dev",
   "plugins": {
     "updater": {
@@ -59,9 +59,11 @@
       {
         "fullscreen": false,
         "height": 800,
-        "resizable": true,
+        "resizable": false,
         "title": "Pavo",
-        "width": 380
+        "width": 380,
+        "visible": false,
+        "decorations": false
       }
     ],
     "withGlobalTauri": true,

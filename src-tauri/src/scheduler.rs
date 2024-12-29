@@ -55,8 +55,10 @@ impl Scheduler {
       filename: Images::get_filename(&p.url).to_string(),
     });
 
-    println!("user_config.shuffle_source {:?}", user_config.shuffle_source);
-
+    println!(
+      "user_config.shuffle_source {:?}",
+      user_config.shuffle_source
+    );
 
     self.list = list.collect();
 

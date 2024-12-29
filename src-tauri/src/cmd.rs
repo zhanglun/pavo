@@ -27,7 +27,7 @@ pub async fn download(url: &str, service: PhotoService) -> Result<String, String
 
 #[tauri::command]
 pub async fn get_bing_wallpaper_list(_page: u8, country: String) -> Vec<bing::Images> {
-  println!("🚀 ~ file: cmd.rs:30 ~ pubfnget_bing_wallpaper_list ~ country: {:?}", country);
+  log::info!("🚀 ~ file: cmd.rs:30 ~ country: {:?}", country);
   let mut cache = cache::CACHE.lock().await;
   let res = cache.get_bing_list(Some(country)).await;
 

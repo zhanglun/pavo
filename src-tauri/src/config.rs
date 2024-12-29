@@ -1,8 +1,8 @@
+use dirs;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
-use dirs;
 use tauri;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
