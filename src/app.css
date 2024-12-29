@@ -10,6 +10,11 @@
 
 @layer components {
   .scrollbar-stable {
-    scrollbar-gutter: stable;
+    scrollbar-gutter: overlay;
   }
+}
+
+
+body {
+  overflow: hidden;
 }

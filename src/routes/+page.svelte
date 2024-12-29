@@ -17,14 +17,14 @@
 </script>
 
 <div class="w-full h-full flex flex-col">
-  <Tabs tabStyle="underline" contentClass="p-4 pr-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-stable">
-    <TabItem open title="Bing">
+  <Tabs tabStyle="underline" contentClass="flex-1 h-0">
+    <TabItem open title="Bing" divClass="p-4 pr-0 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
       <Bing />
     </TabItem>
-    <TabItem title="Settings">
+    <TabItem title="Settings" divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
       <Settings />
     </TabItem>
-    <TabItem title="About">
+    <TabItem title="About" divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
       <About />
     </TabItem>
   </Tabs>
