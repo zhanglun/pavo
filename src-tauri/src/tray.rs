@@ -112,7 +112,7 @@ pub fn create_tray(
         //   }
         // }
         _ => {
-          log::info!("unhandled event {event:?}");
+          log::trace!("unhandled event {event:?}");
         }
       }
     })
