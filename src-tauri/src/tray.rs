@@ -1,11 +1,11 @@
 use tauri::image::Image;
-use tauri_plugin_positioner::{WindowExt, Position};
 use tauri::{
   menu::{Menu, MenuItem},
   menu::{MenuBuilder, MenuItemBuilder},
   tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
   App, Manager,
 };
+use tauri_plugin_positioner::{Position, WindowExt};
 
 use crate::cmd::AsyncProcInputTx;
 use crate::services::AsyncProcessMessage;
@@ -68,33 +68,30 @@ pub fn create_tray(
       tauri_plugin_positioner::on_tray_event(tray.app_handle(), &event);
 
       match event {
-
         TrayIconEvent::Click {
           button: MouseButton::Left,
           button_state: MouseButtonState::Up,
           ..
         } => {
           println!("left click pressed and released");
-          if cfg!(target_os = "windows") {
 
-            let app = tray.app_handle();
+          let app = tray.app_handle();
 
-            if let Some(window) = app.get_webview_window("main") {
-              print!("window visible? {}", window.is_visible().unwrap());
+          if let Some(window) = app.get_webview_window("main") {
+            print!("window visible? {}", window.is_visible().unwrap());
 
-              if window.is_visible().unwrap() {
-                let _ = window.hide();
-              } else {
-                let _ = window.move_window(Position::TrayCenter);
-                // let current_position = window.outer_position().unwrap();
-                // let offset_position = tauri::PhysicalPosition {
-                //   x: current_position.x - 288,
-                //     y: current_position.y - 12,
-                // };
-                // let _ = window.set_position(tauri::Position::Physical(offset_position));
-                let _ = window.show();
-                let _ = window.set_focus();
-              }
+            if window.is_visible().unwrap() {
+              let _ = window.hide();
+            } else {
+              let _ = window.move_window(Position::TrayCenter);
+              // let current_position = window.outer_position().unwrap();
+              // let offset_position = tauri::PhysicalPosition {
+              //   x: current_position.x - 288,
+              //     y: current_position.y - 12,
+              // };
+              // let _ = window.set_position(tauri::Position::Physical(offset_position));
+              let _ = window.show();
+              let _ = window.set_focus();
             }
           }
         }
