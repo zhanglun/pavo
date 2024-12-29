@@ -4,6 +4,7 @@
   import Bing from "../pages/bing.svelte";
   import Settings from "../pages/settings.svelte";
   import About from "../pages/about.svelte";
+  import { checkUpdate } from "$lib/updater";
 
   let current = $state("Bing");
 
@@ -12,19 +13,32 @@
       listen("go-to-about", (event) => {
         current = "About";
       });
+
+      listen("go-to-settings", (event) => {
+        current = "Settings";
+      });
+
+      listen("check-for-updates", (event) => {
+        console.log("🚀 ~ file: +page.svelte:22 ~ listen ~ check-for-update:")
+        checkUpdate().then(() => {
+
+        })
+      });
     };
+
+    return sub();
   });
 </script>
 
 <div class="w-full h-full flex flex-col">
   <Tabs tabStyle="underline" contentClass="flex-1 h-0">
-    <TabItem open title="Bing" divClass="p-4 pr-0 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
+    <TabItem open={current === "Bing"} title="Bing" divClass="p-4 pr-0 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
       <Bing />
     </TabItem>
-    <TabItem title="Settings" divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
+    <TabItem open={current === "Settings"} title="Settings" divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
       <Settings />
     </TabItem>
-    <TabItem title="About" divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
+    <TabItem open={current === "About"} title="About" divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
       <About />
     </TabItem>
   </Tabs>

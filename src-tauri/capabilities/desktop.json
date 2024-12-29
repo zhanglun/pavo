@@ -9,6 +9,11 @@
     "updater:default",
     "updater:default",
     "positioner:default",
-    "positioner:default"
+    "positioner:default",
+    "process:default",
+    "updater:allow-install",
+    "updater:allow-check",
+    "updater:allow-download",
+    "updater:allow-download-and-install"
   ]
 }

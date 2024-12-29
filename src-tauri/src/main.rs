@@ -86,6 +86,7 @@ async fn main() {
   });
 
   tauri::Builder::default()
+    .plugin(tauri_plugin_process::init())
     .plugin(tauri_plugin_positioner::init())
     .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
       let _ = app

@@ -3,7 +3,7 @@ use tauri::{
   menu::{Menu, MenuItem},
   menu::{MenuBuilder, MenuItemBuilder},
   tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-  App, Manager,
+  App, Emitter, Manager,
 };
 use tauri_plugin_positioner::{Position, WindowExt};
 
@@ -38,7 +38,7 @@ pub fn create_tray(
     .build(app)
     .unwrap();
   let settings = MenuItemBuilder::new("Settings...")
-    .id("setting")
+    .id("settings")
     .build(app)
     .unwrap();
 
@@ -96,22 +96,23 @@ pub fn create_tray(
           }
         }
         // A double click happened on the tray icon. Windows Only
-        TrayIconEvent::DoubleClick {
-          id,
-          position,
-          rect,
-          button,
-        } => {
-          println!("double click");
-          let app = tray.app_handle();
+        // TrayIconEvent::DoubleClick {
+        //   id,
+        //   position,
+        //   rect,
+        //   button,
+        // } => {
+        //   println!("double click");
+        //   let app = tray.app_handle();
 
-          if let Some(window) = app.get_webview_window("main") {
-            let _ = window.show();
-            let _ = window.set_focus();
-          }
-        }
+        //   if let Some(window) = app.get_webview_window("main") {
+        //     let _ = window.move_window(Position::TrayCenter);
+        //     let _ = window.show();
+        //     let _ = window.set_focus();
+        //   }
+        // }
         _ => {
-          // println!("unhandled event {event:?}");
+          log::info!("unhandled event {event:?}");
         }
       }
     })
@@ -121,6 +122,7 @@ pub fn create_tray(
         let app = app.app_handle();
 
         if let Some(window) = app.get_webview_window("main") {
+          let _ = window.move_window(Position::TrayCenter);
           let _ = window.show();
           let _ = window.set_focus();
         }
@@ -146,7 +148,29 @@ pub fn create_tray(
         });
       }
       "about" => {
-        // app.emit("go-to-about", ());
+        let app = app.app_handle();
+
+        if let Some(window) = app.get_webview_window("main") {
+          app.emit("go-to-about", ());
+
+          let _ = window.move_window(Position::TrayCenter);
+          let _ = window.show();
+          let _ = window.set_focus();
+        }
+      }
+      "settings" => {
+        let app = app.app_handle();
+
+        if let Some(window) = app.get_webview_window("main") {
+          app.emit("go-to-about", ());
+
+          let _ = window.move_window(Position::TrayCenter);
+          let _ = window.show();
+          let _ = window.set_focus();
+        }
+      }
+      "check_for_updates" => {
+        app.emit("check-for-updates", ());
       }
       "quit" => {
         println!("quit menu item was clicked");
