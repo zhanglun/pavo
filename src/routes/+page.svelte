@@ -19,10 +19,7 @@
       });
 
       listen("check-for-updates", (event) => {
-        console.log("🚀 ~ file: +page.svelte:22 ~ listen ~ check-for-update:")
-        checkUpdate().then(() => {
-
-        })
+        checkUpdate().then(() => {});
       });
     };
 
@@ -32,13 +29,34 @@
 
 <div class="w-full h-full flex flex-col">
   <Tabs tabStyle="underline" contentClass="flex-1 h-0">
-    <TabItem open={current === "Bing"} title="Bing" divClass="p-4 pr-2 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
+    <TabItem
+      open={current === "Bing"}
+      title="Bing"
+      divClass="p-4 pr-2 h-full overflow-y-auto overflow-x-hidden scrollbar-stable"
+      onclick={() => {
+        current = "Bing";
+      }}
+    >
       <Bing />
     </TabItem>
-    <TabItem open={current === "Settings"} title="Settings" divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
+    <TabItem
+      open={current === "Settings"}
+      title="Settings"
+      divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable"
+      onclick={() => {
+        current = "Settings";
+      }}
+    >
       <Settings />
     </TabItem>
-    <TabItem open={current === "About"} title="About" divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable">
+    <TabItem
+      open={current === "About"}
+      title="About"
+      divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable"
+      onclick={() => {
+        current = "About";
+      }}
+    >
       <About />
     </TabItem>
   </Tabs>

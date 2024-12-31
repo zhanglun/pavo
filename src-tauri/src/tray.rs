@@ -76,9 +76,7 @@ pub fn create_tray(
           button_state: MouseButtonState::Up,
           ..
         } => {
-
           if let Some(window) = app.get_webview_window("main") {
-
             if window.is_visible().unwrap() {
               let _ = window.hide();
             } else {
@@ -149,8 +147,7 @@ pub fn create_tray(
         let app = app.app_handle();
 
         if let Some(window) = app.get_webview_window("main") {
-          app.emit("go-to-about", ());
-
+          let _ = app.emit("go-to-about", ());
           let _ = window.move_window(Position::TrayCenter);
           let _ = window.show();
           let _ = window.set_focus();
@@ -160,15 +157,14 @@ pub fn create_tray(
         let app = app.app_handle();
 
         if let Some(window) = app.get_webview_window("main") {
-          app.emit("go-to-about", ());
-
+          let _ = app.emit("go-to-settings", ());
           let _ = window.move_window(Position::TrayCenter);
           let _ = window.show();
           let _ = window.set_focus();
         }
       }
       "check_for_updates" => {
-        app.emit("check-for-updates", ());
+        let _ = app.emit("check-for-updates", ());
       }
       "quit" => {
         println!("quit menu item was clicked");

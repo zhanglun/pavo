@@ -1,6 +1,6 @@
 [package]
 name = "pavo"
-version = "0.0.5"
+version = "0.0.6"
 description = "wallpaper"
 authors = ["you"]
 license = ""
@@ -33,6 +33,7 @@ dirs = "5.0.1"
 tauri-plugin-log = "2"
 log = "0.4"
 tauri-plugin-process = "2"
+tauri-plugin-dialog = "2"
 
 [features]
 # by default Tauri runs in production mode
