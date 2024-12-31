@@ -1,6 +1,6 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 #app {
   height: 100vh;
@@ -16,7 +16,7 @@
     width: 8px;
   }
   .scrollbar-stable::-webkit-scrollbar-thumb {
-    background-color: rgba(0,0,0,0.6);
+    background-color: rgba(0, 0, 0, 0.6);
     border-radius: 8px;
     /* box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3); */
   }
@@ -25,9 +25,6 @@
   }
 }
 
-
 body {
   overflow: hidden;
 }
-
-

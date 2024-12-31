@@ -64,6 +64,8 @@ pub fn create_tray(
     .on_tray_icon_event(|tray, event| {
       tauri_plugin_positioner::on_tray_event(tray.app_handle(), &event);
 
+      let app = tray.app_handle();
+
       if let Some(window) = app.get_webview_window("main") {
         let _ = window.move_window(Position::TrayCenter);
       }
@@ -74,9 +76,9 @@ pub fn create_tray(
           button_state: MouseButtonState::Up,
           ..
         } => {
-          let app = tray.app_handle();
 
           if let Some(window) = app.get_webview_window("main") {
+
             if window.is_visible().unwrap() {
               let _ = window.hide();
             } else {

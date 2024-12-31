@@ -55,6 +55,7 @@
     }
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
         "fullscreen": false,
@@ -63,7 +64,8 @@
         "title": "Pavo",
         "width": 380,
         "visible": false,
-        "decorations": false
+        "decorations": false,
+        "transparent": true
       }
     ],
     "withGlobalTauri": true,
