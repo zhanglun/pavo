@@ -2924,7 +2924,7 @@ checksum = "d61c5ce1153ab5b689d0c074c4e7fc613e942dfb7dd9eea5ab202d2ad91fe361"
 
 [[package]]
 name = "pavo"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "chrono",
  "dirs 5.0.1",
