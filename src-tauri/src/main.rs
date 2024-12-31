@@ -27,14 +27,9 @@ fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
     tauri::WindowEvent::Focused(flag) => {
       println!("window focused! {:?}", flag);
 
-      // tauri::async_runtime::spawn(async move {
-      //   let mut g_cache = cache::CACHE.lock().await;
-      //   g_cache.update_timestamp();
-      // });
-
-      // if !flag {
-      //   window.hide().unwrap();
-      // }
+      if !flag {
+        let _ = window.hide().unwrap();
+      }
     }
     _ => {}
   }
@@ -85,10 +80,11 @@ async fn main() {
     }
   });
 
-  tauri::Builder::default()
+  let mut app = tauri::Builder::default()
+    .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_process::init())
     .plugin(tauri_plugin_positioner::init())
-    .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+    .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
       let _ = app
         .get_webview_window("main")
         .expect("no main window")
@@ -113,6 +109,9 @@ async fn main() {
       sender: Mutex::new(async_process_input_tx),
     })
     .setup(move |app| {
+      #[cfg(target_os = "macos")]
+      app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
       let sender = tx.clone();
       let _ = tray::create_tray(app, sender);
 
