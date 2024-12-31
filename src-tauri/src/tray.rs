@@ -61,11 +61,12 @@ pub fn create_tray(
     .menu(&menu)
     .icon_as_template(true)
     .icon(Image::from_path(icon_path).unwrap())
-    // .on_tray_icon_event(|tray_handle, event| {
-    //   tauri_plugin_positioner::on_tray_event(tray_handle.app_handle(), &event);
-    // })
     .on_tray_icon_event(|tray, event| {
       tauri_plugin_positioner::on_tray_event(tray.app_handle(), &event);
+
+      if let Some(window) = app.get_webview_window("main") {
+        let _ = window.move_window(Position::TrayCenter);
+      }
 
       match event {
         TrayIconEvent::Click {
@@ -73,17 +74,12 @@ pub fn create_tray(
           button_state: MouseButtonState::Up,
           ..
         } => {
-          println!("left click pressed and released");
-
           let app = tray.app_handle();
 
           if let Some(window) = app.get_webview_window("main") {
-            print!("window visible? {}", window.is_visible().unwrap());
-
             if window.is_visible().unwrap() {
               let _ = window.hide();
             } else {
-              let _ = window.move_window(Position::TrayCenter);
               // let current_position = window.outer_position().unwrap();
               // let offset_position = tauri::PhysicalPosition {
               //   x: current_position.x - 288,
