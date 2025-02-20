@@ -119,7 +119,7 @@ impl Cache {
     let images1 = res1.json.images;
     let images2 = res2.json.images;
 
-    let res: Vec<bing::Images> = images1
+    let mut res: Vec<bing::Images> = images1
       .into_iter()
       .chain(images2.into_iter())
       .map(|mut i| {
@@ -127,6 +127,8 @@ impl Cache {
         i
       })
       .collect();
+
+    res.dedup_by(|a, b| a.url == b.url);
 
     self.timestamp = Utc::now().timestamp();
 
