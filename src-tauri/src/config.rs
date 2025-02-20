@@ -112,22 +112,6 @@ impl PavoConfig {
     data
   }
 
-  pub fn set_shuffle_source(&self, source: String, checked: bool) -> Self {
-    let mut data = Self::get_config();
-
-    if checked {
-      data.shuffle_source.push(source);
-    } else {
-      data.shuffle_source.retain(|x| *x != source);
-    }
-
-    println!("data; {:?}", data);
-
-    Self::write_config(data.clone());
-
-    data
-  }
-
   pub fn get_interval() -> u64 {
     let data = Self::get_config();
     println!("data: {:?}", data);
