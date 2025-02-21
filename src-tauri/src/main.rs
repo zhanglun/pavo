@@ -14,7 +14,6 @@ use cmd::AsyncProcInputTx;
 use log;
 use services::AsyncProcessMessage;
 use tauri::Manager;
-use tauri_plugin_log::{Target, TargetKind};
 use tokio::sync::{mpsc, Mutex};
 
 fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
@@ -39,10 +38,10 @@ fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
-  tauri::async_runtime::spawn(async move {
-    let mut g_cache = cache::CACHE.lock().await;
-    g_cache.update_timestamp_if_need();
-  });
+  // tauri::async_runtime::spawn(async move {
+  //   let mut g_cache = cache::CACHE.lock().await;
+  //   g_cache.update_timestamp_if_need();
+  // });
 
   let (async_process_input_tx, mut async_process_input_rx) =
     mpsc::channel::<AsyncProcessMessage>(32);
@@ -80,7 +79,7 @@ async fn main() {
     }
   });
 
-  let mut app = tauri::Builder::default()
+  let _app = tauri::Builder::default()
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_process::init())
     .plugin(tauri_plugin_positioner::init())

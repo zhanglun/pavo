@@ -1,5 +1,4 @@
-use std::sync::Arc;
-
+use crate::scheduler::{self, Scheduler};
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{cache, config, services};
 
@@ -26,18 +25,18 @@ pub async fn download(url: &str, service: PhotoService) -> Result<String, String
 }
 
 #[tauri::command]
-pub async fn get_bing_wallpaper_list(_page: u8, country: String) -> Vec<bing::Images> {
+pub async fn get_bing_wallpaper_list(_page: u8, country: String) -> Vec<scheduler::SchedulerPhoto> {
   log::info!("🚀 ~ file: cmd.rs:30 ~ country: {:?}", country);
-  let mut cache = cache::CACHE.lock().await;
-  let res = cache.get_bing_list(Some(country)).await;
+  let mut scheduler = scheduler::SCHEDULER.lock().await;
+  let res = scheduler.get_list_from_remote(Some(country)).await;
 
   res
 }
 
 #[tauri::command]
-pub async fn get_bing_daily(country: Option<String>) -> bing::Images {
-  let mut bing_daily = cache::CACHE.lock().await;
-  let res = bing_daily.get_bing_daily(country).await;
+pub async fn get_bing_daily(country: Option<String>) -> scheduler::SchedulerPhoto {
+  let mut scheduler = scheduler::SCHEDULER.lock().await;
+  let res = scheduler.get_bing_daily(country).await;
 
   res
 }
