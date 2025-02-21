@@ -93,6 +93,13 @@ pub async fn set_randomly(randomly: bool) {
 }
 
 #[tauri::command]
+pub async fn set_auto_save(auto_save: bool) {
+  let pavo_config = config::PavoConfig::get_config();
+
+  pavo_config.set_auto_save(auto_save);
+}
+
+#[tauri::command]
 pub async fn view_photo(handle: tauri::AppHandle, href: String) {
   services::view_photo(handle, href);
 }

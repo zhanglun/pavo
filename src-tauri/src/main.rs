@@ -135,6 +135,7 @@ async fn main() {
       cmd::set_auto_shuffle,
       cmd::set_interval,
       cmd::set_randomly,
+      cmd::set_auto_save,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())
