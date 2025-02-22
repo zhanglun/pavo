@@ -231,9 +231,19 @@ impl Scheduler {
   }
 
   pub async fn previous_photo(&mut self) {
-    let mut cache = cache::CACHE.lock().await;
-    let item = cache.shuffle_to_previous();
-    println!("CHANGE TO {:?} \n", &item);
+    let mut list = vec![];
+
+    if let Some(l) = self.cache_list.get(&self.current_lang) {
+      list = l.clone();
+    }
+
+    if self.current_idx <= 0 {
+      self.current_idx = list.len() - 1;
+    } else {
+      self.current_idx -= 1;
+    }
+
+    let item = list[self.current_idx].clone();
 
     Self::set_wallpaper(&item.url, &item.filename)
       .await
@@ -241,10 +251,19 @@ impl Scheduler {
   }
 
   pub async fn next_photo(&mut self) {
-    let mut cache = cache::CACHE.lock().await;
-    let item = cache.shuffle_to_next();
+    let mut list = vec![];
 
-    println!("CHANGE TO {:?} \n", &item);
+    if let Some(l) = self.cache_list.get(&self.current_lang) {
+      list = l.clone();
+    }
+
+    if self.current_idx >= list.len() - 1 {
+      self.current_idx = 0;
+    } else {
+      self.current_idx += 1;
+    }
+
+    let item = list[self.current_idx].clone();
 
     Self::set_wallpaper(&item.url, &item.filename)
       .await
