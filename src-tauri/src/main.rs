@@ -3,16 +3,19 @@
   windows_subsystem = "windows"
 )]
 
+mod background;
 mod cache;
 mod cmd;
 mod config;
 mod scheduler;
 mod services;
+mod threads;
 mod tray;
 
 use cmd::AsyncProcInputTx;
 use log;
 use services::AsyncProcessMessage;
+use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::{mpsc, Mutex};
 
@@ -47,37 +50,35 @@ async fn main() {
     mpsc::channel::<AsyncProcessMessage>(32);
   let tx = async_process_input_tx.clone();
 
-  let mut scheduler = scheduler::Scheduler::new();
+  // scheduler.setup_list(None).await;
+  // scheduler.shuffle_photo().await;
 
-  scheduler.setup_list(None).await;
-  scheduler.shuffle_photo().await;
+  // tauri::async_runtime::spawn(async move {
+  //   loop {
+  //     if let Some(message) = async_process_input_rx.recv().await {
+  //       println!("output: {:?}", message);
 
-  tauri::async_runtime::spawn(async move {
-    loop {
-      if let Some(message) = async_process_input_rx.recv().await {
-        println!("output: {:?}", message);
-
-        match message {
-          AsyncProcessMessage::StartShuffle => {
-            println!("init output start 2 {:?}", message);
-            scheduler.start_shuffle_photo().await;
-          }
-          AsyncProcessMessage::StopShuffle => {
-            println!("init output stop 2 {:?}", message);
-            scheduler.stop_shuffle_photo();
-          }
-          AsyncProcessMessage::PreviousPhoto => {
-            println!("PreviousPhoto {:?}", message);
-            scheduler.previous_photo().await;
-          }
-          AsyncProcessMessage::NextPhoto => {
-            println!("NextPhoto {:?}", message);
-            scheduler.next_photo().await;
-          }
-        }
-      }
-    }
-  });
+  //       match message {
+  //         AsyncProcessMessage::StartShuffle => {
+  //           println!("init output start 2 {:?}", message);
+  //           scheduler.start_shuffle_photo().await;
+  //         }
+  //         AsyncProcessMessage::StopShuffle => {
+  //           println!("init output stop 2 {:?}", message);
+  //           scheduler.stop_shuffle_photo();
+  //         }
+  //         AsyncProcessMessage::PreviousPhoto => {
+  //           println!("PreviousPhoto {:?}", message);
+  //           scheduler.previous_photo().await;
+  //         }
+  //         AsyncProcessMessage::NextPhoto => {
+  //           println!("NextPhoto {:?}", message);
+  //           scheduler.next_photo().await;
+  //         }
+  //       }
+  //     }
+  //   }
+  // });
 
   let _app = tauri::Builder::default()
     .plugin(tauri_plugin_dialog::init())
@@ -119,6 +120,9 @@ async fn main() {
       let handle = app.handle().clone();
 
       tauri::async_runtime::spawn(async move {
+        println!("background start");
+        background::Background::new(Arc::new(Mutex::new(async_process_input_rx))).await;
+
         update(handle).await.unwrap();
       });
 

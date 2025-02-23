@@ -5,12 +5,11 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
-use tauri::async_runtime::JoinHandle;
-use tokio::{self, sync::mpsc, sync::Mutex, time};
+use tokio::{self, sync::Mutex, time};
 
 use crate::services::bing;
-use crate::services::{download_file, AsyncProcessMessage};
-use crate::{cache, config};
+use crate::services::{download_file};
+use crate::{config};
 
 #[allow(dead_code)]
 fn now() -> String {
@@ -27,7 +26,7 @@ pub struct SchedulerPhoto {
   filename: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Scheduler {
   pub interval: u64,
   pub last_load_time: i64,
@@ -38,7 +37,6 @@ pub struct Scheduler {
 
   pub rotating: bool,
   pub current_idx: usize,
-  pub shuffle_thread: Option<JoinHandle<()>>,
 }
 
 impl Scheduler {
@@ -54,7 +52,6 @@ impl Scheduler {
       current_lang: String::from("zh-cn"),
       rotating: false,
       current_idx: 0,
-      shuffle_thread: None,
     }
   }
 
@@ -168,10 +165,10 @@ impl Scheduler {
       ()
     }
 
-    if let Some(shuffle_thread) = self.shuffle_thread.take() {
-      println!("shuffle thread abort, restart now");
-      shuffle_thread.abort();
-    }
+    // if let Some(shuffle_thread) = self.shuffle_thread.take() {
+    //   println!("shuffle thread abort, restart now");
+    //   shuffle_thread.abort();
+    // }
 
     let shuffle_interval = config::PavoConfig::get_interval();
     let mut interval = time::interval(time::Duration::from_secs(shuffle_interval * 60));
@@ -179,10 +176,13 @@ impl Scheduler {
       loop {
         interval.tick().await;
         println!("shuffle_photo called---->");
+        // let list = self.cache_list.get(&self.current_lang).unwrap();
+
+        // println!("{:?}", list);
       }
     });
 
-    self.shuffle_thread = Some(thread);
+    // self.shuffle_thread = Some(thread);
 
     // tauri::async_runtime::spawn(async move {
     //   loop {
@@ -224,10 +224,10 @@ impl Scheduler {
   pub fn stop_shuffle_photo(&mut self) {
     self.rotating = false;
 
-    if let Some(shuffle_thread) = self.shuffle_thread.take() {
-      println!("shuffle thread abort, stop_shuffle_photo");
-      shuffle_thread.abort();
-    }
+    // if let Some(shuffle_thread) = self.shuffle_thread.take() {
+    //   println!("shuffle thread abort, stop_shuffle_photo");
+    //   shuffle_thread.abort();
+    // }
   }
 
   pub async fn previous_photo(&mut self) {
@@ -236,6 +236,8 @@ impl Scheduler {
     if let Some(l) = self.cache_list.get(&self.current_lang) {
       list = l.clone();
     }
+
+    println!("current_idx: {:?}", list);
 
     if self.current_idx <= 0 {
       self.current_idx = list.len() - 1;

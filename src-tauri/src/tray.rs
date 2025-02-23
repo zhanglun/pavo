@@ -7,7 +7,6 @@ use tauri::{
 };
 use tauri_plugin_positioner::{Position, WindowExt};
 
-use crate::cmd::AsyncProcInputTx;
 use crate::services::AsyncProcessMessage;
 use tokio::sync::{mpsc, Mutex};
 
