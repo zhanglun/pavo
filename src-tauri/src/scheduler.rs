@@ -36,8 +36,6 @@ pub struct Scheduler {
 
 impl Scheduler {
   pub fn new() -> Self {
-    let cfg = config::PavoConfig::get_config();
-
     Self {
       last_load_time: Utc::now().timestamp(),
       cache_list: HashMap::new(),

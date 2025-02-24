@@ -1,10 +1,9 @@
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::Mutex;
 use tokio::time;
 use crate::scheduler::Scheduler;
 
-use crate::{config};
-
+use crate::config;
 
 pub struct ShuffleThread {
   thread: Option<tauri::async_runtime::JoinHandle<()>>,
