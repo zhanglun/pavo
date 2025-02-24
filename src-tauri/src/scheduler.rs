@@ -5,7 +5,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
-use tokio::{self, sync::Mutex};
+use tokio::{self, sync::Mutex };
 
 use crate::services::bing;
 use crate::services::download_file;
@@ -28,14 +28,9 @@ pub struct SchedulerPhoto {
 
 #[derive(Debug, Clone)]
 pub struct Scheduler {
-  pub interval: u64,
   pub last_load_time: i64,
-  pub auto_shuffle: bool,
-  pub randomly: bool,
   pub cache_list: HashMap<String, Vec<SchedulerPhoto>>,
   pub current_lang: String,
-
-  pub rotating: bool,
   pub current_idx: usize,
 }
 
@@ -44,13 +39,9 @@ impl Scheduler {
     let cfg = config::PavoConfig::get_config();
 
     Self {
-      interval: cfg.interval,
       last_load_time: Utc::now().timestamp(),
-      auto_shuffle: cfg.auto_shuffle,
-      randomly: cfg.randomly,
       cache_list: HashMap::new(),
       current_lang: String::from("zh-cn"),
-      rotating: false,
       current_idx: 0,
     }
   }

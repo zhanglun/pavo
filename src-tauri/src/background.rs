@@ -1,27 +1,30 @@
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex};
+use tokio::{
+  sync::{mpsc, Mutex},
+  time,
+};
 
 use crate::{config, scheduler, services::AsyncProcessMessage, shuffle_thread};
 
-pub struct Background {
-}
+const BING_EXPIRE_TIME: u64 = 60 * 60 * 12;
+
+pub struct Background {}
 
 impl Background {
   pub async fn new(receiver: Arc<Mutex<mpsc::Receiver<AsyncProcessMessage>>>) -> Self {
     let mut scheduler = scheduler::Scheduler::new();
     let mut shuffle_thread = shuffle_thread::ShuffleThread::new();
+    let mut scheduler_clone = scheduler.clone();
 
     scheduler.setup_list(None).await;
 
-    let mut cfg = config::PavoConfig::get_config();
+    let cfg = config::PavoConfig::get_config();
 
     if cfg.auto_shuffle {
       shuffle_thread
         .start_shuffle(Arc::new(Mutex::new(scheduler.clone())))
         .await;
     }
-
-    let scheduler_clone = scheduler.clone();
 
     tauri::async_runtime::spawn(async move {
       loop {
@@ -54,7 +57,16 @@ impl Background {
       }
     });
 
-    Self {
-    }
+    let mut interval = time::interval(time::Duration::from_secs(BING_EXPIRE_TIME));
+
+    tauri::async_runtime::spawn(async move {
+      loop {
+        interval.tick().await;
+        scheduler_clone.setup_list(None).await;
+        log::info!("A Bright New Day!");
+      }
+    });
+
+    Self {}
   }
 }

@@ -1,6 +1,6 @@
-use crate::scheduler::{self, Scheduler};
+use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
-use crate::{cache, config, services};
+use crate::{config, services};
 
 use tokio::sync::{mpsc, Mutex};
 

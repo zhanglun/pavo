@@ -4,12 +4,11 @@
 )]
 
 mod background;
-mod cache;
 mod cmd;
 mod config;
 mod scheduler;
-mod shuffle_thread;
 mod services;
+mod shuffle_thread;
 mod tray;
 
 use cmd::AsyncProcInputTx;
@@ -41,8 +40,7 @@ fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
-  let (async_process_input_tx, mut async_process_input_rx) =
-    mpsc::channel::<AsyncProcessMessage>(32);
+  let (async_process_input_tx, async_process_input_rx) = mpsc::channel::<AsyncProcessMessage>(32);
   let tx = async_process_input_tx.clone();
 
   let _app = tauri::Builder::default()
