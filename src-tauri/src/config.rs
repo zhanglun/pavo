@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
-use tauri;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
@@ -11,6 +10,7 @@ pub struct PavoConfig {
   pub shuffle_source: Vec<String>,
   pub randomly: bool,
   pub interval: u64,
+  pub auto_save: bool,
 }
 
 impl PavoConfig {
@@ -20,6 +20,7 @@ impl PavoConfig {
       shuffle_source: vec![],
       randomly: false,
       interval: 30,
+      auto_save: false,
     }
   }
 
@@ -77,11 +78,7 @@ impl PavoConfig {
       fs::File::create(&file_path).expect("create config failed");
     }
 
-    let content = match fs::read_to_string(&file_path) {
-      Ok(content) => content,
-      Err(_) => "".to_string(),
-    };
-
+    let content = fs::read_to_string(&file_path).unwrap_or_default();
     let data: PavoConfig = match toml::from_str(&content) {
       Ok(data) => PavoConfig { ..data },
       Err(_) => PavoConfig::new(),
@@ -112,22 +109,6 @@ impl PavoConfig {
     data
   }
 
-  pub fn set_shuffle_source(&self, source: String, checked: bool) -> Self {
-    let mut data = Self::get_config();
-
-    if checked {
-      data.shuffle_source.push(source);
-    } else {
-      data.shuffle_source.retain(|x| *x != source);
-    }
-
-    println!("data; {:?}", data);
-
-    Self::write_config(data.clone());
-
-    data
-  }
-
   pub fn get_interval() -> u64 {
     let data = Self::get_config();
     println!("data: {:?}", data);
@@ -144,4 +125,15 @@ impl PavoConfig {
 
     data
   }
+
+  pub fn set_auto_save(&self, status: bool) -> Self {
+    let mut data = Self::get_config();
+
+    data.auto_save = status;
+
+    Self::write_config(data.clone());
+
+    data
+  }
 }
+

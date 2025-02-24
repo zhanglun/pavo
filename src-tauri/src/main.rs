@@ -3,18 +3,19 @@
   windows_subsystem = "windows"
 )]
 
-mod cache;
+mod background;
 mod cmd;
 mod config;
 mod scheduler;
 mod services;
+mod shuffle_thread;
 mod tray;
 
 use cmd::AsyncProcInputTx;
 use log;
 use services::AsyncProcessMessage;
+use std::sync::Arc;
 use tauri::Manager;
-use tauri_plugin_log::{Target, TargetKind};
 use tokio::sync::{mpsc, Mutex};
 
 fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
@@ -39,48 +40,10 @@ fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
-  tauri::async_runtime::spawn(async move {
-    let mut g_cache = cache::CACHE.lock().await;
-    g_cache.update_timestamp_if_need();
-  });
-
-  let (async_process_input_tx, mut async_process_input_rx) =
-    mpsc::channel::<AsyncProcessMessage>(32);
+  let (async_process_input_tx, async_process_input_rx) = mpsc::channel::<AsyncProcessMessage>(32);
   let tx = async_process_input_tx.clone();
 
-  let mut scheduler = scheduler::Scheduler::new();
-
-  scheduler.setup_list(None).await;
-  scheduler.shuffle_photo().await;
-
-  tauri::async_runtime::spawn(async move {
-    loop {
-      if let Some(message) = async_process_input_rx.recv().await {
-        println!("output: {:?}", message);
-
-        match message {
-          AsyncProcessMessage::StartShuffle => {
-            println!("init output start 2 {:?}", message);
-            scheduler.start_shuffle_photo().await;
-          }
-          AsyncProcessMessage::StopShuffle => {
-            println!("init output stop 2 {:?}", message);
-            scheduler.stop_shuffle_photo();
-          }
-          AsyncProcessMessage::PreviousPhoto => {
-            println!("PreviousPhoto {:?}", message);
-            scheduler.previous_photo().await;
-          }
-          AsyncProcessMessage::NextPhoto => {
-            println!("NextPhoto {:?}", message);
-            scheduler.next_photo().await;
-          }
-        }
-      }
-    }
-  });
-
-  let mut app = tauri::Builder::default()
+  let _app = tauri::Builder::default()
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_process::init())
     .plugin(tauri_plugin_positioner::init())
@@ -120,6 +83,9 @@ async fn main() {
       let handle = app.handle().clone();
 
       tauri::async_runtime::spawn(async move {
+        println!("background start");
+        background::Background::new(Arc::new(Mutex::new(async_process_input_rx))).await;
+
         update(handle).await.unwrap();
       });
 
@@ -135,7 +101,7 @@ async fn main() {
       cmd::set_auto_shuffle,
       cmd::set_interval,
       cmd::set_randomly,
-      cmd::set_shuffle_source,
+      cmd::set_auto_save,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())

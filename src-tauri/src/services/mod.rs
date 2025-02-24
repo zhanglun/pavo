@@ -5,8 +5,6 @@ use std::cmp::min;
 use std::fs::File;
 use std::io::{Seek, Write};
 
-use crate::services::bing::Images;
-
 pub mod bing;
 #[derive(Debug, Serialize, Deserialize)]
 pub enum PhotoService {
@@ -83,13 +81,13 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
 }
 
 pub fn view_photo(handle: tauri::AppHandle, href: String) {
-  let label = href.clone();
-  let label = Images::get_filename(label.as_str());
+  let _label = href.clone();
+  // let label = Images::get_filename(label.as_str());
   let label = "view_photo";
 
   println!("{:?}", label);
 
-  let view_window = tauri::webview::WebviewWindowBuilder::new(
+  let _view_window = tauri::webview::WebviewWindowBuilder::new(
     &handle,
     label,
     tauri::WebviewUrl::External(href.parse().unwrap()),

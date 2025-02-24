@@ -1,15 +1,13 @@
 use tauri::image::Image;
 use tauri::{
-  menu::{Menu, MenuItem},
   menu::{MenuBuilder, MenuItemBuilder},
   tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
   App, Emitter, Manager,
 };
 use tauri_plugin_positioner::{Position, WindowExt};
 
-use crate::cmd::AsyncProcInputTx;
 use crate::services::AsyncProcessMessage;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::mpsc;
 
 pub fn create_tray(
   app: &mut App,
