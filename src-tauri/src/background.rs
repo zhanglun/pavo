@@ -1,28 +1,28 @@
-use crate::{scheduler, services::AsyncProcessMessage};
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 
+use crate::{config, scheduler, services::AsyncProcessMessage, shuffle_thread};
+
 pub struct Background {
-  scheduler: scheduler::Scheduler,
-  scheduler_thread: tauri::async_runtime::JoinHandle<()>,
 }
 
 impl Background {
   pub async fn new(receiver: Arc<Mutex<mpsc::Receiver<AsyncProcessMessage>>>) -> Self {
     let mut scheduler = scheduler::Scheduler::new();
+    let mut shuffle_thread = shuffle_thread::ShuffleThread::new();
 
-    // scheduler.setup_list(None).await;
-    // scheduler.shuffle_photo().await;
+    scheduler.setup_list(None).await;
 
-    println!("init output start");
+    let mut cfg = config::PavoConfig::get_config();
+
+    if cfg.auto_shuffle {
+      shuffle_thread
+        .start_shuffle(Arc::new(Mutex::new(scheduler.clone())))
+        .await;
+    }
 
     let scheduler_clone = scheduler.clone();
 
-    let scheduler_thread = tauri::async_runtime::spawn(async move {
-      // loop {
-      //   scheduler.shuffle_photo().await;
-      // }
-    });
     tauri::async_runtime::spawn(async move {
       loop {
         let message = receiver.lock().await.recv().await;
@@ -33,11 +33,13 @@ impl Background {
           match message {
             AsyncProcessMessage::StartShuffle => {
               println!("init output start 2 {:?}", message);
-              scheduler.start_shuffle_photo().await;
+              shuffle_thread
+                .start_shuffle(Arc::new(Mutex::new(scheduler.clone())))
+                .await;
             }
             AsyncProcessMessage::StopShuffle => {
               println!("init output stop 2 {:?}", message);
-              scheduler.stop_shuffle_photo();
+              shuffle_thread.stop_shuffle();
             }
             AsyncProcessMessage::PreviousPhoto => {
               println!("PreviousPhoto {:?}", message);
@@ -53,8 +55,6 @@ impl Background {
     });
 
     Self {
-      scheduler: scheduler_clone,
-      scheduler_thread,
     }
   }
 }

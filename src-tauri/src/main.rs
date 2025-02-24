@@ -8,8 +8,8 @@ mod cache;
 mod cmd;
 mod config;
 mod scheduler;
+mod shuffle_thread;
 mod services;
-mod threads;
 mod tray;
 
 use cmd::AsyncProcInputTx;
@@ -41,44 +41,9 @@ fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
 async fn main() {
   config::PavoConfig::create_app_folder().expect("create app folder failed!");
 
-  // tauri::async_runtime::spawn(async move {
-  //   let mut g_cache = cache::CACHE.lock().await;
-  //   g_cache.update_timestamp_if_need();
-  // });
-
   let (async_process_input_tx, mut async_process_input_rx) =
     mpsc::channel::<AsyncProcessMessage>(32);
   let tx = async_process_input_tx.clone();
-
-  // scheduler.setup_list(None).await;
-  // scheduler.shuffle_photo().await;
-
-  // tauri::async_runtime::spawn(async move {
-  //   loop {
-  //     if let Some(message) = async_process_input_rx.recv().await {
-  //       println!("output: {:?}", message);
-
-  //       match message {
-  //         AsyncProcessMessage::StartShuffle => {
-  //           println!("init output start 2 {:?}", message);
-  //           scheduler.start_shuffle_photo().await;
-  //         }
-  //         AsyncProcessMessage::StopShuffle => {
-  //           println!("init output stop 2 {:?}", message);
-  //           scheduler.stop_shuffle_photo();
-  //         }
-  //         AsyncProcessMessage::PreviousPhoto => {
-  //           println!("PreviousPhoto {:?}", message);
-  //           scheduler.previous_photo().await;
-  //         }
-  //         AsyncProcessMessage::NextPhoto => {
-  //           println!("NextPhoto {:?}", message);
-  //           scheduler.next_photo().await;
-  //         }
-  //       }
-  //     }
-  //   }
-  // });
 
   let _app = tauri::Builder::default()
     .plugin(tauri_plugin_dialog::init())

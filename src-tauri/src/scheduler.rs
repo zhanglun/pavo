@@ -5,11 +5,11 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
-use tokio::{self, sync::Mutex, time};
+use tokio::{self, sync::Mutex};
 
 use crate::services::bing;
-use crate::services::{download_file};
-use crate::{config};
+use crate::services::download_file;
+use crate::config;
 
 #[allow(dead_code)]
 fn now() -> String {
@@ -158,86 +158,12 @@ impl Scheduler {
     }
   }
 
-  pub async fn shuffle_photo(&mut self) {
-    println!("shuffle_photo called");
-
-    if self.rotating == false {
-      ()
-    }
-
-    // if let Some(shuffle_thread) = self.shuffle_thread.take() {
-    //   println!("shuffle thread abort, restart now");
-    //   shuffle_thread.abort();
-    // }
-
-    let shuffle_interval = config::PavoConfig::get_interval();
-    let mut interval = time::interval(time::Duration::from_secs(shuffle_interval * 60));
-    let thread = tauri::async_runtime::spawn(async move {
-      loop {
-        interval.tick().await;
-        println!("shuffle_photo called---->");
-        // let list = self.cache_list.get(&self.current_lang).unwrap();
-
-        // println!("{:?}", list);
-      }
-    });
-
-    // self.shuffle_thread = Some(thread);
-
-    // tauri::async_runtime::spawn(async move {
-    //   loop {
-    //     log::info!("WAITTING! Wallpaper will switch in {:?} mins \n", shuffle_interval);
-
-    //     interval.tick().await;
-
-    //     let mut cfg = config::PavoConfig::get_config();
-    //     let mut cache = cache::CACHE.lock().await;
-
-    //     if cache.cache_list.len() > 0 && cfg.auto_shuffle {
-    //       cfg = config::PavoConfig::get_config();
-
-    //       if cfg.randomly {
-    //         let item = cache.get_random_photo();
-    //         println!("CHANGE TO {:?} \n", &item);
-
-    //         Self::set_wallpaper(&item.url, &item.filename)
-    //           .await
-    //           .unwrap();
-    //       } else {
-    //         let item = cache.shuffle_to_next();
-    //         println!("CHANGE TO {:?} \n", &item);
-
-    //         Self::set_wallpaper(&item.url, &item.filename)
-    //           .await
-    //           .unwrap();
-    //       }
-    //     }
-    //   }
-    // });
-  }
-
-  pub async fn start_shuffle_photo(&mut self) {
-    self.rotating = true;
-    self.shuffle_photo().await;
-  }
-
-  pub fn stop_shuffle_photo(&mut self) {
-    self.rotating = false;
-
-    // if let Some(shuffle_thread) = self.shuffle_thread.take() {
-    //   println!("shuffle thread abort, stop_shuffle_photo");
-    //   shuffle_thread.abort();
-    // }
-  }
-
   pub async fn previous_photo(&mut self) {
     let mut list = vec![];
 
     if let Some(l) = self.cache_list.get(&self.current_lang) {
       list = l.clone();
     }
-
-    println!("current_idx: {:?}", list);
 
     if self.current_idx <= 0 {
       self.current_idx = list.len() - 1;
