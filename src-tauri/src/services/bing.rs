@@ -139,15 +139,13 @@ impl Wallpaper {
 fn get_url(index: u8, number: u8, mkt: Option<String>) -> String {
   let num = number.to_string();
   let idx = index.to_string();
-  let mut url_parts = vec![BING_URL, "&idx=", &idx, "&n=", &num];
-  let mut mkt_str = String::new();
+  let mut url = format!("{}&idx={}&n={}", BING_URL, &idx, &num);
 
-  if let Some(mkt_val) = mkt {
-    mkt_str = format!("&mkt={}", mkt_val);
-    url_parts.push(&mkt_str);
+  if let Some(mkt_val) = mkt.clone() {
+    let v = mkt_val.clone();
+    url.push_str("&mkt=");
+    url.push_str(v.clone().as_str());
   }
-
-  let url = url_parts.concat();
 
   println!("url: {:?}", url);
 

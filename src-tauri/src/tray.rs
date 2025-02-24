@@ -1,6 +1,5 @@
 use tauri::image::Image;
 use tauri::{
-  menu,
   menu::{MenuBuilder, MenuItemBuilder},
   tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
   App, Emitter, Manager,
