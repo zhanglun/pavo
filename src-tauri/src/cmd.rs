@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
@@ -82,6 +84,26 @@ pub async fn set_interval(interval: u64) {
   println!("{:?}", interval);
 
   pavo_config.set_interval(interval);
+}
+
+#[tauri::command]
+pub async fn reveal_log_file() {
+  let folder_dir = config::PavoConfig::get_app_folder().unwrap();
+  let file_path = Path::new(&folder_dir).join("logs/Pavo.log");
+
+  #[cfg(target_os = "windows")]
+  {
+    Command::new("explorer")
+      .args(["/select,", &path]) // The comma after select is not a typo
+      .spawn()
+      .unwrap();
+  }
+
+  #[cfg(target_os = "macos")]
+  std::process::Command::new("open")
+    .args(["-R", file_path.to_str().unwrap()]) // i don't have a mac so not 100% sure
+    .spawn()
+    .unwrap();
 }
 
 #[tauri::command]

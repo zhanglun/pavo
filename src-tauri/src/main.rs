@@ -102,6 +102,7 @@ async fn main() {
       cmd::set_interval,
       cmd::set_randomly,
       cmd::set_auto_save,
+      cmd::reveal_log_file,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())
