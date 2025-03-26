@@ -94,7 +94,7 @@ pub async fn reveal_log_file() {
   #[cfg(target_os = "windows")]
   {
     Command::new("explorer")
-      .args(["/select,", &path]) // The comma after select is not a typo
+      .args(["/select,", file_path.to_str().unwrap()]) // The comma after select is not a typo
       .spawn()
       .unwrap();
   }
