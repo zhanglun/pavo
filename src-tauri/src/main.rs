@@ -13,11 +13,9 @@ mod shuffle_thread;
 mod tray;
 
 use cmd::AsyncProcInputTx;
-use log;
 use plugins::register_plugins;
 use services::AsyncProcessMessage;
 use std::sync::Arc;
-use tauri::Manager;
 use tokio::sync::{mpsc, Mutex};
 
 fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
@@ -76,7 +74,6 @@ async fn main() {
       cmd::download,
       cmd::view_photo,
       cmd::get_bing_wallpaper_list,
-      cmd::get_bing_daily,
       cmd::get_config,
       cmd::set_auto_shuffle,
       cmd::set_interval,

@@ -63,7 +63,7 @@
 
     invoke("get_bing_wallpaper_list", { page: 0, country: selectCountry }).then(
       (res) => {
-        images = res as BingImage[];
+        images = (res as BingImage[]).sort((a, b) => b.startdates[0] > a.startdates[0] ? 1 : -1);
         console.log("🚀 ~ file: bing.svelte:65 ~ getBingWallpaper ~ images:", images)
         loading = false
       },

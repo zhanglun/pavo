@@ -2,8 +2,13 @@
   import Toolbar from "./Toolbar.svelte";
 
   // your script goes here
-  let { title, url, startdate, copyright, copyrightlink }: BingImage = $props();
-  console.log("🚀 ~ file: BingWallpaper.svelte:6 ~ startdate:", startdate)
+  let { titles, urls, startdates, copyrights, copyrightlinks }: BingImage = $props();
+
+  let title = titles[0];
+  let url = urls[0];
+  let startdate = startdates[0];
+  let copyright = copyrights[0];
+  let copyrightlink = copyrightlinks[0];
 
   function view_photo() {}
 </script>
