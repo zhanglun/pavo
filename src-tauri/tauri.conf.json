@@ -63,9 +63,7 @@
         "resizable": false,
         "title": "Pavo",
         "width": 340,
-        "visible": false,
-        "decorations": false,
-        "transparent": true
+        "visible": false
       }
     ],
     "withGlobalTauri": true,

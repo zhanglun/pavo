@@ -4,7 +4,6 @@ use tauri::{
   tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
   App, Emitter, Manager,
 };
-use tauri_plugin_positioner::{Position, WindowExt};
 
 use crate::services::AsyncProcessMessage;
 use tokio::sync::mpsc;
@@ -60,13 +59,7 @@ pub fn create_tray(
     .icon_as_template(true)
     .icon(Image::from_path(icon_path).unwrap())
     .on_tray_icon_event(|tray, event| {
-      tauri_plugin_positioner::on_tray_event(tray.app_handle(), &event);
-
       let app = tray.app_handle();
-
-      if let Some(window) = app.get_webview_window("main") {
-        let _ = window.move_window(Position::TrayCenter);
-      }
 
       match event {
         TrayIconEvent::Click {
@@ -78,33 +71,11 @@ pub fn create_tray(
             if window.is_visible().unwrap() {
               let _ = window.hide();
             } else {
-              // let current_position = window.outer_position().unwrap();
-              // let offset_position = tauri::PhysicalPosition {
-              //   x: current_position.x - 288,
-              //     y: current_position.y - 12,
-              // };
-              // let _ = window.set_position(tauri::Position::Physical(offset_position));
               let _ = window.show();
               let _ = window.set_focus();
             }
           }
         }
-        // A double click happened on the tray icon. Windows Only
-        // TrayIconEvent::DoubleClick {
-        //   id,
-        //   position,
-        //   rect,
-        //   button,
-        // } => {
-        //   println!("double click");
-        //   let app = tray.app_handle();
-
-        //   if let Some(window) = app.get_webview_window("main") {
-        //     let _ = window.move_window(Position::TrayCenter);
-        //     let _ = window.show();
-        //     let _ = window.set_focus();
-        //   }
-        // }
         _ => {
           log::trace!("unhandled event {event:?}");
         }
@@ -116,7 +87,6 @@ pub fn create_tray(
         let app = app.app_handle();
 
         if let Some(window) = app.get_webview_window("main") {
-          let _ = window.move_window(Position::TrayCenter);
           let _ = window.show();
           let _ = window.set_focus();
         }
@@ -146,7 +116,6 @@ pub fn create_tray(
 
         if let Some(window) = app.get_webview_window("main") {
           let _ = app.emit("go-to-about", ());
-          let _ = window.move_window(Position::TrayCenter);
           let _ = window.show();
           let _ = window.set_focus();
         }
@@ -156,7 +125,6 @@ pub fn create_tray(
 
         if let Some(window) = app.get_webview_window("main") {
           let _ = app.emit("go-to-settings", ());
-          let _ = window.move_window(Position::TrayCenter);
           let _ = window.show();
           let _ = window.set_focus();
         }
