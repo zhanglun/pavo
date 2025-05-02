@@ -27,7 +27,7 @@ pub async fn download(url: &str, service: PhotoService) -> Result<String, String
 }
 
 #[tauri::command]
-pub async fn get_bing_wallpaper_list(_page: u8, country: String) -> Vec<scheduler::SchedulerPhoto> {
+pub async fn get_bing_wallpaper_list() -> Vec<scheduler::SchedulerPhoto> {
   let mut scheduler = scheduler::SCHEDULER.lock().await;
   let res = scheduler.batch_fetch().await.unwrap();
 
