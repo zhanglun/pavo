@@ -7,15 +7,15 @@ mod background;
 mod cmd;
 mod config;
 mod scheduler;
+mod plugins;
 mod services;
 mod shuffle_thread;
 mod tray;
 
 use cmd::AsyncProcInputTx;
-use log;
+use plugins::register_plugins;
 use services::AsyncProcessMessage;
 use std::sync::Arc;
-use tauri::Manager;
 use tokio::sync::{mpsc, Mutex};
 
 fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
@@ -43,32 +43,10 @@ async fn main() {
   let (async_process_input_tx, async_process_input_rx) = mpsc::channel::<AsyncProcessMessage>(32);
   let tx = async_process_input_tx.clone();
 
-  let _app = tauri::Builder::default()
-    .plugin(tauri_plugin_dialog::init())
-    .plugin(tauri_plugin_process::init())
-    .plugin(tauri_plugin_positioner::init())
-    .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-      let _ = app
-        .get_webview_window("main")
-        .expect("no main window")
-        .set_focus();
-    }))
-    .plugin(
-      tauri_plugin_log::Builder::new()
-        .target(tauri_plugin_log::Target::new(
-          tauri_plugin_log::TargetKind::Folder {
-            path: std::path::PathBuf::from(config::PavoConfig::get_app_folder().unwrap() + "/logs"),
-            file_name: None,
-          },
-        ))
-        .level(log::LevelFilter::Info)
-        .build(),
-    )
-    .plugin(tauri_plugin_updater::Builder::new().build())
-    .plugin(tauri_plugin_positioner::init())
-    .plugin(tauri_plugin_fs::init())
-    .plugin(tauri_plugin_shell::init())
-    .manage(AsyncProcInputTx {
+  let builder = tauri::Builder::default();
+  let builder = register_plugins(builder);
+
+  builder.manage(AsyncProcInputTx {
       sender: Mutex::new(async_process_input_tx),
     })
     .setup(move |app| {
@@ -96,12 +74,12 @@ async fn main() {
       cmd::download,
       cmd::view_photo,
       cmd::get_bing_wallpaper_list,
-      cmd::get_bing_daily,
       cmd::get_config,
       cmd::set_auto_shuffle,
       cmd::set_interval,
       cmd::set_randomly,
       cmd::set_auto_save,
+      cmd::reveal_log_file,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())

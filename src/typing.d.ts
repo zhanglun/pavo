@@ -13,21 +13,11 @@ declare global {
     }
   }
   type BingImage = {
-    bot: number;
-    copyright: string;
-    copyrightlink: string;
-    drk: number;
-    enddate: string;
-    fullstartdate: string;
-    hs: string[];
-    hsh: string;
-    quiz: string;
-    startdate: string;
-    title: string;
-    top: number;
-    url: string;
-    urlbase: string;
-    wp: boolean;
+    copyrights: string[];
+    copyrightlinks: string[];
+    startdates: string[];
+    titles: string[];
+    urls: string[];
   };
 }
 

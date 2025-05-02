@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
@@ -25,18 +27,9 @@ pub async fn download(url: &str, service: PhotoService) -> Result<String, String
 }
 
 #[tauri::command]
-pub async fn get_bing_wallpaper_list(_page: u8, country: String) -> Vec<scheduler::SchedulerPhoto> {
-  log::info!("🚀 ~ file: cmd.rs:30 ~ country: {:?}", country);
+pub async fn get_bing_wallpaper_list() -> Vec<scheduler::SchedulerPhoto> {
   let mut scheduler = scheduler::SCHEDULER.lock().await;
-  let res = scheduler.get_list_from_remote(Some(country)).await;
-
-  res
-}
-
-#[tauri::command]
-pub async fn get_bing_daily(country: Option<String>) -> scheduler::SchedulerPhoto {
-  let mut scheduler = scheduler::SCHEDULER.lock().await;
-  let res = scheduler.get_bing_daily(country).await;
+  let res = scheduler.batch_fetch().await.unwrap();
 
   res
 }
@@ -82,6 +75,26 @@ pub async fn set_interval(interval: u64) {
   println!("{:?}", interval);
 
   pavo_config.set_interval(interval);
+}
+
+#[tauri::command]
+pub async fn reveal_log_file() {
+  let folder_dir = config::PavoConfig::get_app_folder().unwrap();
+  let file_path = Path::new(&folder_dir).join("logs/Pavo.log");
+
+  #[cfg(target_os = "windows")]
+  {
+    Command::new("explorer")
+      .args(["/select,", file_path.to_str().unwrap()]) // The comma after select is not a typo
+      .spawn()
+      .unwrap();
+  }
+
+  #[cfg(target_os = "macos")]
+  std::process::Command::new("open")
+    .args(["-R", file_path.to_str().unwrap()]) // i don't have a mac so not 100% sure
+    .spawn()
+    .unwrap();
 }
 
 #[tauri::command]

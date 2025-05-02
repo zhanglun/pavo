@@ -26,7 +26,8 @@
 
 <div>
   <div class="grid gap-2 grid-flow-col">
-    <span
+    <button
+      type="button"
       class="
     py-1
     text-center
@@ -41,9 +42,10 @@
   "
       onclick={setAsDesktop}
     >
-    <DesktopPcOutline size="sm" />
-    </span>
-    <span
+      <DesktopPcOutline size="sm" />
+    </button>
+    <button
+      type="button"
       class="
     py-1
     text-center
@@ -59,7 +61,7 @@
       onclick={download}
     >
       <DownloadOutline size="sm" />
-    </span>
+    </button>
 
     <a
       class="
@@ -75,7 +77,7 @@
       hover:scale-110
     "
       target="_blank"
-      {href}
-    ><ArrowUpRightFromSquareOutline size="sm" /></a>
+      {href}><ArrowUpRightFromSquareOutline size="sm" /></a
+    >
   </div>
 </div>

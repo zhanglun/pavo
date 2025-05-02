@@ -4878,41 +4878,6 @@
           "const": "log:deny-log"
         },
         {
-          "description": "Allows the moveWindow and handleIconState APIs",
-          "type": "string",
-          "const": "positioner:default"
-        },
-        {
-          "description": "Enables the move_window command without any pre-configured scope.",
-          "type": "string",
-          "const": "positioner:allow-move-window"
-        },
-        {
-          "description": "Enables the move_window_constrained command without any pre-configured scope.",
-          "type": "string",
-          "const": "positioner:allow-move-window-constrained"
-        },
-        {
-          "description": "Enables the set_tray_icon_state command without any pre-configured scope.",
-          "type": "string",
-          "const": "positioner:allow-set-tray-icon-state"
-        },
-        {
-          "description": "Denies the move_window command without any pre-configured scope.",
-          "type": "string",
-          "const": "positioner:deny-move-window"
-        },
-        {
-          "description": "Denies the move_window_constrained command without any pre-configured scope.",
-          "type": "string",
-          "const": "positioner:deny-move-window-constrained"
-        },
-        {
-          "description": "Denies the set_tray_icon_state command without any pre-configured scope.",
-          "type": "string",
-          "const": "positioner:deny-set-tray-icon-state"
-        },
-        {
           "description": "This permission set configures which\nprocess feeatures are by default exposed.\n\n#### Granted Permissions\n\nThis enables to quit via `allow-exit` and restart via `allow-restart`\nthe application.\n",
           "type": "string",
           "const": "process:default"

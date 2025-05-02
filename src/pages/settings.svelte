@@ -1,6 +1,6 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
-  import { Checkbox, Label, Select } from "flowbite-svelte";
+  import { Button, Checkbox, Label, Select } from "flowbite-svelte";
 
   let interval_options = [
     {
@@ -62,6 +62,10 @@
       console.log(res);
     });
   }
+
+  async function handleRevealLog() {
+    await invoke("reveal_log_file")
+  }
 </script>
 
 <div class="flex gap-2 flex-col">
@@ -95,5 +99,9 @@
         <option value={option.value}>{option.label}</option>
       {/each}
     </Select>
+  </div>
+  <div class="flex justify-between items-center my-4">
+    <Label for="log file" class="mb-2">Log file</Label>
+    <Button size="sm" on:click={handleRevealLog}>Reveal</Button>
   </div>
 </div>

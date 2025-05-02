@@ -8,8 +8,6 @@
   "permissions": [
     "updater:default",
     "updater:default",
-    "positioner:default",
-    "positioner:default",
     "process:default",
     "updater:allow-install",
     "updater:allow-check",

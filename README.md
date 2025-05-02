@@ -3,7 +3,7 @@
 </p>
 <h1 align="center">Pavo</h1>
 
-A wallpaper application.
+Pavo is a lightweight desktop wallpaper app that lets you easily customize and change your desktop background. With Pavo, you can quickly switch between different wallpapers, set random wallpapers from your local directory, and even adjust the wallpaper's position and scaling. It's simple to use and perfect for anyone who wants to personalize their desktop with minimal effort.
 
 ## Screenshot
 
@@ -37,7 +37,7 @@ pnpm tauri build
 
 You can get more details about building Tauri app in [here](https://tauri.app/v1/guides/distribution/publishing)
 
-## Repo Activuty
+## Repo Activity
 
 ![Alt](https://repobeats.axiom.co/api/embed/ac6f91c5371bcea9fdb92dcc7da9479f50423d81.svg "Repobeats analytics image")
 
