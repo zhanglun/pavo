@@ -59,7 +59,7 @@ impl Scheduler {
     }
   }
 
-  pub async fn batch_fetch(&mut self) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error>> {
+  pub async fn batch_fetch(&mut self) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
     if !self.should_refresh() && !self.cache_list.is_empty() {
       return Ok(self.cache_list.clone());
     }
@@ -68,14 +68,21 @@ impl Scheduler {
       "zh-CN", "en-US", "fr-FR", "de-DE", "ja-JP", "en-CA", "en-GB", "en-IN", "it-IT",
     ];
 
-    let mut res: Vec<SchedulerPhoto> = vec![];
+    let mut handles = vec![];
 
     for region_code in region_codes {
-      match self.fetch_list_with_region(region_code.into()).await {
-        Ok(mut l) => {
-          res.append(&mut l);
-        }
-        Err(_) => (),
+      let region = region_code.to_string();
+      let mut scheduler = self.clone();
+      let handle = tokio::spawn(async move {
+        scheduler.fetch_list_with_region(region).await
+      });
+      handles.push(handle);
+    }
+
+    let mut res: Vec<SchedulerPhoto> = vec![];
+    for handle in handles {
+      if let Ok(Ok(mut photos)) = handle.await {
+        res.append(&mut photos);
       }
     }
 
@@ -109,7 +116,7 @@ impl Scheduler {
     Ok(formatted_list)
   }
 
-  pub async fn fetch_list_with_region(&mut self, region: String) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error>> {
+  pub async fn fetch_list_with_region(&mut self, region: String) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
     let res1 = bing::Wallpaper::new(0, 8, Some(region.clone()))
       .await
       .unwrap();

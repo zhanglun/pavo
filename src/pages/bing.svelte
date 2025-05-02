@@ -70,11 +70,11 @@
     );
   }
 
-  function switchCountry(country: string) {
-    selectCountry = country;
+  // function switchCountry(country: string) {
+  //   selectCountry = country;
 
-    getBingWallpaper();
-  }
+  //   getBingWallpaper();
+  // }
 
   getBingWallpaper();
 </script>
@@ -89,10 +89,10 @@
       >
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <span onclick={() => switchCountry(country.code)} class="select-none">
+        <!-- <span onclick={() => switchCountry(country.code)} class="select-none">
           {country.icon}
           {country.name}
-        </span>
+        </span> -->
       </Badge>
     {/each}
   </div>
