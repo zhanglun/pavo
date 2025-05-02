@@ -19,8 +19,6 @@ const BING_EXPIRE_TIME: i64 = 60 * 60 * 12;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchedulerPhoto {
-  // #[serde(flatten)]
-  // pub images: bing::Images,
   filename: String,
   regions: Vec<String>,
   urls: Vec<String>,
@@ -145,60 +143,10 @@ impl Scheduler {
     Ok(res)
   }
 
-  // pub async fn get_list_from_remote(&mut self, country: Option<String>) -> Vec<SchedulerPhoto> {
-  //   let now = Utc::now().timestamp();
-  //   let mut lang = self.current_lang.clone();
+  pub async fn setup_list(&mut self) -> Vec<SchedulerPhoto> {
+    let list = self.batch_fetch().await.unwrap();
 
-  //   if let Some(country) = country.clone() {
-  //     lang = country;
-  //   }
-
-  //   let mut list = vec![];
-
-  //   if let Some(l) = self.cache_list.get(&lang) {
-  //     list = l.clone();
-  //   }
-
-  //   if list.len() > 0 && now - self.last_load_time < BING_EXPIRE_TIME {
-  //     return list.clone();
-  //   }
-
-  //   let res1 = bing::Wallpaper::new(0, 8, country.clone()).await.unwrap();
-  //   let res2 = bing::Wallpaper::new(7, 8, country.clone()).await.unwrap();
-
-  //   let images1 = res1.json.images;
-  //   let images2 = res2.json.images;
-
-  //   let mut res: Vec<SchedulerPhoto> = images1
-  //     .into_iter()
-  //     .chain(images2.into_iter())
-  //     .into_iter()
-  //     .map(|i| SchedulerPhoto {
-  //       images: i.clone(),
-  //       url: ["https://www.bing.com", &i.url].concat(),
-  //       filename: bing::Images::get_filename(&i.url).to_string(),
-  //       regions: vec![lang.clone()]
-  //     })
-  //     .collect();
-
-  //   res.dedup_by(|a, b| a.url == b.url);
-
-  //   self.last_load_time = Utc::now().timestamp();
-
-  //   println!("timestamp: {:?}", self.last_load_time);
-
-  //   if self.cache_list.get(&lang).is_none() {
-  //     self.cache_list.insert(lang.to_string(), res.clone());
-  //   }
-
-  //   res.clone()
-  // }
-
-  pub async fn setup_list(&mut self, country: Option<String>) -> Vec<SchedulerPhoto> {
-    // let list = self.get_list_from_remote(country).await;
-
-    // list
-    return vec![];
+    list
   }
 
   pub async fn save_wallpaper(url: &str, filename: &str) -> Result<String, String> {
@@ -207,9 +155,6 @@ impl Scheduler {
     let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap())
       .await
       .unwrap();
-
-    // 71行经常报错alled `Result::unwrap()` on an `Err` value: "Failed to GET from 'https://www.bing.com/th?id=OHR.SnowySvaneti_JA-JP2274619860_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4'"
-    // note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
     println!("{:?}", res);
 
