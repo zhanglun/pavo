@@ -43,12 +43,7 @@ pub struct Images {
   pub wp: bool,
 }
 
-#[warn(dead_code)]
 impl Images {
-  pub fn url(&self) -> String {
-    ["https://www.bing.com", &self.url].concat()
-  }
-
   pub fn get_filename(url: &str) -> &str {
     let s = url.find("OHR.").ok_or(0).unwrap();
     let e = url.find("&rf=").ok_or(0).unwrap();
