@@ -57,10 +57,8 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
   } else {
     println!("Fresh file..");
 
-    _file = File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
+    file = File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
   }
-
-  file = File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
 
   println!("Commencing transfer");
 
@@ -82,7 +80,6 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
 
 pub fn view_photo(handle: tauri::AppHandle, href: String) {
   let _label = href.clone();
-  // let label = Images::get_filename(label.as_str());
   let label = "view_photo";
 
   println!("{:?}", label);
