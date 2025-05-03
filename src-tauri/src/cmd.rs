@@ -5,6 +5,7 @@ use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
 
 use tokio::sync::{mpsc, Mutex};
+use showfile;
 
 pub struct AsyncProcInputTx {
   pub sender: Mutex<mpsc::Sender<AsyncProcessMessage>>,
@@ -82,19 +83,7 @@ pub async fn reveal_log_file() {
   let folder_dir = config::PavoConfig::get_app_folder().unwrap();
   let file_path = Path::new(&folder_dir).join("logs/Pavo.log");
 
-  #[cfg(target_os = "windows")]
-  {
-    Command::new("explorer")
-      .args(["/select,", file_path.to_str().unwrap()]) // The comma after select is not a typo
-      .spawn()
-      .unwrap();
-  }
-
-  #[cfg(target_os = "macos")]
-  std::process::Command::new("open")
-    .args(["-R", file_path.to_str().unwrap()]) // i don't have a mac so not 100% sure
-    .spawn()
-    .unwrap();
+  showfile::show_path_in_file_manager(file_path.to_path_buf());
 }
 
 #[tauri::command]

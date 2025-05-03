@@ -57,7 +57,7 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
   } else {
     println!("Fresh file..");
 
-    file = File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
+    _file = File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
   }
 
   file = File::create(path).or(Err(format!("Failed to create file '{}'", path)))?;
