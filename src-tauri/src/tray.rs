@@ -68,7 +68,11 @@ pub fn create_tray(
           ..
         } => {
           if let Some(window) = app.get_webview_window("main") {
-            if window.is_visible().unwrap() {
+            if window.is_minimized().unwrap() {
+              let _ = window.unminimize().unwrap();
+              let _ = window.show();
+              let _ = window.set_focus();
+            } else if window.is_visible().unwrap() {
               let _ = window.hide();
             } else {
               let _ = window.show();
