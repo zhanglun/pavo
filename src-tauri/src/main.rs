@@ -25,13 +25,6 @@ fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
       api.prevent_close();
       window.hide().unwrap();
     }
-    tauri::WindowEvent::Focused(flag) => {
-      println!("window focused! {:?}", flag);
-
-      if !flag {
-        let _ = window.hide().unwrap();
-      }
-    }
     _ => {}
   }
 }
