@@ -13,6 +13,7 @@ pub struct Background {}
 impl Background {
   pub async fn new(receiver: Arc<Mutex<mpsc::Receiver<AsyncProcessMessage>>>) -> Self {
     let mut scheduler = scheduler::Scheduler::new();
+    scheduler.setup_list().await;
     let mut shuffle_thread = shuffle_thread::ShuffleThread::new();
     let mut scheduler_clone = scheduler.clone();
 
