@@ -6,54 +6,6 @@
   import QuoteSolid from "flowbite-svelte-icons/QuoteSolid.svelte";
   import Skeleton from "$lib/components/Skeleton.svelte";
 
-  const country = [
-    {
-      name: "中国",
-      code: "zh-CN",
-      icon: "🇨🇳",
-    },
-    {
-      name: "United States",
-      code: "en-US",
-      icon: "🇺🇸",
-    },
-    {
-      name: "France",
-      code: "fr-FR",
-      icon: "🇫🇷",
-    },
-    {
-      name: " Deutschland",
-      code: "de-DE",
-      icon: "🇩🇪",
-    },
-    {
-      name: "日本",
-      code: "ja-JP",
-      icon: "🇯🇵",
-    },
-    {
-      name: "Canada",
-      code: "en-CA",
-      icon: "🇨🇦",
-    },
-    {
-      name: "United Kingdom",
-      code: "en-GB",
-      icon: "🇬🇧",
-    },
-    {
-      name: "India",
-      code: "en-IN",
-      icon: "🇮🇳",
-    },
-    {
-      name: "Italy",
-      code: "it-IT",
-      icon: "🇮🇹",
-    },
-  ];
-
   let images = $state<BingImage[]>([]);
   let loading = $state<boolean>(true);
 

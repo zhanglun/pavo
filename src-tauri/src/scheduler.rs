@@ -153,8 +153,7 @@ impl Scheduler {
     let app_folder = config::PavoConfig::get_app_folder().unwrap();
     let path = Path::new(&app_folder).join(&*filename);
     let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap())
-      .await
-      .unwrap();
+      .await;
 
     println!("{:?}", res);
 
@@ -218,3 +217,15 @@ impl Scheduler {
 }
 
 pub static SCHEDULER: Lazy<Mutex<Scheduler>> = Lazy::new(|| Mutex::new(Scheduler::new()));
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let result = add(2, 2);
+        assert_eq!(result, 4);
+    }
+}

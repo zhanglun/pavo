@@ -24,10 +24,10 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
     .get(url)
     .send()
     .await
-    .or(Err(format!("Failed to GET from '{}'", &url)))?;
+    .map_err(|e| format!("Failed to GET from '{}': {}", url, e))?;
   let total_size = res
     .content_length()
-    .ok_or(format!("Failed to get content length from '{}'", &url))?;
+    .ok_or_else(|| format!("Server did not provide Content-Length for '{}'", url))?;
 
   // let pb = ProgressBar::new(total_size);
   // pb.set_style(ProgressStyle::default_bar()
@@ -45,15 +45,15 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
     println!("File exists. Resuming.");
 
     file = std::fs::OpenOptions::new()
-      .read(true)
+      .write(true)
       .append(true)
       .open(path)
-      .unwrap();
+      .map_err(|e| format!("Failed to open existing file for appending '{}': {}", path, e))?;
 
-    let file_size = std::fs::metadata(path).unwrap().len();
+    // let file_size = std::fs::metadata(path)?.len();
 
-    file.seek(std::io::SeekFrom::Start(file_size)).unwrap();
-    downloaded = file_size;
+    // file.seek(std::io::SeekFrom::Start(file_size))?;
+    // downloaded = file_size;
   } else {
     println!("Fresh file..");
 
@@ -68,8 +68,8 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
     file
       .write(&chunk)
       .or(Err(format!("Error while writing to file")))?;
-    let new = min(downloaded + (chunk.len() as u64), total_size);
-    downloaded = new;
+    // let new = min(downloaded + (chunk.len() as u64), total_size);
+    // downloaded = new;
     // pb.set_position(new);
   }
 
