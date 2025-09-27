@@ -1,9 +1,11 @@
 use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::cmp::min;
+use std::path::Path;
+use std::io::{Write};
 use std::fs::File;
-use std::io::{Seek, Write};
+
+use crate::config;
 
 pub mod bing;
 #[derive(Debug, Serialize, Deserialize)]
@@ -48,7 +50,12 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
       .write(true)
       .append(true)
       .open(path)
-      .map_err(|e| format!("Failed to open existing file for appending '{}': {}", path, e))?;
+      .map_err(|e| {
+        format!(
+          "Failed to open existing file for appending '{}': {}",
+          path, e
+        )
+      })?;
 
     // let file_size = std::fs::metadata(path)?.len();
 
@@ -78,6 +85,17 @@ pub async fn download_file(client: &Client, url: &str, path: &str) -> Result<Str
   return Ok(path.to_string());
 }
 
+pub async fn save_wallpaper(url: &str, filename: &str) -> Result<String, String> {
+  let app_folder = config::PavoConfig::get_app_folder().unwrap();
+  let path = Path::new(&app_folder).join(&*filename);
+  let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap()).await;
+
+  match res {
+    Ok(a) => Ok(a),
+    Err(e) => Err(e.to_string()),
+
+  }
+}
 pub fn view_photo(handle: tauri::AppHandle, href: String) {
   let _label = href.clone();
   let label = "view_photo";
@@ -94,3 +112,15 @@ pub fn view_photo(handle: tauri::AppHandle, href: String) {
 
   println!("{:?} ", href);
 }
+
+#[cfg(test)]
+mod tests {
+  #[tokio::test]
+
+  async fn it_works() {
+    let url = "https://www.bing.com/HPImageArchive.aspx?&format=js&uhd=1&uhdwidth=3840&uhdheight=2160&idx=0&n=8&mkt=fr-FR";
+    let result = save_wallpaper(&url).await.unwrap();
+    assert!(Path::new(&result).exists());
+  }
+}
+

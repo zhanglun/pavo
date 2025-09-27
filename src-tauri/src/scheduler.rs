@@ -3,12 +3,11 @@ use chrono::Local;
 use once_cell::sync::Lazy;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
-use tokio::{self, sync::Mutex};
+use tokio::{sync::Mutex};
 
 use crate::config;
 use crate::services::bing;
-use crate::services::download_file;
+use crate::services::{download_file, save_wallpaper};
 
 #[allow(dead_code)]
 fn now() -> String {
@@ -149,17 +148,6 @@ impl Scheduler {
     list
   }
 
-  pub async fn save_wallpaper(url: &str, filename: &str) -> Result<String, String> {
-    let app_folder = config::PavoConfig::get_app_folder().unwrap();
-    let path = Path::new(&app_folder).join(&*filename);
-    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap())
-      .await;
-
-    println!("{:?}", res);
-
-    Ok(res)
-  }
-
   pub async fn set_wallpaper_from_local(a: String) -> String {
     wallpaper::set_from_path(a.as_str()).unwrap();
 
@@ -171,7 +159,7 @@ impl Scheduler {
   }
 
   pub async fn set_wallpaper(url: &str, filename: &str) -> Result<String, String> {
-    let a = Self::save_wallpaper(url, filename).await;
+    let a = save_wallpaper(url, filename).await;
 
     match a {
       Ok(a) => {
@@ -217,15 +205,3 @@ impl Scheduler {
 }
 
 pub static SCHEDULER: Lazy<Mutex<Scheduler>> = Lazy::new(|| Mutex::new(Scheduler::new()));
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
