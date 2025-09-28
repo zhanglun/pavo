@@ -1,9 +1,9 @@
 use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
-use std::io::{Write};
 use std::fs::File;
+use std::io::Write;
+use std::path::Path;
 
 use crate::config;
 
@@ -93,7 +93,6 @@ pub async fn save_wallpaper(url: &str, filename: &str) -> Result<String, String>
   match res {
     Ok(a) => Ok(a),
     Err(e) => Err(e.to_string()),
-
   }
 }
 pub fn view_photo(handle: tauri::AppHandle, href: String) {
@@ -115,12 +114,14 @@ pub fn view_photo(handle: tauri::AppHandle, href: String) {
 
 #[cfg(test)]
 mod tests {
+  use std::path::Path;
+  use crate::services::save_wallpaper;
+
   #[tokio::test]
 
   async fn it_works() {
     let url = "https://www.bing.com/HPImageArchive.aspx?&format=js&uhd=1&uhdwidth=3840&uhdheight=2160&idx=0&n=8&mkt=fr-FR";
-    let result = save_wallpaper(&url).await.unwrap();
+    let result = save_wallpaper(&url, "test.png").await.unwrap();
     assert!(Path::new(&result).exists());
   }
 }
-
