@@ -7,7 +7,7 @@ use tokio::{sync::Mutex};
 
 use crate::config;
 use crate::services::bing;
-use crate::services::{download_file, save_wallpaper};
+use crate::services::{save_wallpaper};
 
 #[allow(dead_code)]
 fn now() -> String {

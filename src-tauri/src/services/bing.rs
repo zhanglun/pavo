@@ -78,6 +78,9 @@ pub struct Wallpaper {
   number: u8,
   files: Vec<String>,
   pub json: WallpaperRes,
+
+  #[serde(skip)]
+  client: Option<Client>,
 }
 
 impl Wallpaper {
@@ -88,23 +91,34 @@ impl Wallpaper {
       number,
       files: vec![],
       json,
+      client: Some(Client::new()),
     })
   }
 
-  pub async fn save_wallpaper(url: &str, filename: Option<&str>) -> Result<String> {
+  // 获取或重新创建 Client
+  fn get_client(&mut self) -> &Client {
+    if self.client.is_none() {
+      self.client = Some(Client::new());
+    }
+    self.client.as_ref().unwrap()
+  }
+
+  pub async fn save_wallpaper(
+    url: &str,
+    filename: Option<&str>,
+  ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let filename = match filename {
       Some(filename) => filename,
       None => Images::get_filename(url),
     };
-    let app_folder = config::PavoConfig::get_app_folder().unwrap();
+    let app_folder = config::PavoConfig::get_app_folder()?;
     let path = Path::new(&app_folder).join(&*filename);
-    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap())
-      .await
-      .unwrap();
+    let client = self.get_client();
+    let res = download_file(, &url, path.clone().to_str().unwrap()).await;
 
     println!("{:?}", res);
 
-    Ok(res)
+    return res;
   }
 
   /// set wallpaper from local file
