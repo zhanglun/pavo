@@ -7,6 +7,13 @@ use crate::config;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
+use once_cell::sync::Lazy;
+use std::sync::Arc;
+
+static GLOBAL_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| {
+    Arc::new(Client::new())
+});
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UrlParams {
   pub index: u8,
@@ -78,9 +85,6 @@ pub struct Wallpaper {
   number: u8,
   files: Vec<String>,
   pub json: WallpaperRes,
-
-  #[serde(skip)]
-  client: Option<Client>,
 }
 
 impl Wallpaper {
@@ -90,31 +94,25 @@ impl Wallpaper {
       index,
       number,
       files: vec![],
-      json,
-      client: Some(Client::new()),
+      json
     })
-  }
-
-  // 获取或重新创建 Client
-  fn get_client(&mut self) -> &Client {
-    if self.client.is_none() {
-      self.client = Some(Client::new());
-    }
-    self.client.as_ref().unwrap()
   }
 
   pub async fn save_wallpaper(
     url: &str,
     filename: Option<&str>,
-  ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+  ) -> Result<String> {
     let filename = match filename {
       Some(filename) => filename,
       None => Images::get_filename(url),
     };
-    let app_folder = config::PavoConfig::get_app_folder()?;
+    let app_folder = config::PavoConfig::get_app_folder()
+        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("Error code: {}, message: {}", e.0, e.1)))
+        })?;
     let path = Path::new(&app_folder).join(&*filename);
-    let client = self.get_client();
-    let res = download_file(, &url, path.clone().to_str().unwrap()).await;
+    let client = GLOBAL_CLIENT.clone();
+    let res = download_file(&client, &url, path.clone().to_str().unwrap()).await;
 
     println!("{:?}", res);
 

@@ -1,11 +1,9 @@
 use chrono::offset::Utc;
 use chrono::Local;
 use once_cell::sync::Lazy;
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tokio::{sync::Mutex};
 
-use crate::config;
 use crate::services::bing;
 use crate::services::{save_wallpaper};
 
