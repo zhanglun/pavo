@@ -7,6 +7,13 @@ use crate::config;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
+use once_cell::sync::Lazy;
+use std::sync::Arc;
+
+static GLOBAL_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| {
+    Arc::new(Client::new())
+});
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UrlParams {
   pub index: u8,
@@ -87,24 +94,29 @@ impl Wallpaper {
       index,
       number,
       files: vec![],
-      json,
+      json
     })
   }
 
-  pub async fn save_wallpaper(url: &str, filename: Option<&str>) -> Result<String> {
+  pub async fn save_wallpaper(
+    url: &str,
+    filename: Option<&str>,
+  ) -> Result<String> {
     let filename = match filename {
       Some(filename) => filename,
       None => Images::get_filename(url),
     };
-    let app_folder = config::PavoConfig::get_app_folder().unwrap();
+    let app_folder = config::PavoConfig::get_app_folder()
+        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("Error code: {}, message: {}", e.0, e.1)))
+        })?;
     let path = Path::new(&app_folder).join(&*filename);
-    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap())
-      .await
-      .unwrap();
+    let client = GLOBAL_CLIENT.clone();
+    let res = download_file(&client, &url, path.clone().to_str().unwrap()).await;
 
     println!("{:?}", res);
 
-    Ok(res)
+    return res;
   }
 
   /// set wallpaper from local file
