@@ -1,14 +1,11 @@
 use chrono::offset::Utc;
 use chrono::Local;
 use once_cell::sync::Lazy;
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
-use tokio::{self, sync::Mutex};
+use tokio::{sync::Mutex};
 
-use crate::config;
 use crate::services::bing;
-use crate::services::download_file;
+use crate::services::{save_wallpaper};
 
 #[allow(dead_code)]
 fn now() -> String {
@@ -149,43 +146,31 @@ impl Scheduler {
     list
   }
 
-  pub async fn save_wallpaper(url: &str, filename: &str) -> Result<String, String> {
-    let app_folder = config::PavoConfig::get_app_folder().unwrap();
-    let path = Path::new(&app_folder).join(&*filename);
-    let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap())
-      .await
-      .unwrap();
-
-    println!("{:?}", res);
-
-    Ok(res)
-  }
-
-  pub async fn set_wallpaper_from_local(a: String) -> String {
-    wallpaper::set_from_path(a.as_str()).unwrap();
+  pub async fn set_wallpaper_from_local(path: &str) -> Result<&str, Box<dyn std::error::Error + Send + Sync>> {
+    wallpaper::set_from_path(path).map_err(|e| e.to_string())?;
 
     if cfg!(not(target_os = "macos")) {
-      wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
+      wallpaper::set_mode(wallpaper::Mode::Crop).map_err(|e| e.to_string())?;
     }
 
-    a
+    Ok(path)
   }
 
-  pub async fn set_wallpaper(url: &str, filename: &str) -> Result<String, String> {
-    let a = Self::save_wallpaper(url, filename).await;
+  pub async fn set_wallpaper(url: &str, filename: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    let file_path = save_wallpaper(url, filename).await?;
 
-    match a {
-      Ok(a) => {
-        Self::set_wallpaper_from_local(a).await;
+    Self::set_wallpaper_from_local(&file_path).await
+      .map_err(|e| format!("Failed to set wallpaper from local file: {}", e))?;
 
-        Ok(String::from("OK"))
-      }
-      Err(e) => Err(e.to_string().into()),
-    }
+    Ok(String::from("Ok"))
   }
 
-  pub async fn previous_photo(&mut self) {
+  pub async fn previous_photo(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let list = self.cache_list.clone();
+
+    if list.is_empty() {
+      return Err("No wallpapers available in cache".into());
+    }
 
     if self.current_idx <= 0 {
       self.current_idx = list.len() - 1;
@@ -193,15 +178,20 @@ impl Scheduler {
       self.current_idx -= 1;
     }
 
-    let item = list[self.current_idx].clone();
+    let item = &list[self.current_idx];
 
     Self::set_wallpaper(&item.urls[0], &item.filename)
-      .await
-      .unwrap();
+      .await?;
+
+    Ok(())
   }
 
-  pub async fn next_photo(&mut self) {
+  pub async fn next_photo(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>{
     let list = self.cache_list.clone();
+
+    if list.is_empty() {
+      return Err("No wallpapers available in cache".into());
+    }
 
     if self.current_idx >= list.len() - 1 {
       self.current_idx = 0;
@@ -209,11 +199,12 @@ impl Scheduler {
       self.current_idx += 1;
     }
 
-    let item = list[self.current_idx].clone();
+    let item = &list[self.current_idx];
 
     Self::set_wallpaper(&item.urls[0], &item.filename)
-      .await
-      .unwrap();
+      .await?;
+
+    Ok(())
   }
 }
 

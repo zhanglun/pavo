@@ -1,5 +1,6 @@
 <!-- svelte-ignore a11y_consider_explicit_label -->
 <script lang="ts">
+  import { Tooltip } from "flowbite-svelte";
   import { invoke } from "@tauri-apps/api/core";
   import DownloadOutline from "flowbite-svelte-icons/DownloadOutline.svelte";
   import DesktopPcOutline from "flowbite-svelte-icons/DesktopPcOutline.svelte";
@@ -44,6 +45,7 @@
     >
       <DesktopPcOutline size="sm" />
     </button>
+    <Tooltip class="text-xs text-nowrap">Set as wallpaper</Tooltip>
     <button
       type="button"
       class="
@@ -62,7 +64,7 @@
     >
       <DownloadOutline size="sm" />
     </button>
-
+    <Tooltip class="text-xs text-nowrap">Download</Tooltip>
     <a
       class="
       py-1
@@ -79,5 +81,6 @@
       target="_blank"
       {href}><ArrowUpRightFromSquareOutline size="sm" /></a
     >
+    <Tooltip class="text-xs text-nowrap">Open in Bing</Tooltip>
   </div>
 </div>
