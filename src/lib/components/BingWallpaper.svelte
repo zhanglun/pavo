@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Badge } from "flowbite-svelte";
   import Toolbar from "./Toolbar.svelte";
 
   let { titles, urls, startdates, copyrights, copyrightlinks }: BingImage =
@@ -10,55 +9,6 @@
   let startdate = startdates[0];
   let copyright = copyrights[0];
   let copyrightlink = copyrightlinks[0];
-
-  const country = [
-    {
-      name: "中国",
-      code: "zh-CN",
-      icon: "🇨🇳",
-      unicode: "🇨🇳",
-    },
-    {
-      name: "United States",
-      code: "en-US",
-      icon: "🇺🇸",
-    },
-    {
-      name: "France",
-      code: "fr-FR",
-      icon: "🇫🇷",
-    },
-    {
-      name: " Deutschland",
-      code: "de-DE",
-      icon: "🇩🇪",
-    },
-    {
-      name: "日本",
-      code: "ja-JP",
-      icon: "🇯🇵",
-    },
-    {
-      name: "Canada",
-      code: "en-CA",
-      icon: "🇨🇦",
-    },
-    {
-      name: "United Kingdom",
-      code: "en-GB",
-      icon: "🇬🇧",
-    },
-    {
-      name: "India",
-      code: "en-IN",
-      icon: "🇮🇳",
-    },
-    {
-      name: "Italy",
-      code: "it-IT",
-      icon: "🇮🇹",
-    },
-  ];
 
   function view_photo() {}
 </script>
@@ -103,11 +53,6 @@
         >
         {copyright}
       </div>
-      <!-- <div class="flex gap-1">
-        {#each country as country}
-          <Badge large class="cursor-pointer">{country.icon}{country.unicode}</Badge>
-        {/each}
-      </div> -->
     </div>
   </div>
 </div>
