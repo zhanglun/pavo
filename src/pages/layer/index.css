@@ -1,0 +1,14 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+#app {
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+}
+
+body {
+  overflow: hidden;
+}
+
