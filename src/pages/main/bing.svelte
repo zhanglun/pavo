@@ -1,10 +1,10 @@
 <!-- svelte-ignore a11y_autofocus -->
 <script lang="ts">
-  import { Hr } from "flowbite-svelte";
   import { invoke } from "@tauri-apps/api/core";
-  import BingWallpaper from "../lib/components/BingWallpaper.svelte";
+  import { Hr } from "flowbite-svelte";
   import QuoteSolid from "flowbite-svelte-icons/QuoteSolid.svelte";
-  import Skeleton from "$lib/components/Skeleton.svelte";
+  import BingWallpaper from "../../lib/components/BingWallpaper.svelte";
+  import Skeleton from "../../lib/components/Skeleton.svelte";
 
   let images = $state<BingImage[]>([]);
   let loading = $state<boolean>(true);

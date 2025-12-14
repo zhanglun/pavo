@@ -1,12 +1,17 @@
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import { sveltekit } from "@sveltejs/kit/vite";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+console.log("🚀 ~ __dirname:", __dirname)
+
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [sveltekit()],
+  plugins: [svelte()],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
@@ -28,5 +33,13 @@ export default defineConfig(async () => ({
       // 3. tell vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
-  }
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, "src", "index.html"),
+        underLayer: resolve(__dirname, "src", "underlayer.html"),
+      },
+    },
+  },
 }));

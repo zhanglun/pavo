@@ -41,11 +41,11 @@
     },
   ];
 
-  let config = $state<UserConfig>({});
+  let config = $state<UserConfig>({} as UserConfig);
 
   function getUserConfig() {
     invoke("get_config").then((res) => {
-      config = res;
+      config = res as UserConfig;
     });
   }
 
@@ -71,8 +71,8 @@
 <div class="flex gap-2 flex-col">
   <div class="flex gap-2">
     <Checkbox
-      bind:checked={config.auto_shuffle}
-      bind:value={config.auto_shuffle}
+      bind:checked={config.auto_shuffle as boolean}
+      bind:value={config.auto_shuffle as any}
       on:change={(e) => {
         if (e.target) {
           const checked = (e.target as HTMLInputElement).checked;
