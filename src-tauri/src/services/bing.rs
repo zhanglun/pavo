@@ -15,14 +15,6 @@ static GLOBAL_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| {
 });
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UrlParams {
-  pub index: u8,
-  pub number: u8,
-  pub mkt: Option<String>,
-  pub hdr: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tooltips {
   pub loading: String,
   pub next: String,
@@ -120,26 +112,33 @@ impl Wallpaper {
   }
 
   /// set wallpaper from local file
-  pub async fn set_wallpaper_from_local(a: String) -> String {
-    wallpaper::set_from_path(a.as_str()).unwrap();
+  // pub async fn set_wallpaper_from_local(a: String) -> String {
+  //   wallpaper::set_from_path(a.as_str()).unwrap();
+
+  //   if cfg!(not(target_os = "macos")) {
+  //     wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
+  //   }
+
+  //   a
+  // }
+
+  pub async fn set_wallpaper_from_local(path: &str) -> Result<&str> {
+    wallpaper::set_from_path(path).map_err(|e| e.to_string())?;
 
     if cfg!(not(target_os = "macos")) {
-      wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
+      wallpaper::set_mode(wallpaper::Mode::Crop).map_err(|e| e.to_string())?;
     }
 
-    a
+    Ok(path)
   }
 
   pub async fn set_wallpaper(url: &str) -> Result<String> {
-    let a = Wallpaper::save_wallpaper(url, None).await;
-    match a {
-      Ok(a) => {
-        Self::set_wallpaper_from_local(a).await;
+    let file_path = Wallpaper::save_wallpaper(url, None).await?;
 
-        Ok(String::from("OK"))
-      }
-      Err(e) => Err(e.to_string().into()),
-    }
+    Self::set_wallpaper_from_local(&file_path).await
+      .map_err(|e| format!("Failed to set wallpaper from local file: {}", e))?;
+
+    Ok(String::from("Ok"))
   }
 }
 

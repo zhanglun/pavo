@@ -5,8 +5,6 @@ use std::path::Path;
 use tokio::fs::{File, OpenOptions};
 use tokio::io::AsyncWriteExt;
 
-use crate::config;
-
 pub mod bing;
 #[derive(Debug, Serialize, Deserialize)]
 pub enum PhotoService {
@@ -109,16 +107,7 @@ pub async fn download_file(
 
   Ok(path.to_string_lossy().into_owned())
 }
-pub async fn save_wallpaper(url: &str, filename: &str) -> Result<String, String> {
-  let app_folder = config::PavoConfig::get_app_folder().unwrap();
-  let path = Path::new(&app_folder).join(&*filename);
-  let res = download_file(&Client::new(), &url, path.clone().to_str().unwrap()).await;
 
-  match res {
-    Ok(a) => Ok(a),
-    Err(e) => Err(e.to_string()),
-  }
-}
 pub fn view_photo(handle: tauri::AppHandle, href: String) {
   let _label = href.clone();
   let label = "view_photo";
@@ -138,14 +127,14 @@ pub fn view_photo(handle: tauri::AppHandle, href: String) {
 
 #[cfg(test)]
 mod tests {
-  use crate::services::save_wallpaper;
+  use bing::Wallpaper::save_wallpaper;
   use std::path::Path;
 
   #[tokio::test]
 
   async fn it_works() {
     let url = "https://www.bing.com/HPImageArchive.aspx?&format=js&uhd=1&uhdwidth=3840&uhdheight=2160&idx=0&n=8&mkt=fr-FR";
-    let result = save_wallpaper(&url, "test.png").await.unwrap();
+    let result = save_wallpaper(&url).await.unwrap();
     assert!(Path::new(&result).exists());
   }
 }

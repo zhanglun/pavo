@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use tokio::{sync::Mutex};
 
 use crate::services::bing;
-use crate::services::{save_wallpaper};
 
 #[allow(dead_code)]
 fn now() -> String {
@@ -144,25 +143,6 @@ impl Scheduler {
     list
   }
 
-  pub async fn set_wallpaper_from_local(path: &str) -> Result<&str, Box<dyn std::error::Error + Send + Sync>> {
-    wallpaper::set_from_path(path).map_err(|e| e.to_string())?;
-
-    if cfg!(not(target_os = "macos")) {
-      wallpaper::set_mode(wallpaper::Mode::Crop).map_err(|e| e.to_string())?;
-    }
-
-    Ok(path)
-  }
-
-  pub async fn set_wallpaper(url: &str, filename: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let file_path = save_wallpaper(url, filename).await?;
-
-    Self::set_wallpaper_from_local(&file_path).await
-      .map_err(|e| format!("Failed to set wallpaper from local file: {}", e))?;
-
-    Ok(String::from("Ok"))
-  }
-
   pub async fn previous_photo(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let list = self.cache_list.clone();
 
@@ -178,7 +158,7 @@ impl Scheduler {
 
     let item = &list[self.current_idx];
 
-    Self::set_wallpaper(&item.urls[0], &item.filename)
+    bing::Wallpaper::set_wallpaper(&item.urls[0])
       .await?;
 
     Ok(())
@@ -199,7 +179,7 @@ impl Scheduler {
 
     let item = &list[self.current_idx];
 
-    Self::set_wallpaper(&item.urls[0], &item.filename)
+    bing::Wallpaper::set_wallpaper(&item.urls[0])
       .await?;
 
     Ok(())
