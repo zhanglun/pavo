@@ -14,6 +14,16 @@ const config = {
   },
   kit: {
     adapter: adapter(),
+    vite: {
+      build: {
+        rollupOptions: {
+          input: {
+            app: "app.html",
+            underLayer: "underlayer.html",
+          },
+        },
+      },
+    },
   },
 };
 

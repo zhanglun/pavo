@@ -29,7 +29,6 @@ pub struct SchedulerPhoto {
 pub struct Scheduler {
   pub last_load_time: i64,
   pub cache_list: Vec<SchedulerPhoto>,
-  pub current_lang: String,
   pub current_idx: usize,
 }
 
@@ -38,7 +37,6 @@ impl Scheduler {
     Self {
       last_load_time: Utc::now().timestamp(),
       cache_list: vec![],
-      current_lang: String::from("zh-cn"),
       current_idx: 0,
     }
   }

@@ -45,11 +45,11 @@ impl Background {
             }
             AsyncProcessMessage::PreviousPhoto => {
               println!("PreviousPhoto {:?}", message);
-              scheduler.previous_photo().await;
+              let _ = scheduler.previous_photo().await;
             }
             AsyncProcessMessage::NextPhoto => {
               println!("NextPhoto {:?}", message);
-              scheduler.next_photo().await;
+              let _ = scheduler.next_photo().await;
             }
           };
         };

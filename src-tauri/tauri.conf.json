@@ -63,8 +63,17 @@
         "title": "Pavo",
         "width": 340,
         "visible": false
+      },
+      {
+        "url": "underlayer.html",
+        "label": "underlayer",
+        "width": 320,
+        "height": 160,
+        "transparent": true,
+        "visible": false
       }
     ],
+    "macOSPrivateApi": true,
     "withGlobalTauri": true,
     "security": {
       "csp": null

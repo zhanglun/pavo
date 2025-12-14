@@ -15,6 +15,8 @@ mod tray;
 use cmd::AsyncProcInputTx;
 use plugins::register_plugins;
 use services::AsyncProcessMessage;
+use tauri::Manager;
+use tauri_plugin_desktop_underlay::DesktopUnderlayExt;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 
@@ -59,6 +61,16 @@ async fn main() {
 
         update(handle).await.unwrap();
       });
+
+
+      let app = app.app_handle();
+      let clock = app.get_webview_window("underlayer").unwrap();
+      clock.set_desktop_underlay(false)?;
+      println!(
+          "Desktop underlay enabled for clock window: {}",
+          clock.is_desktop_underlay()
+      );
+      clock.show()?;
 
       Ok(())
     })
