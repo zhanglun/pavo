@@ -127,14 +127,14 @@ pub fn view_photo(handle: tauri::AppHandle, href: String) {
 
 #[cfg(test)]
 mod tests {
-  use bing::Wallpaper::save_wallpaper;
+  use crate::services::bing;
   use std::path::Path;
 
   #[tokio::test]
 
   async fn it_works() {
     let url = "https://www.bing.com/HPImageArchive.aspx?&format=js&uhd=1&uhdwidth=3840&uhdheight=2160&idx=0&n=8&mkt=fr-FR";
-    let result = save_wallpaper(&url).await.unwrap();
+    let result = bing::Wallpaper::save_wallpaper(&url, None).await.unwrap();
     assert!(Path::new(&result).exists());
   }
 }

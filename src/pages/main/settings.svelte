@@ -46,6 +46,7 @@
   function getUserConfig() {
     invoke("get_config").then((res) => {
       config = res as UserConfig;
+      console.log("🚀 ~ getUserConfig ~ config:", config)
     });
   }
 
@@ -53,6 +54,12 @@
 
   function updateConfigShuffle(key: string, value: boolean) {
     invoke("set_auto_shuffle", { shuffle: value }).then((res) => {
+      console.log(res);
+    });
+  }
+
+  function updateConfigShowLayer(key: string, value: boolean) {
+    invoke("set_show_layer", { showLayer: value }).then((res) => {
       console.log(res);
     });
   }
@@ -79,6 +86,18 @@
           updateConfigShuffle("shuffle", checked);
         }
       }}>Shuffle</Checkbox
+    >
+  </div>
+  <div class="flex gap-2">
+    <Checkbox
+      bind:checked={config.show_layer as boolean}
+      bind:value={config.show_layer as any}
+      on:change={(e) => {
+        if (e.target) {
+          const checked = (e.target as HTMLInputElement).checked;
+          updateConfigShowLayer("show_layer", checked);
+        }
+      }}>Show desktop layer</Checkbox
     >
   </div>
   <div class="flex justify-between items-center">

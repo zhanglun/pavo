@@ -11,6 +11,7 @@ pub struct PavoConfig {
   pub randomly: bool,
   pub interval: u64,
   pub auto_save: bool,
+  pub show_layer: bool,
 }
 
 impl PavoConfig {
@@ -21,6 +22,7 @@ impl PavoConfig {
       randomly: false,
       interval: 30,
       auto_save: false,
+      show_layer: false
     }
   }
 
@@ -120,6 +122,16 @@ impl PavoConfig {
     let mut data = Self::get_config();
 
     data.randomly = randomly;
+
+    Self::write_config(data.clone());
+
+    data
+  }
+
+  pub fn set_show_layer(&self, show_layer: bool) -> Self {
+    let mut data = Self::get_config();
+
+    data.show_layer = show_layer;
 
     Self::write_config(data.clone());
 
