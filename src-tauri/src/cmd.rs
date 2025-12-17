@@ -4,8 +4,7 @@ use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
 
-use tauri::Manager;
-use tauri::AppHandle;
+use tauri::{Manager, AppHandle, Runtime};
 use tokio::sync::{mpsc, Mutex};
 use showfile;
 
@@ -81,16 +80,16 @@ pub async fn set_interval(interval: u64) {
 }
 
 #[tauri::command]
-pub async fn set_show_layer(show_layer: bool, app_handler: AppHandle) {
+pub async fn set_show_layer<R: Runtime>(app_handler: AppHandle<R>, show_layer: bool) {
   let pavo_config = config::PavoConfig::get_config();
 
   pavo_config.set_show_layer(show_layer);
 
   if show_layer {
     print!("show layer");
-    app_hadler.get_webview_window("underlayer").unwrap().show().unwrap();
+    app_handler.get_webview_window("underlayer").unwrap().show().unwrap();
   } else {
-    app_hadler.get_webview_window("underlayer").unwrap().hide().unwrap();
+    app_handler.get_webview_window("underlayer").unwrap().hide().unwrap();
   }
 }
 
