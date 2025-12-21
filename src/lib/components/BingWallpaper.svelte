@@ -45,7 +45,7 @@
     <div class="grid gap-1">
       <div class="flex justify-between items-center">
         <div class="font-semibold">{title}</div>
-        <Toolbar service={"Bing"} {url} href={copyrightlink} />
+        <Toolbar service={"Bing"} {url} { title} {copyright} {copyrightlink} date={startdate} href={copyrightlink} />
       </div>
       <div class="text-xs text-neutral-700">
         <span class="font-normal text-xs text-right text-neutral-700"

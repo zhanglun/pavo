@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use crate::scheduler;
+use crate::services::bing::WallpaperMeta;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
 
@@ -13,18 +14,18 @@ pub struct AsyncProcInputTx {
 }
 
 #[tauri::command]
-pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, String> {
+pub async fn set_as_desktop(url: &str, meta: WallpaperMeta) -> Result<String, String> {
   println!("set as {:?}", url);
 
-  match service {
-    PhotoService::Bing => Ok(bing::Wallpaper::set_wallpaper(url).await.unwrap()),
-  }
+  bing::Wallpaper::set_wallpaper(url, Some(meta)).await.unwrap();
+
+  Ok(String::from("Ok"))
 }
 
 #[tauri::command]
 pub async fn download(url: &str, service: PhotoService) -> Result<String, String> {
   match service {
-    PhotoService::Bing => Ok(bing::Wallpaper::save_wallpaper(url, None).await.unwrap()),
+    PhotoService::Bing => Ok(bing::Wallpaper::save_wallpaper(url).await.unwrap()),
   }
 }
 

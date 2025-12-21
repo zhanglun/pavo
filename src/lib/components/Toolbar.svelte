@@ -6,14 +6,18 @@
   import DesktopPcOutline from "flowbite-svelte-icons/DesktopPcOutline.svelte";
   import ArrowUpRightFromSquareOutline from "flowbite-svelte-icons/ArrowUpRightFromSquareOutline.svelte";
 
-  let { service, url, href } = $props<{
+  let { service, url, href, copyright, date, copyrightlink, title } = $props<{
     service: string;
     url: string;
+    date: string;
     href: string;
+    title: string,
+    copyright: string;
+    copyrightlink: string;
   }>();
 
   function setAsDesktop() {
-    invoke("set_as_desktop", { service, url }).then((res) => {
+    invoke("set_as_desktop", { url, service, meta: { title, date, copyright, copyrightlink} }).then((res) => {
       console.log(res);
     });
   }

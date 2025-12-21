@@ -23,6 +23,14 @@ pub struct Tooltips {
   pub walls: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct WallpaperMeta {
+  pub title: String,
+  pub date: String,
+  pub copyright: String,
+  pub copyrightlink: String,
+}
+
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Images {
   pub bot: usize,
@@ -92,12 +100,8 @@ impl Wallpaper {
 
   pub async fn save_wallpaper(
     url: &str,
-    filename: Option<&str>,
   ) -> Result<String> {
-    let filename = match filename {
-      Some(filename) => filename,
-      None => Images::get_filename(url),
-    };
+    let filename = Images::get_filename(url);
     let app_folder = config::PavoConfig::get_app_folder()
         .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> {
             Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("Error code: {}, message: {}", e.0, e.1)))
@@ -111,17 +115,6 @@ impl Wallpaper {
     return res;
   }
 
-  /// set wallpaper from local file
-  // pub async fn set_wallpaper_from_local(a: String) -> String {
-  //   wallpaper::set_from_path(a.as_str()).unwrap();
-
-  //   if cfg!(not(target_os = "macos")) {
-  //     wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
-  //   }
-
-  //   a
-  // }
-
   pub async fn set_wallpaper_from_local(path: &str) -> Result<&str> {
     wallpaper::set_from_path(path).map_err(|e| e.to_string())?;
 
@@ -132,8 +125,10 @@ impl Wallpaper {
     Ok(path)
   }
 
-  pub async fn set_wallpaper(url: &str) -> Result<String> {
-    let file_path = Wallpaper::save_wallpaper(url, None).await?;
+  pub async fn set_wallpaper(url: &str, meta: Option<WallpaperMeta>) -> Result<String> {
+    let file_path = Wallpaper::save_wallpaper(url).await?;
+
+    // TODO: set text in layer window
 
     Self::set_wallpaper_from_local(&file_path).await
       .map_err(|e| format!("Failed to set wallpaper from local file: {}", e))?;

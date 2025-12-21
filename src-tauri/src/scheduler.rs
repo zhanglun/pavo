@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use tokio::{sync::Mutex};
 
-use crate::services::bing;
+use crate::services::bing::{self, WallpaperMeta};
 
 #[allow(dead_code)]
 fn now() -> String {
@@ -157,8 +157,14 @@ impl Scheduler {
     }
 
     let item = &list[self.current_idx];
+    let meta = WallpaperMeta {
+      title: item.titles[0].clone(),
+      date: item.startdates[0].clone(),
+      copyright: item.copyrights[0].clone(),
+      copyrightlink: item.copyrightlinks[0].clone(),
+    };
 
-    bing::Wallpaper::set_wallpaper(&item.urls[0])
+    bing::Wallpaper::set_wallpaper(&item.urls[0], Some(meta))
       .await?;
 
     Ok(())
@@ -178,8 +184,14 @@ impl Scheduler {
     }
 
     let item = &list[self.current_idx];
+    let meta = WallpaperMeta {
+      title: item.titles[0].clone(),
+      date: item.startdates[0].clone(),
+      copyright: item.copyrights[0].clone(),
+      copyrightlink: item.copyrightlinks[0].clone(),
+    };
 
-    bing::Wallpaper::set_wallpaper(&item.urls[0])
+    bing::Wallpaper::set_wallpaper(&item.urls[0], Some(meta))
       .await?;
 
     Ok(())
