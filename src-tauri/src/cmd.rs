@@ -89,8 +89,10 @@ pub async fn set_show_layer<R: Runtime>(app_handler: AppHandle<R>, show_layer: b
   if show_layer {
     print!("show layer");
     app_handler.get_webview_window("underlayer").unwrap().show().unwrap();
+    app_handler.get_webview_window("main").unwrap().set_focus().unwrap();
   } else {
     app_handler.get_webview_window("underlayer").unwrap().hide().unwrap();
+    app_handler.get_webview_window("main").unwrap().set_focus().unwrap();
   }
 }
 

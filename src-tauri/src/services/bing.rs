@@ -23,7 +23,7 @@ pub struct Tooltips {
   pub walls: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct WallpaperMeta {
   pub title: String,
   pub date: String,
