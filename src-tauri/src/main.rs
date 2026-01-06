@@ -62,18 +62,20 @@ async fn main() {
         update(handle).await.unwrap();
       });
 
-
       let app = app.app_handle();
+
       let clock = app.get_webview_window("underlayer").unwrap();
 
       clock.set_desktop_underlay(true)?;
-      clock.set_decorations(false)?;
 
-      println!(
-          "Desktop underlay enabled for clock window: {}",
-          clock.is_desktop_underlay()
-      );
-      // clock.show()?;
+      let cfg = config::PavoConfig::get_config();
+
+      if cfg.show_layer {
+        clock.show()?;
+      } else {
+        clock.set_desktop_underlay(true)?;
+        clock.hide()?;
+      }
 
       Ok(())
     })
