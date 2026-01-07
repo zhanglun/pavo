@@ -109,10 +109,8 @@ impl Scheduler {
   }
 
   pub async fn fetch_list_with_region(&mut self, region: String) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
-    let res1 = bing::Wallpaper::new(0, 8, Some(region.clone()))
-      .await
-      .unwrap();
-    let res2 = bing::Wallpaper::new(7, 8, Some(region.clone())).await.unwrap();
+    let res1 = bing::Wallpaper::new(0, 8, Some(region.clone())).await?;
+    let res2 = bing::Wallpaper::new(7, 8, Some(region.clone())).await?;
 
     let images1 = res1.json.images;
     let images2 = res2.json.images;
@@ -120,17 +118,19 @@ impl Scheduler {
     let mut res: Vec<SchedulerPhoto> = images1
       .into_iter()
       .chain(images2.into_iter())
-      .into_iter()
-      .map(|i| SchedulerPhoto {
-        filename: bing::Images::get_filename(&i.url).to_string(),
-        urls: vec![["https://www.bing.com", &i.url].concat()],
-        regions: vec![region.clone()],
-        titles: vec![i.clone().title],
-        startdates: vec![i.clone().startdate],
-        copyrights: vec![i.clone().copyright],
-        copyrightlinks: vec![i.clone().copyrightlink],
+      .map(|i| -> Result<SchedulerPhoto, Box<dyn std::error::Error + Send + Sync>> {
+        let filename = bing::Images::get_filename(&i.url)?;
+        Ok(SchedulerPhoto {
+          filename,
+          urls: vec![["https://www.bing.com", &i.url].concat()],
+          regions: vec![region.clone()],
+          titles: vec![i.clone().title],
+          startdates: vec![i.clone().startdate],
+          copyrights: vec![i.clone().copyright],
+          copyrightlinks: vec![i.clone().copyrightlink],
+        })
       })
-      .collect();
+      .collect::<Result<_, _>>()?;
 
     res.dedup_by(|a, b| a.filename == b.filename);
 

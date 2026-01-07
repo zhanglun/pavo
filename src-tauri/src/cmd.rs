@@ -17,14 +17,22 @@ pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, 
   println!("set as {:?}", url);
 
   match service {
-    PhotoService::Bing => Ok(bing::Wallpaper::set_wallpaper(url).await.unwrap()),
+    PhotoService::Bing => {
+      bing::Wallpaper::set_wallpaper(url)
+        .await
+        .map_err(|e| e.to_string())
+    }
   }
 }
 
 #[tauri::command]
 pub async fn download(url: &str, service: PhotoService) -> Result<String, String> {
   match service {
-    PhotoService::Bing => Ok(bing::Wallpaper::save_wallpaper(url, None).await.unwrap()),
+    PhotoService::Bing => {
+      bing::Wallpaper::save_wallpaper(url, None)
+        .await
+        .map_err(|e| e.to_string())
+    }
   }
 }
 
