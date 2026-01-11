@@ -67,8 +67,11 @@
       {
         "url": "underlayer.html",
         "label": "underlayer",
-        "width": 320,
-        "height": 160,
+        "width": 420,
+        "height": 130,
+        "x": 820,
+        "y": 820,
+        "resizable": false,
         "transparent": true,
         "visible": false
       }

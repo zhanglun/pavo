@@ -5,6 +5,7 @@ use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
 
 use tauri::{Manager, AppHandle, Runtime};
+use tauri_plugin_desktop_underlay::DesktopUnderlayExt;
 use tokio::sync::{mpsc, Mutex};
 use showfile;
 
@@ -95,10 +96,14 @@ pub async fn set_show_layer<R: Runtime>(app_handler: AppHandle<R>, show_layer: b
 
   if show_layer {
     print!("show layer");
-    app_handler.get_webview_window("underlayer").unwrap().show().unwrap();
+    // app_handler.get_webview_window("underlayer").unwrap().show().unwrap();
+    // app_handler.get_webview_window("underlayer").unwrap().set_desktop_underlay(true).unwrap();
+    app_handler.get_webview_window("underlayer").unwrap().toggle_desktop_underlay().unwrap();
     app_handler.get_webview_window("main").unwrap().set_focus().unwrap();
   } else {
-    app_handler.get_webview_window("underlayer").unwrap().hide().unwrap();
+    // app_handler.get_webview_window("underlayer").unwrap().hide().unwrap();
+    // app_handler.get_webview_window("underlayer").unwrap().set_desktop_underlay(false).unwrap();
+    app_handler.get_webview_window("underlayer").unwrap().toggle_desktop_underlay().unwrap();
     app_handler.get_webview_window("main").unwrap().set_focus().unwrap();
   }
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { toggleDesktopUnderlay } from "tauri-plugin-desktop-underlay-api";
   import { invoke } from "@tauri-apps/api/core";
   import { Button, Checkbox, Label, Select } from "flowbite-svelte";
 
@@ -58,10 +59,9 @@
     });
   }
 
-  function updateConfigShowLayer(key: string, value: boolean) {
-    invoke("set_show_layer", { showLayer: value }).then((res) => {
-      console.log(res);
-    });
+  async function updateConfigShowLayer(key: string, value: boolean) {
+    await invoke("set_show_layer", { showLayer: value });
+    // await toggleDesktopUnderlay("underlayer");
   }
 
   function updateConfigInterval(key: string, value: string) {

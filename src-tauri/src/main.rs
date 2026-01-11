@@ -27,6 +27,18 @@ fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
       api.prevent_close();
       window.hide().unwrap();
     }
+    tauri::WindowEvent::Destroyed => {
+      println!("window destroyed");
+      if window.label() == "main" {
+        let app_handle = window.app_handle();
+
+        for (label, win) in app_handle.webview_windows() {
+          if label != "main" {
+            win.close().unwrap();
+          }
+        }
+      }
+    }
     _ => {}
   }
 }
@@ -67,14 +79,16 @@ async fn main() {
       let clock = app.get_webview_window("underlayer").unwrap();
 
       clock.set_desktop_underlay(true)?;
+      clock.show()?;
 
       let cfg = config::PavoConfig::get_config();
 
       if cfg.show_layer {
-        clock.show()?;
-      } else {
+        // clock.show()?;
         clock.set_desktop_underlay(true)?;
-        clock.hide()?;
+      } else {
+        clock.set_desktop_underlay(false)?;
+        // clock.hide()?;
       }
 
       Ok(())
