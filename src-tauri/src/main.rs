@@ -6,18 +6,21 @@
 mod background;
 mod cmd;
 mod config;
-mod scheduler;
+mod desktop_layer;
+mod events;
 mod plugins;
+mod scheduler;
 mod services;
 mod shuffle_thread;
 mod tray;
 
 use cmd::AsyncProcInputTx;
+use events::WallpaperEvent;
 use plugins::register_plugins;
 use services::AsyncProcessMessage;
+use std::sync::Arc;
 use tauri::Manager;
 use tauri_plugin_desktop_underlay::DesktopUnderlayExt;
-use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 
 fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
@@ -53,7 +56,8 @@ async fn main() {
   let builder = tauri::Builder::default();
   let builder = register_plugins(builder);
 
-  builder.manage(AsyncProcInputTx {
+  builder
+    .manage(AsyncProcInputTx {
       sender: Mutex::new(async_process_input_tx),
     })
     .setup(move |app| {
@@ -69,7 +73,8 @@ async fn main() {
 
       tauri::async_runtime::spawn(async move {
         println!("background start");
-        background::Background::new(Arc::new(Mutex::new(async_process_input_rx))).await;
+        background::Background::new(Arc::new(Mutex::new(async_process_input_rx)), handle.clone())
+          .await;
 
         update(handle).await.unwrap();
       });

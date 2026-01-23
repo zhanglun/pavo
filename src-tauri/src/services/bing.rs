@@ -10,9 +10,7 @@ pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + S
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 
-static GLOBAL_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| {
-    Arc::new(Client::new())
-});
+static GLOBAL_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| Arc::new(Client::new()));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tooltips {
@@ -97,14 +95,11 @@ impl Wallpaper {
       index,
       number,
       files: vec![],
-      json
+      json,
     })
   }
 
-  pub async fn save_wallpaper(
-    url: &str,
-    filename: Option<&str>,
-  ) -> Result<String> {
+  pub async fn save_wallpaper(url: &str, filename: Option<&str>) -> Result<String> {
     let filename_owned;
     let filename = match filename {
       Some(filename) => filename,
@@ -113,10 +108,14 @@ impl Wallpaper {
         filename_owned.as_str()
       }
     };
-    let app_folder = config::PavoConfig::get_app_folder()
-        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> {
-            Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("Error code: {}, message: {}", e.0, e.1)))
-        })?;
+    let app_folder = config::PavoConfig::get_app_folder().map_err(
+      |e| -> Box<dyn std::error::Error + Send + Sync> {
+        Box::new(std::io::Error::new(
+          std::io::ErrorKind::Other,
+          format!("Error code: {}, message: {}", e.0, e.1),
+        ))
+      },
+    )?;
     let path = Path::new(&app_folder).join(&*filename);
     let client = GLOBAL_CLIENT.clone();
     let path_str = path.to_string_lossy().to_string();
@@ -156,7 +155,8 @@ impl Wallpaper {
   pub async fn set_wallpaper(url: &str) -> Result<String> {
     let file_path = Wallpaper::save_wallpaper(url, None).await?;
 
-    Self::set_wallpaper_from_local(&file_path).await
+    Self::set_wallpaper_from_local(&file_path)
+      .await
       .map_err(|e| format!("Failed to set wallpaper from local file: {}", e))?;
 
     Ok(String::from("Ok"))

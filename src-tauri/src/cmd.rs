@@ -4,10 +4,10 @@ use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
 
-use tauri::{Manager, AppHandle, Runtime};
+use showfile;
+use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_desktop_underlay::DesktopUnderlayExt;
 use tokio::sync::{mpsc, Mutex};
-use showfile;
 
 pub struct AsyncProcInputTx {
   pub sender: Mutex<mpsc::Sender<AsyncProcessMessage>>,
@@ -18,22 +18,18 @@ pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, 
   println!("set as {:?}", url);
 
   match service {
-    PhotoService::Bing => {
-      bing::Wallpaper::set_wallpaper(url)
-        .await
-        .map_err(|e| e.to_string())
-    }
+    PhotoService::Bing => bing::Wallpaper::set_wallpaper(url)
+      .await
+      .map_err(|e| e.to_string()),
   }
 }
 
 #[tauri::command]
 pub async fn download(url: &str, service: PhotoService) -> Result<String, String> {
   match service {
-    PhotoService::Bing => {
-      bing::Wallpaper::save_wallpaper(url, None)
-        .await
-        .map_err(|e| e.to_string())
-    }
+    PhotoService::Bing => bing::Wallpaper::save_wallpaper(url, None)
+      .await
+      .map_err(|e| e.to_string()),
   }
 }
 
@@ -98,13 +94,29 @@ pub async fn set_show_layer<R: Runtime>(app_handler: AppHandle<R>, show_layer: b
     print!("show layer");
     // app_handler.get_webview_window("underlayer").unwrap().show().unwrap();
     // app_handler.get_webview_window("underlayer").unwrap().set_desktop_underlay(true).unwrap();
-    app_handler.get_webview_window("underlayer").unwrap().toggle_desktop_underlay().unwrap();
-    app_handler.get_webview_window("main").unwrap().set_focus().unwrap();
+    app_handler
+      .get_webview_window("underlayer")
+      .unwrap()
+      .toggle_desktop_underlay()
+      .unwrap();
+    app_handler
+      .get_webview_window("main")
+      .unwrap()
+      .set_focus()
+      .unwrap();
   } else {
     // app_handler.get_webview_window("underlayer").unwrap().hide().unwrap();
     // app_handler.get_webview_window("underlayer").unwrap().set_desktop_underlay(false).unwrap();
-    app_handler.get_webview_window("underlayer").unwrap().toggle_desktop_underlay().unwrap();
-    app_handler.get_webview_window("main").unwrap().set_focus().unwrap();
+    app_handler
+      .get_webview_window("underlayer")
+      .unwrap()
+      .toggle_desktop_underlay()
+      .unwrap();
+    app_handler
+      .get_webview_window("main")
+      .unwrap()
+      .set_focus()
+      .unwrap();
   }
 }
 

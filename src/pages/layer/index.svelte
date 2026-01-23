@@ -1,11 +1,26 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
+  import { listen } from "@tauri-apps/api/event";
+  import { onMount } from "svelte";
 
-  $effect(() => {
-    console.log("🚀 ~ file: about.svelte:10 ~ getVersion ~ res:");
+  let meta = $state({ title: "", copyright: "", startdate: "" });
+
+  onMount(async () => {
+    const unlisten = await listen<{ title: string; copyright: string; url: string; startdate: string }>(
+      "wallpaper:changed",
+      (event) => {
+        meta.title = event.payload.title;
+        meta.copyright = event.payload.copyright;
+        meta.startdate = event.payload.startdate;
+      }
+    );
+
+    return () => {
+      unlisten();
+    };
   });
 </script>
 
 <div class="flex gap-2 flex-col">
-  hahahahahh
+  <span class="title">{meta.title}</span>
+  <span class="copyright">{meta.copyright}</span>
 </div>

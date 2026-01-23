@@ -29,6 +29,9 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: ~2
         version: 2.3.0
+      tauri-plugin-desktop-underlay-api:
+        specifier: ^0.2.0
+        version: 0.2.0
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^4.0.0
@@ -416,6 +419,9 @@ packages:
 
   '@tauri-apps/api@2.1.1':
     resolution: {integrity: sha512-fzUfFFKo4lknXGJq8qrCidkUcKcH2UHhfaaCNt4GzgzGaW2iS26uFOg4tS3H4P8D6ZEeUxtiD5z0nwFF0UN30A==}
+
+  '@tauri-apps/api@2.9.1':
+    resolution: {integrity: sha512-IGlhP6EivjXHepbBic618GOmiWe4URJiIeZFlB7x3czM0yDHHYviH1Xvoiv4FefdkQtn6v7TuwWCRfOGdnVUGw==}
 
   '@tauri-apps/cli-darwin-arm64@2.1.0':
     resolution: {integrity: sha512-ESc6J6CE8hl1yKH2vJ+ALF+thq4Be+DM1mvmTyUCQObvezNCNhzfS6abIUd3ou4x5RGH51ouiANeT3wekU6dCw==}
@@ -1071,6 +1077,9 @@ packages:
     engines: {node: '>=14.0.0'}
     hasBin: true
 
+  tauri-plugin-desktop-underlay-api@0.2.0:
+    resolution: {integrity: sha512-kwS2IXdUCT+7vhgONYqKAPAC7jc5TRf+HfPIcRvayMweHacx9vfnkpknrJnJpTyNYmydwmYiGMu4I4PXUM/Ovg==}
+
   thenify-all@1.6.0:
     resolution: {integrity: sha512-RNxQH/qI8/t3thXJDwcstUO4zeqo64+Uy/+sNVRBx4Xn2OX+OZ9oP+iJnNFqplFra2ZUVeKCSa2oVWi3T4uVmA==}
     engines: {node: '>=0.8'}
@@ -1400,6 +1409,8 @@ snapshots:
       tailwindcss: 3.4.17
 
   '@tauri-apps/api@2.1.1': {}
+
+  '@tauri-apps/api@2.9.1': {}
 
   '@tauri-apps/cli-darwin-arm64@2.1.0':
     optional: true
@@ -2055,6 +2066,10 @@ snapshots:
       sucrase: 3.35.0
     transitivePeerDependencies:
       - ts-node
+
+  tauri-plugin-desktop-underlay-api@0.2.0:
+    dependencies:
+      '@tauri-apps/api': 2.9.1
 
   thenify-all@1.6.0:
     dependencies:

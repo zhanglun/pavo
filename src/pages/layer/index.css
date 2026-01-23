@@ -6,6 +6,21 @@
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.6);
   border-radius: 12px;
+  padding: 12px;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.copyright {
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1.3;
 }
 
 body {

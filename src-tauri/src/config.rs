@@ -22,7 +22,7 @@ impl PavoConfig {
       randomly: false,
       interval: 30,
       auto_save: false,
-      show_layer: false
+      show_layer: false,
     }
   }
 
@@ -148,4 +148,3 @@ impl PavoConfig {
     data
   }
 }
-

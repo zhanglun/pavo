@@ -37,8 +37,8 @@ export default defineConfig(async () => ({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, "src", "index.html"),
-        underLayer: resolve(__dirname, "src", "underlayer.html"),
+        main: resolve(__dirname, "index.html"),
+        underLayer: resolve(__dirname, "underlayer.html"),
       },
     },
   },
