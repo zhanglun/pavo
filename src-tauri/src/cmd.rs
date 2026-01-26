@@ -14,14 +14,25 @@ pub struct AsyncProcInputTx {
 }
 
 #[tauri::command]
-pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, String> {
+pub async fn set_as_desktop<R: Runtime>(
+  app: AppHandle<R>,
+  url: &str,
+  service: PhotoService,
+) -> Result<String, String> {
   println!("set as {:?}", url);
 
-  match service {
+  let result = match service {
     PhotoService::Bing => bing::Wallpaper::set_wallpaper(url)
       .await
       .map_err(|e| e.to_string()),
+  };
+
+  if result.is_ok() {
+    let scheduler = scheduler::SCHEDULER.lock().await;
+    let _ = scheduler.emit_wallpaper_event_by_url(&app, url).await;
   }
+
+  result
 }
 
 #[tauri::command]

@@ -224,6 +224,29 @@ impl Scheduler {
     app.emit("wallpaper:changed", event)?;
     Ok(())
   }
+
+  pub async fn emit_wallpaper_event_by_url<R: tauri::Runtime>(
+    &self,
+    app: &tauri::AppHandle<R>,
+    url: &str,
+  ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let item = self
+      .cache_list
+      .iter()
+      .find(|photo| photo.urls.contains(&url.to_string()));
+
+    if let Some(item) = item {
+      let event = WallpaperEvent {
+        title: item.titles.first().cloned().unwrap_or_default(),
+        copyright: item.copyrights.first().cloned().unwrap_or_default(),
+        url: url.to_string(),
+        startdate: item.startdates.first().cloned().unwrap_or_default(),
+      };
+      app.emit("wallpaper:changed", event)?;
+    }
+
+    Ok(())
+  }
 }
 
 pub static SCHEDULER: Lazy<Mutex<Scheduler>> = Lazy::new(|| Mutex::new(Scheduler::new()));
