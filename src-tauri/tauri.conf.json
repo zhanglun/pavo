@@ -69,11 +69,10 @@
         "label": "underlayer",
         "width": 420,
         "height": 130,
-        "x": 820,
-        "y": 820,
-        "resizable": false,
+        "center": false,
+        "decorations": false,
         "transparent": true,
-        "visible": false
+        "skipTaskbar": true
       }
     ],
     "macOSPrivateApi": true,
