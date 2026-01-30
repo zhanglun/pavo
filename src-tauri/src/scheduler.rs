@@ -2,10 +2,11 @@ use chrono::offset::Utc;
 use chrono::Local;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use tokio::{sync::Mutex};
+use tokio::sync::Mutex;
 
+use crate::events::WallpaperEvent;
 use crate::services::bing;
-use crate::services::{save_wallpaper};
+use tauri::Emitter;
 
 #[allow(dead_code)]
 fn now() -> String {
@@ -29,7 +30,6 @@ pub struct SchedulerPhoto {
 pub struct Scheduler {
   pub last_load_time: i64,
   pub cache_list: Vec<SchedulerPhoto>,
-  pub current_lang: String,
   pub current_idx: usize,
 }
 
@@ -38,7 +38,6 @@ impl Scheduler {
     Self {
       last_load_time: Utc::now().timestamp(),
       cache_list: vec![],
-      current_lang: String::from("zh-cn"),
       current_idx: 0,
     }
   }
@@ -54,7 +53,9 @@ impl Scheduler {
     }
   }
 
-  pub async fn batch_fetch(&mut self) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
+  pub async fn batch_fetch(
+    &mut self,
+  ) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
     if !self.should_refresh() && !self.cache_list.is_empty() {
       return Ok(self.cache_list.clone());
     }
@@ -68,9 +69,7 @@ impl Scheduler {
     for region_code in region_codes {
       let region = region_code.to_string();
       let mut scheduler = self.clone();
-      let handle = tokio::spawn(async move {
-        scheduler.fetch_list_with_region(region).await
-      });
+      let handle = tokio::spawn(async move { scheduler.fetch_list_with_region(region).await });
       handles.push(handle);
     }
 
@@ -86,7 +85,9 @@ impl Scheduler {
     for i in res {
       let unique_name = i.filename.clone().split("_").collect::<Vec<_>>()[0].to_string();
 
-      let idx = formatted_list.iter().position(|x: &SchedulerPhoto| x.filename.clone().split("_").collect::<Vec<_>>()[0] == unique_name);
+      let idx = formatted_list.iter().position(|x: &SchedulerPhoto| {
+        x.filename.clone().split("_").collect::<Vec<_>>()[0] == unique_name
+      });
 
       match idx {
         Some(idx) => {
@@ -111,11 +112,12 @@ impl Scheduler {
     Ok(formatted_list)
   }
 
-  pub async fn fetch_list_with_region(&mut self, region: String) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
-    let res1 = bing::Wallpaper::new(0, 8, Some(region.clone()))
-      .await
-      .unwrap();
-    let res2 = bing::Wallpaper::new(7, 8, Some(region.clone())).await.unwrap();
+  pub async fn fetch_list_with_region(
+    &mut self,
+    region: String,
+  ) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
+    let res1 = bing::Wallpaper::new(0, 8, Some(region.clone())).await?;
+    let res2 = bing::Wallpaper::new(7, 8, Some(region.clone())).await?;
 
     let images1 = res1.json.images;
     let images2 = res2.json.images;
@@ -123,17 +125,21 @@ impl Scheduler {
     let mut res: Vec<SchedulerPhoto> = images1
       .into_iter()
       .chain(images2.into_iter())
-      .into_iter()
-      .map(|i| SchedulerPhoto {
-        filename: bing::Images::get_filename(&i.url).to_string(),
-        urls: vec![["https://www.bing.com", &i.url].concat()],
-        regions: vec![region.clone()],
-        titles: vec![i.clone().title],
-        startdates: vec![i.clone().startdate],
-        copyrights: vec![i.clone().copyright],
-        copyrightlinks: vec![i.clone().copyrightlink],
-      })
-      .collect();
+      .map(
+        |i| -> Result<SchedulerPhoto, Box<dyn std::error::Error + Send + Sync>> {
+          let filename = bing::Images::get_filename(&i.url)?;
+          Ok(SchedulerPhoto {
+            filename,
+            urls: vec![["https://www.bing.com", &i.url].concat()],
+            regions: vec![region.clone()],
+            titles: vec![i.clone().title],
+            startdates: vec![i.clone().startdate],
+            copyrights: vec![i.clone().copyright],
+            copyrightlinks: vec![i.clone().copyrightlink],
+          })
+        },
+      )
+      .collect::<Result<_, _>>()?;
 
     res.dedup_by(|a, b| a.filename == b.filename);
 
@@ -144,25 +150,6 @@ impl Scheduler {
     let list = self.batch_fetch().await.unwrap();
 
     list
-  }
-
-  pub async fn set_wallpaper_from_local(path: &str) -> Result<&str, Box<dyn std::error::Error + Send + Sync>> {
-    wallpaper::set_from_path(path).map_err(|e| e.to_string())?;
-
-    if cfg!(not(target_os = "macos")) {
-      wallpaper::set_mode(wallpaper::Mode::Crop).map_err(|e| e.to_string())?;
-    }
-
-    Ok(path)
-  }
-
-  pub async fn set_wallpaper(url: &str, filename: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let file_path = save_wallpaper(url, filename).await?;
-
-    Self::set_wallpaper_from_local(&file_path).await
-      .map_err(|e| format!("Failed to set wallpaper from local file: {}", e))?;
-
-    Ok(String::from("Ok"))
   }
 
   pub async fn previous_photo(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -180,13 +167,12 @@ impl Scheduler {
 
     let item = &list[self.current_idx];
 
-    Self::set_wallpaper(&item.urls[0], &item.filename)
-      .await?;
+    bing::Wallpaper::set_wallpaper(&item.urls[0]).await?;
 
     Ok(())
   }
 
-  pub async fn next_photo(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>{
+  pub async fn next_photo(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let list = self.cache_list.clone();
 
     if list.is_empty() {
@@ -201,8 +187,63 @@ impl Scheduler {
 
     let item = &list[self.current_idx];
 
-    Self::set_wallpaper(&item.urls[0], &item.filename)
-      .await?;
+    bing::Wallpaper::set_wallpaper(&item.urls[0]).await?;
+
+    Ok(())
+  }
+
+  pub async fn next_photo_with_event<R: tauri::Runtime>(
+    &mut self,
+    app: &tauri::AppHandle<R>,
+  ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    self.next_photo().await?;
+    self.emit_wallpaper_event(app).await?;
+    Ok(())
+  }
+
+  pub async fn previous_photo_with_event<R: tauri::Runtime>(
+    &mut self,
+    app: &tauri::AppHandle<R>,
+  ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    self.previous_photo().await?;
+    self.emit_wallpaper_event(app).await?;
+    Ok(())
+  }
+
+  async fn emit_wallpaper_event<R: tauri::Runtime>(
+    &self,
+    app: &tauri::AppHandle<R>,
+  ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let item = &self.cache_list[self.current_idx];
+    let event = WallpaperEvent {
+      title: item.titles.first().cloned().unwrap_or_default(),
+      copyright: item.copyrights.first().cloned().unwrap_or_default(),
+      url: item.urls.first().cloned().unwrap_or_default(),
+      startdate: item.startdates.first().cloned().unwrap_or_default(),
+    };
+    app.emit("wallpaper:changed", event)?;
+    Ok(())
+  }
+
+  pub async fn emit_wallpaper_event_by_url<R: tauri::Runtime>(
+    &self,
+    app: &tauri::AppHandle<R>,
+    url: &str,
+  ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let item = self
+      .cache_list
+      .iter()
+      .find(|photo| photo.urls.contains(&url.to_string()));
+
+    if let Some(item) = item {
+      let event = WallpaperEvent {
+        title: item.titles.first().cloned().unwrap_or_default(),
+        copyright: item.copyrights.first().cloned().unwrap_or_default(),
+        url: url.to_string(),
+        startdate: item.startdates.first().cloned().unwrap_or_default(),
+      };
+      app.emit("wallpaper:changed", event)?;
+    }
 
     Ok(())
   }

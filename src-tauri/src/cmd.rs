@@ -4,26 +4,43 @@ use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
 
-use tokio::sync::{mpsc, Mutex};
 use showfile;
+use tauri::{AppHandle, Manager, Runtime};
+use tauri_plugin_desktop_underlay::DesktopUnderlayExt;
+use tokio::sync::{mpsc, Mutex};
 
 pub struct AsyncProcInputTx {
   pub sender: Mutex<mpsc::Sender<AsyncProcessMessage>>,
 }
 
 #[tauri::command]
-pub async fn set_as_desktop(url: &str, service: PhotoService) -> Result<String, String> {
+pub async fn set_as_desktop<R: Runtime>(
+  app: AppHandle<R>,
+  url: &str,
+  service: PhotoService,
+) -> Result<String, String> {
   println!("set as {:?}", url);
 
-  match service {
-    PhotoService::Bing => Ok(bing::Wallpaper::set_wallpaper(url).await.unwrap()),
+  let result = match service {
+    PhotoService::Bing => bing::Wallpaper::set_wallpaper(url)
+      .await
+      .map_err(|e| e.to_string()),
+  };
+
+  if result.is_ok() {
+    let scheduler = scheduler::SCHEDULER.lock().await;
+    let _ = scheduler.emit_wallpaper_event_by_url(&app, url).await;
   }
+
+  result
 }
 
 #[tauri::command]
 pub async fn download(url: &str, service: PhotoService) -> Result<String, String> {
   match service {
-    PhotoService::Bing => Ok(bing::Wallpaper::save_wallpaper(url, None).await.unwrap()),
+    PhotoService::Bing => bing::Wallpaper::save_wallpaper(url, None)
+      .await
+      .map_err(|e| e.to_string()),
   }
 }
 
@@ -76,6 +93,42 @@ pub async fn set_interval(interval: u64) {
   println!("{:?}", interval);
 
   pavo_config.set_interval(interval);
+}
+
+#[tauri::command]
+pub async fn set_show_layer<R: Runtime>(app_handler: AppHandle<R>, show_layer: bool) {
+  let pavo_config = config::PavoConfig::get_config();
+
+  pavo_config.set_show_layer(show_layer);
+
+  if show_layer {
+    print!("show layer");
+    // app_handler.get_webview_window("underlayer").unwrap().show().unwrap();
+    // app_handler.get_webview_window("underlayer").unwrap().set_desktop_underlay(true).unwrap();
+    app_handler
+      .get_webview_window("underlayer")
+      .unwrap()
+      .toggle_desktop_underlay()
+      .unwrap();
+    app_handler
+      .get_webview_window("main")
+      .unwrap()
+      .set_focus()
+      .unwrap();
+  } else {
+    // app_handler.get_webview_window("underlayer").unwrap().hide().unwrap();
+    // app_handler.get_webview_window("underlayer").unwrap().set_desktop_underlay(false).unwrap();
+    app_handler
+      .get_webview_window("underlayer")
+      .unwrap()
+      .toggle_desktop_underlay()
+      .unwrap();
+    app_handler
+      .get_webview_window("main")
+      .unwrap()
+      .set_focus()
+      .unwrap();
+  }
 }
 
 #[tauri::command]

@@ -3,7 +3,8 @@
   "description": "permissions that were migrated from v1",
   "local": true,
   "windows": [
-    "main"
+    "main",
+    "underlayer"
   ],
   "permissions": [
     "core:default",
@@ -16,6 +17,7 @@
     "updater:allow-check",
     "updater:allow-download",
     "updater:allow-download-and-install",
-    "dialog:default"
+    "dialog:default",
+    "desktop-underlay:default"
   ]
 }

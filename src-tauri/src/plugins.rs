@@ -31,4 +31,5 @@ pub fn register_plugins<R: Runtime>(builder: Builder<R>) -> Builder<R> {
         .expect("no main window")
         .set_focus();
     }))
+    .plugin(tauri_plugin_desktop_underlay::init())
 }

@@ -1,20 +1,27 @@
 use crate::scheduler::Scheduler;
 use std::sync::Arc;
+use tauri::AppHandle;
 use tokio::sync::Mutex;
 use tokio::time;
 
 use crate::config;
 
 pub struct ShuffleThread {
+  app: Option<AppHandle>,
   thread: Option<tauri::async_runtime::JoinHandle<()>>,
 }
 
 impl ShuffleThread {
   pub fn new() -> Self {
-    Self { thread: None }
+    Self {
+      app: None,
+      thread: None,
+    }
   }
 
-  pub async fn start_shuffle(&mut self, scheduler: Arc<Mutex<Scheduler>>) {
+  pub async fn start_shuffle(&mut self, app: AppHandle, scheduler: Arc<Mutex<Scheduler>>) {
+    self.app = Some(app.clone());
+
     if let Some(thread) = self.thread.take() {
       println!("shuffle thread abort, restart now");
       thread.abort();
@@ -40,7 +47,7 @@ impl ShuffleThread {
           }
         };
 
-        match scheduler.next_photo().await {
+        match scheduler.next_photo_with_event(&app).await {
           Ok(_) => {
             log::info!("Successfully switched wallpaper");
           }

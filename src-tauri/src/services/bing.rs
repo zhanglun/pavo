@@ -10,17 +10,7 @@ pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + S
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 
-static GLOBAL_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| {
-    Arc::new(Client::new())
-});
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UrlParams {
-  pub index: u8,
-  pub number: u8,
-  pub mkt: Option<String>,
-  pub hdr: Option<String>,
-}
+static GLOBAL_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| Arc::new(Client::new()));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tooltips {
@@ -29,6 +19,14 @@ pub struct Tooltips {
   pub previous: String,
   pub walle: String,
   pub walls: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct WallpaperMeta {
+  pub title: String,
+  pub date: String,
+  pub copyright: String,
+  pub copyrightlink: String,
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
@@ -51,11 +49,15 @@ pub struct Images {
 }
 
 impl Images {
-  pub fn get_filename(url: &str) -> &str {
-    let s = url.find("OHR.").ok_or(0).unwrap();
-    let e = url.find("&rf=").ok_or(0).unwrap();
+  pub fn get_filename(url: &str) -> Result<String> {
+    let s = url
+      .find("OHR.")
+      .ok_or_else(|| format!("url missing OHR segment: {url}"))?;
+    let e = url
+      .find("&rf=")
+      .ok_or_else(|| format!("url missing &rf= segment: {url}"))?;
 
-    &url[s..e]
+    Ok(url[s..e].to_string())
   }
 }
 
@@ -67,12 +69,11 @@ pub struct WallpaperRes {
 
 impl WallpaperRes {
   pub async fn new(index: u8, number: u8, mkt: Option<String>) -> Result<WallpaperRes> {
-    Ok(
-      reqwest::get(get_url(index, number, mkt).as_str())
-        .await?
-        .json::<WallpaperRes>()
-        .await?,
-    )
+    let client = GLOBAL_CLIENT.clone();
+    let url = get_url(index, number, mkt);
+    let res = client.get(url).send().await?;
+
+    Ok(res.json::<WallpaperRes>().await?)
   }
 }
 
@@ -94,25 +95,31 @@ impl Wallpaper {
       index,
       number,
       files: vec![],
-      json
+      json,
     })
   }
 
-  pub async fn save_wallpaper(
-    url: &str,
-    filename: Option<&str>,
-  ) -> Result<String> {
+  pub async fn save_wallpaper(url: &str, filename: Option<&str>) -> Result<String> {
+    let filename_owned;
     let filename = match filename {
       Some(filename) => filename,
-      None => Images::get_filename(url),
+      None => {
+        filename_owned = Images::get_filename(url)?;
+        filename_owned.as_str()
+      }
     };
-    let app_folder = config::PavoConfig::get_app_folder()
-        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> {
-            Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("Error code: {}, message: {}", e.0, e.1)))
-        })?;
+    let app_folder = config::PavoConfig::get_app_folder().map_err(
+      |e| -> Box<dyn std::error::Error + Send + Sync> {
+        Box::new(std::io::Error::new(
+          std::io::ErrorKind::Other,
+          format!("Error code: {}, message: {}", e.0, e.1),
+        ))
+      },
+    )?;
     let path = Path::new(&app_folder).join(&*filename);
     let client = GLOBAL_CLIENT.clone();
-    let res = download_file(&client, &url, path.clone().to_str().unwrap()).await;
+    let path_str = path.to_string_lossy().to_string();
+    let res = download_file(&client, &url, &path_str).await;
 
     println!("{:?}", res);
 
@@ -120,38 +127,50 @@ impl Wallpaper {
   }
 
   /// set wallpaper from local file
-  pub async fn set_wallpaper_from_local(a: String) -> String {
-    wallpaper::set_from_path(a.as_str()).unwrap();
+  // pub async fn set_wallpaper_from_local(a: String) -> String {
+  //   wallpaper::set_from_path(a.as_str()).unwrap();
 
-    if cfg!(not(target_os = "macos")) {
-      wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
-    }
+  //   if cfg!(not(target_os = "macos")) {
+  //     wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
+  //   }
 
-    a
+  //   a
+  // }
+
+  pub async fn set_wallpaper_from_local(path: &str) -> Result<String> {
+    let path_owned = path.to_string();
+    tokio::task::spawn_blocking(move || {
+      wallpaper::set_from_path(&path_owned).map_err(|e| e.to_string())?;
+
+      if cfg!(not(target_os = "macos")) {
+        wallpaper::set_mode(wallpaper::Mode::Crop).map_err(|e| e.to_string())?;
+      }
+
+      Ok(path_owned)
+    })
+    .await
+    .map_err(|e| format!("Failed to join wallpaper task: {e}"))?
   }
 
   pub async fn set_wallpaper(url: &str) -> Result<String> {
-    let a = Wallpaper::save_wallpaper(url, None).await;
-    match a {
-      Ok(a) => {
-        Self::set_wallpaper_from_local(a).await;
+    let file_path = Wallpaper::save_wallpaper(url, None).await?;
 
-        Ok(String::from("OK"))
-      }
-      Err(e) => Err(e.to_string().into()),
-    }
+    Self::set_wallpaper_from_local(&file_path)
+      .await
+      .map_err(|e| format!("Failed to set wallpaper from local file: {}", e))?;
+
+    Ok(String::from("Ok"))
   }
 }
 
 fn get_url(index: u8, number: u8, mkt: Option<String>) -> String {
   let num = number.to_string();
   let idx = index.to_string();
-  let mut url = format!("{}&idx={}&n={}", BING_URL, &idx, &num);
+  let mut url = format!("{}&idx={}&n={}", BING_URL, idx, num);
 
-  if let Some(mkt_val) = mkt.clone() {
-    let v = mkt_val.clone();
+  if let Some(mkt_val) = mkt {
     url.push_str("&mkt=");
-    url.push_str(v.clone().as_str());
+    url.push_str(mkt_val.as_str());
   }
 
   println!("url: {:?}", url);

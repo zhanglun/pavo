@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { toggleDesktopUnderlay } from "tauri-plugin-desktop-underlay-api";
   import { invoke } from "@tauri-apps/api/core";
   import { Button, Checkbox, Label, Select } from "flowbite-svelte";
 
@@ -41,11 +42,12 @@
     },
   ];
 
-  let config = $state<UserConfig>({});
+  let config = $state<UserConfig>({} as UserConfig);
 
   function getUserConfig() {
     invoke("get_config").then((res) => {
-      config = res;
+      config = res as UserConfig;
+      console.log("🚀 ~ getUserConfig ~ config:", config)
     });
   }
 
@@ -55,6 +57,11 @@
     invoke("set_auto_shuffle", { shuffle: value }).then((res) => {
       console.log(res);
     });
+  }
+
+  async function updateConfigShowLayer(key: string, value: boolean) {
+    await invoke("set_show_layer", { showLayer: value });
+    // await toggleDesktopUnderlay("underlayer");
   }
 
   function updateConfigInterval(key: string, value: string) {
@@ -71,14 +78,26 @@
 <div class="flex gap-2 flex-col">
   <div class="flex gap-2">
     <Checkbox
-      bind:checked={config.auto_shuffle}
-      bind:value={config.auto_shuffle}
+      bind:checked={config.auto_shuffle as boolean}
+      bind:value={config.auto_shuffle as any}
       on:change={(e) => {
         if (e.target) {
           const checked = (e.target as HTMLInputElement).checked;
           updateConfigShuffle("shuffle", checked);
         }
       }}>Shuffle</Checkbox
+    >
+  </div>
+  <div class="flex gap-2">
+    <Checkbox
+      bind:checked={config.show_layer as boolean}
+      bind:value={config.show_layer as any}
+      on:change={(e) => {
+        if (e.target) {
+          const checked = (e.target as HTMLInputElement).checked;
+          updateConfigShowLayer("show_layer", checked);
+        }
+      }}>Show desktop layer</Checkbox
     >
   </div>
   <div class="flex justify-between items-center">

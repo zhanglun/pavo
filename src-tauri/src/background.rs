@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use tauri::AppHandle;
 use tokio::{
   sync::{mpsc, Mutex},
   time,
@@ -11,7 +12,10 @@ const BING_EXPIRE_TIME: u64 = 60 * 60 * 12;
 pub struct Background {}
 
 impl Background {
-  pub async fn new(receiver: Arc<Mutex<mpsc::Receiver<AsyncProcessMessage>>>) -> Self {
+  pub async fn new(
+    receiver: Arc<Mutex<mpsc::Receiver<AsyncProcessMessage>>>,
+    app: AppHandle,
+  ) -> Self {
     let mut scheduler = scheduler::Scheduler::new();
     scheduler.setup_list().await;
     let mut shuffle_thread = shuffle_thread::ShuffleThread::new();
@@ -21,10 +25,11 @@ impl Background {
 
     if cfg.auto_shuffle {
       shuffle_thread
-        .start_shuffle(Arc::new(Mutex::new(scheduler.clone())))
+        .start_shuffle(app.clone(), Arc::new(Mutex::new(scheduler.clone())))
         .await;
     }
 
+    let app_clone = app.clone();
     tauri::async_runtime::spawn(async move {
       loop {
         let message = receiver.lock().await.recv().await;
@@ -36,7 +41,7 @@ impl Background {
             AsyncProcessMessage::StartShuffle => {
               println!("init output start 2 {:?}", message);
               shuffle_thread
-                .start_shuffle(Arc::new(Mutex::new(scheduler.clone())))
+                .start_shuffle(app_clone.clone(), Arc::new(Mutex::new(scheduler.clone())))
                 .await;
             }
             AsyncProcessMessage::StopShuffle => {
@@ -45,11 +50,11 @@ impl Background {
             }
             AsyncProcessMessage::PreviousPhoto => {
               println!("PreviousPhoto {:?}", message);
-              scheduler.previous_photo().await;
+              let _ = scheduler.previous_photo_with_event(&app_clone).await;
             }
             AsyncProcessMessage::NextPhoto => {
               println!("NextPhoto {:?}", message);
-              scheduler.next_photo().await;
+              let _ = scheduler.next_photo_with_event(&app_clone).await;
             }
           };
         };

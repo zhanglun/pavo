@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import { listen } from "@tauri-apps/api/event";
   import { Tabs, TabItem } from "flowbite-svelte";
-  import Bing from "../pages/bing.svelte";
-  import Settings from "../pages/settings.svelte";
-  import About from "../pages/about.svelte";
-  import { checkUpdate } from "$lib/updater";
+  import Bing from "./bing.svelte";
+  import Settings from "./settings.svelte";
+  import About from "./about.svelte";
+  import { checkUpdate } from "../../lib/updater";
 
   let current = $state("Bing");
 
