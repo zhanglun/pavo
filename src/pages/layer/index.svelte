@@ -20,7 +20,12 @@
   });
 </script>
 
-<div class="flex gap-2 flex-col">
+<div class="flex gap-2 flex-col box">
   <span class="title">{meta.title}</span>
-  <span class="copyright">{meta.copyright}</span>
+  <span class="copyright">
+  {#if meta.startdate}
+  <span class="date">{`${meta.startdate.slice(0, 4)}-${meta.startdate.slice(4, 6)}-${meta.startdate.slice(6, 8)}`}</span>
+  {meta.copyright}
+  {/if}
+  </span>
 </div>

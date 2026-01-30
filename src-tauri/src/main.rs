@@ -15,7 +15,6 @@ mod shuffle_thread;
 mod tray;
 
 use cmd::AsyncProcInputTx;
-use events::WallpaperEvent;
 use plugins::register_plugins;
 use services::AsyncProcessMessage;
 use std::sync::Arc;
@@ -92,8 +91,8 @@ async fn main() {
           let scale_factor = monitor.scale_factor();
           let screen_size = monitor.size();
           let window_size = clock_clone.outer_size().unwrap();
-          let margin_right = 20;
-          let margin_bottom = 20;
+          let margin_right = 40;
+          let margin_bottom = 40;
 
           let x = screen_size.width as i32 - window_size.width as i32 - margin_right;
           let y = screen_size.height as i32 - window_size.height as i32 - margin_bottom;
