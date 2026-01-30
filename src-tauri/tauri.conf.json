@@ -44,7 +44,7 @@
   },
   "productName": "Pavo",
   "mainBinaryName": "Pavo",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "identifier": "com.pavo.dev",
   "plugins": {
     "updater": {
