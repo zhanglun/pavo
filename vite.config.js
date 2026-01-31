@@ -35,6 +35,7 @@ export default defineConfig(async () => ({
     },
   },
   build: {
+    outDir: "./build",
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
