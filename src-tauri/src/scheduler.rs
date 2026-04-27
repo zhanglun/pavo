@@ -17,13 +17,13 @@ const BING_EXPIRE_TIME: i64 = 60 * 60 * 12;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchedulerPhoto {
-  filename: String,
-  regions: Vec<String>,
-  urls: Vec<String>,
-  titles: Vec<String>,
-  startdates: Vec<String>,
-  copyrights: Vec<String>,
-  copyrightlinks: Vec<String>,
+  pub filename: String,
+  pub regions: Vec<String>,
+  pub urls: Vec<String>,
+  pub titles: Vec<String>,
+  pub startdates: Vec<String>,
+  pub copyrights: Vec<String>,
+  pub copyrightlinks: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -46,10 +46,10 @@ impl Scheduler {
     let now = Utc::now().timestamp();
 
     if now - self.last_load_time < BING_EXPIRE_TIME {
-      return false;
+      false
     } else {
       self.last_load_time = now;
-      return true;
+      true
     }
   }
 
@@ -118,13 +118,16 @@ impl Scheduler {
   ) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
     let res1 = bing::Wallpaper::new(0, 8, Some(region.clone())).await?;
     let res2 = bing::Wallpaper::new(7, 8, Some(region.clone())).await?;
+    let res3 = bing::Wallpaper::new(14, 8, Some(region.clone())).await?;
 
     let images1 = res1.json.images;
     let images2 = res2.json.images;
+    let images3 = res3.json.images;
 
     let mut res: Vec<SchedulerPhoto> = images1
       .into_iter()
-      .chain(images2.into_iter())
+      .chain(images2)
+      .chain(images3)
       .map(
         |i| -> Result<SchedulerPhoto, Box<dyn std::error::Error + Send + Sync>> {
           let filename = bing::Images::get_filename(&i.url)?;
@@ -159,7 +162,7 @@ impl Scheduler {
       return Err("No wallpapers available in cache".into());
     }
 
-    if self.current_idx <= 0 {
+    if self.current_idx == 0 {
       self.current_idx = list.len() - 1;
     } else {
       self.current_idx -= 1;
@@ -247,6 +250,132 @@ impl Scheduler {
 
     Ok(())
   }
+
+  pub fn filter_recent_days(list: &[SchedulerPhoto], days: u8, today: &str) -> Vec<SchedulerPhoto> {
+    list
+      .iter()
+      .filter(|photo| {
+        let sd = photo
+          .startdates
+          .first()
+          .map(String::as_str)
+          .unwrap_or_default();
+        within_recent_days(sd, today, days)
+      })
+      .cloned()
+      .collect()
+  }
+
+  pub fn pick_today(list: &[SchedulerPhoto], today: &str) -> Option<SchedulerPhoto> {
+    list
+      .iter()
+      .find(|photo| photo.startdates.first().map(String::as_str) == Some(today))
+      .cloned()
+      .or_else(|| {
+        list
+          .iter()
+          .max_by(|a, b| {
+            let a_sd = a.startdates.first().map(String::as_str).unwrap_or("");
+            let b_sd = b.startdates.first().map(String::as_str).unwrap_or("");
+            a_sd.cmp(b_sd)
+          })
+          .cloned()
+      })
+  }
+}
+
+fn within_recent_days(startdate: &str, today: &str, days: u8) -> bool {
+  let Ok(start) = chrono::NaiveDate::parse_from_str(startdate, "%Y%m%d") else {
+    return false;
+  };
+  let Ok(ref_day) = chrono::NaiveDate::parse_from_str(today, "%Y%m%d") else {
+    return false;
+  };
+  let diff = ref_day.signed_duration_since(start).num_days();
+  diff >= 0 && diff <= days as i64
 }
 
 pub static SCHEDULER: Lazy<Mutex<Scheduler>> = Lazy::new(|| Mutex::new(Scheduler::new()));
+
+#[cfg(test)]
+mod scheduler_tests {
+  use super::*;
+
+  fn photo(filename: &str, startdate: &str) -> SchedulerPhoto {
+    SchedulerPhoto {
+      filename: filename.into(),
+      regions: vec!["zh-CN".into()],
+      urls: vec![format!("https://example.com/{filename}")],
+      titles: vec![filename.into()],
+      startdates: vec![startdate.into()],
+      copyrights: vec!["Copyright".into()],
+      copyrightlinks: vec!["https://www.bing.com".into()],
+    }
+  }
+
+  #[test]
+  fn filter_recent_days_limits_result_count() {
+    let list = vec![
+      photo("a", "20260427"),
+      photo("b", "20260426"),
+      photo("c", "20260420"),
+      photo("d", "20260410"),
+    ];
+
+    let recent = Scheduler::filter_recent_days(&list, 7, "20260427");
+    // 20260427 (day 0), 20260426 (day 1), 20260420 (day 7) → all within 7 days
+    // 20260410 (day 17) → excluded
+    assert_eq!(recent.len(), 3);
+  }
+
+  #[test]
+  fn filter_recent_days_14_includes_more() {
+    let list = vec![
+      photo("a", "20260427"),
+      photo("b", "20260420"),
+      photo("c", "20260414"),
+      photo("d", "20260410"),
+    ];
+
+    let recent = Scheduler::filter_recent_days(&list, 14, "20260427");
+    // 20260427 (day 0), 20260420 (day 7), 20260414 (day 13) → within 14 days
+    // 20260410 (day 17) → excluded
+    assert_eq!(recent.len(), 3);
+  }
+
+  #[test]
+  fn filter_recent_days_empty_list() {
+    let list: Vec<SchedulerPhoto> = vec![];
+    let recent = Scheduler::filter_recent_days(&list, 7, "20260427");
+    assert!(recent.is_empty());
+  }
+
+  #[test]
+  fn pick_today_returns_exact_match() {
+    let list = vec![photo("a", "20260427"), photo("b", "20260426")];
+
+    let today = Scheduler::pick_today(&list, "20260427");
+    assert!(today.is_some());
+    assert_eq!(today.unwrap().filename, "a");
+  }
+
+  #[test]
+  fn pick_today_falls_back_to_newest() {
+    let list = vec![
+      photo("old", "20260420"),
+      photo("newest", "20260426"),
+      photo("mid", "20260423"),
+    ];
+
+    let today = Scheduler::pick_today(&list, "20260427");
+    assert!(today.is_some());
+    assert_eq!(today.unwrap().filename, "newest");
+  }
+
+  #[test]
+  fn pick_today_returns_none_on_empty() {
+    let list: Vec<SchedulerPhoto> = vec![];
+    let today = Scheduler::pick_today(&list, "20260427");
+    assert!(today.is_none());
+  }
+}

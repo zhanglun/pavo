@@ -5,7 +5,7 @@ use tokio::{
   time,
 };
 
-use crate::{config, scheduler, services::AsyncProcessMessage, shuffle_thread};
+use crate::{config, daily_update_thread, scheduler, services::AsyncProcessMessage};
 
 const BING_EXPIRE_TIME: u64 = 60 * 60 * 12;
 
@@ -18,14 +18,14 @@ impl Background {
   ) -> Self {
     let mut scheduler = scheduler::Scheduler::new();
     scheduler.setup_list().await;
-    let mut shuffle_thread = shuffle_thread::ShuffleThread::new();
+    let mut daily_update_worker = daily_update_thread::DailyUpdateWorker::new();
     let mut scheduler_clone = scheduler.clone();
 
     let cfg = config::PavoConfig::get_config();
 
-    if cfg.auto_shuffle {
-      shuffle_thread
-        .start_shuffle(app.clone(), Arc::new(Mutex::new(scheduler.clone())))
+    if cfg.auto_daily_update {
+      daily_update_worker
+        .start_daily_update(app.clone(), Arc::new(Mutex::new(scheduler.clone())))
         .await;
     }
 
@@ -38,22 +38,18 @@ impl Background {
           println!("output: {:?}", message);
 
           match message {
-            AsyncProcessMessage::StartShuffle => {
-              println!("init output start 2 {:?}", message);
-              shuffle_thread
-                .start_shuffle(app_clone.clone(), Arc::new(Mutex::new(scheduler.clone())))
+            AsyncProcessMessage::StartDailyUpdate => {
+              daily_update_worker
+                .start_daily_update(app_clone.clone(), Arc::new(Mutex::new(scheduler.clone())))
                 .await;
             }
-            AsyncProcessMessage::StopShuffle => {
-              println!("init output stop 2 {:?}", message);
-              shuffle_thread.stop_shuffle();
+            AsyncProcessMessage::StopDailyUpdate => {
+              daily_update_worker.stop_daily_update();
             }
             AsyncProcessMessage::PreviousPhoto => {
-              println!("PreviousPhoto {:?}", message);
               let _ = scheduler.previous_photo_with_event(&app_clone).await;
             }
             AsyncProcessMessage::NextPhoto => {
-              println!("NextPhoto {:?}", message);
               let _ = scheduler.next_photo_with_event(&app_clone).await;
             }
           };

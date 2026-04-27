@@ -13,10 +13,22 @@ pub enum PhotoService {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum AsyncProcessMessage {
-  StartShuffle,
-  StopShuffle,
+  StartDailyUpdate,
+  StopDailyUpdate,
   PreviousPhoto,
   NextPhoto,
+}
+
+pub async fn create_or_truncate_file(
+  path: &Path,
+) -> Result<File, Box<dyn std::error::Error + Send + Sync>> {
+  OpenOptions::new()
+    .create(true)
+    .write(true)
+    .truncate(true)
+    .open(path)
+    .await
+    .map_err(|e| format!("Failed to open file '{}': {}", path.display(), e).into())
 }
 
 pub async fn download_file(
@@ -26,7 +38,6 @@ pub async fn download_file(
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
   let path = Path::new(path);
 
-  // 发送请求并检查状态
   let res = client
     .get(url)
     .send()
@@ -48,23 +59,8 @@ pub async fn download_file(
     path.display()
   );
 
-  // 创建或打开文件
-  let mut file = if path.exists() {
-    println!("File exists. Opening for appending.");
-    OpenOptions::new()
-      .write(true)
-      .append(true)
-      .open(path)
-      .await
-      .map_err(|e| format!("Failed to open existing file '{}': {}", path.display(), e))?
-  } else {
-    println!("Creating new file.");
-    File::create(path)
-      .await
-      .map_err(|e| format!("Failed to create file '{}': {}", path.display(), e))?
-  };
+  let mut file = create_or_truncate_file(path).await?;
 
-  // 使用流式下载
   let mut stream = res.bytes_stream();
   let mut downloaded: u64 = 0;
 
@@ -82,17 +78,14 @@ pub async fn download_file(
 
     downloaded += chunk_size;
 
-    // 可选：添加进度显示
     if total_size > 0 {
       let percent = (downloaded as f64 / total_size as f64) * 100.0;
       if downloaded % (1024 * 1024) < chunk_size {
-        // 每约1MB打印一次进度
         println!("Progress: {:.1}% ({}/{})", percent, downloaded, total_size);
       }
     }
   }
 
-  // 验证下载完整性
   if downloaded != total_size {
     return Err(
       format!(
@@ -136,5 +129,50 @@ mod tests {
     let url = "https://www.bing.com/HPImageArchive.aspx?&format=js&uhd=1&uhdwidth=3840&uhdheight=2160&idx=0&n=8&mkt=fr-FR";
     let result = bing::Wallpaper::save_wallpaper(&url, None).await.unwrap();
     assert!(Path::new(&result).exists());
+  }
+
+  #[test]
+  fn favorite_metadata_type_keeps_local_path_optional() {
+    let item = crate::config::FavoriteItem {
+      filename: "demo".into(),
+      url: "https://example.com/demo".into(),
+      title: "Demo".into(),
+      startdate: "20260427".into(),
+      copyright: "Copyright".into(),
+      copyrightlink: "https://www.bing.com".into(),
+      local_path: None,
+    };
+    assert!(item.local_path.is_none());
+  }
+
+  #[tokio::test]
+  async fn create_or_truncate_file_overwrites_existing_content() {
+    let dir = std::env::temp_dir().join("pavo_test_overwrite");
+    let _ = tokio::fs::create_dir_all(&dir).await;
+    let path = dir.join("test_overwrite.jpg");
+
+    tokio::fs::write(&path, b"old content that should be replaced")
+      .await
+      .unwrap();
+    assert_eq!(
+      tokio::fs::read(&path).await.unwrap().len(),
+      35,
+      "precondition: old content length"
+    );
+
+    let mut file = super::create_or_truncate_file(&path)
+      .await
+      .expect("create_or_truncate_file should succeed");
+    use tokio::io::AsyncWriteExt;
+    file.write_all(b"new").await.unwrap();
+    file.flush().await.unwrap();
+
+    let content = tokio::fs::read(&path).await.unwrap();
+    assert_eq!(
+      content, b"new",
+      "file should contain only 'new', not 'old content...new'"
+    );
+
+    let _ = tokio::fs::remove_dir_all(&dir).await;
   }
 }

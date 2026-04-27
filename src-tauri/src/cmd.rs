@@ -4,7 +4,6 @@ use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
 
-use showfile;
 use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_desktop_underlay::DesktopUnderlayExt;
 use tokio::sync::{mpsc, Mutex};
@@ -61,38 +60,28 @@ pub async fn get_config() -> serde_json::Value {
 
 #[tauri::command]
 #[allow(unused)]
-pub async fn set_auto_shuffle(
-  shuffle: bool,
+pub async fn set_auto_daily_update(
+  enabled: bool,
   state: tauri::State<'_, AsyncProcInputTx>,
 ) -> Result<(), ()> {
   let pavo_config = config::PavoConfig::get_config();
+  pavo_config.set_auto_daily_update(enabled);
 
-  pavo_config.set_auto_shuffle(shuffle);
-
-  let async_proc_input_tx = state.sender.lock().await;
-
-  if shuffle {
-    async_proc_input_tx
-      .send(AsyncProcessMessage::StartShuffle)
-      .await
-      .map_err(|e| e.to_string());
-  } else {
-    async_proc_input_tx
-      .send(AsyncProcessMessage::StopShuffle)
-      .await
-      .map_err(|e| e.to_string());
-  }
-
-  Ok(())
+  let sender = state.sender.lock().await;
+  sender
+    .send(if enabled {
+      AsyncProcessMessage::StartDailyUpdate
+    } else {
+      AsyncProcessMessage::StopDailyUpdate
+    })
+    .await
+    .map_err(|_| ())
 }
 
 #[tauri::command]
-pub async fn set_interval(interval: u64) {
+pub async fn set_history_range_days(days: u8) {
   let pavo_config = config::PavoConfig::get_config();
-
-  println!("{:?}", interval);
-
-  pavo_config.set_interval(interval);
+  pavo_config.set_history_range_days(days);
 }
 
 #[tauri::command]
@@ -136,24 +125,42 @@ pub async fn reveal_log_file() {
   let folder_dir = config::PavoConfig::get_app_folder().unwrap();
   let file_path = Path::new(&folder_dir).join("logs/Pavo.log");
 
-  showfile::show_path_in_file_manager(file_path.to_path_buf());
-}
-
-#[tauri::command]
-pub async fn set_randomly(randomly: bool) {
-  let pavo_config = config::PavoConfig::get_config();
-
-  pavo_config.set_randomly(randomly);
-}
-
-#[tauri::command]
-pub async fn set_auto_save(auto_save: bool) {
-  let pavo_config = config::PavoConfig::get_config();
-
-  pavo_config.set_auto_save(auto_save);
+  showfile::show_path_in_file_manager(&file_path);
 }
 
 #[tauri::command]
 pub async fn view_photo(handle: tauri::AppHandle, href: String) {
   services::view_photo(handle, href);
+}
+
+#[tauri::command]
+pub async fn get_today_wallpaper() -> Option<scheduler::SchedulerPhoto> {
+  let mut scheduler = scheduler::SCHEDULER.lock().await;
+  let list = scheduler.batch_fetch().await.ok()?;
+  let today = chrono::Local::now().format("%Y%m%d").to_string();
+  scheduler::Scheduler::pick_today(&list, &today)
+}
+
+#[tauri::command]
+pub async fn get_recent_wallpapers(days: u8) -> Vec<scheduler::SchedulerPhoto> {
+  let mut scheduler = scheduler::SCHEDULER.lock().await;
+  let list = scheduler.batch_fetch().await.unwrap_or_default();
+  let today = chrono::Local::now().format("%Y%m%d").to_string();
+  scheduler::Scheduler::filter_recent_days(&list, days, &today)
+}
+
+#[tauri::command]
+pub async fn list_favorites() -> Vec<config::FavoriteItem> {
+  config::PavoConfig::get_config().favorites
+}
+
+#[tauri::command]
+pub async fn add_favorite(item: config::FavoriteItem) -> serde_json::Value {
+  serde_json::to_value(config::PavoConfig::get_config().add_favorite(item)).unwrap()
+}
+
+#[tauri::command]
+pub async fn remove_favorite(filename: String) -> serde_json::Value {
+  serde_json::to_value(config::PavoConfig::get_config().remove_favorite_by_filename(&filename))
+    .unwrap()
 }

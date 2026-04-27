@@ -6,12 +6,12 @@
 mod background;
 mod cmd;
 mod config;
+mod daily_update_thread;
 mod desktop_layer;
 mod events;
 mod plugins;
 mod scheduler;
 mod services;
-mod shuffle_thread;
 mod tray;
 
 use cmd::AsyncProcInputTx;
@@ -146,12 +146,15 @@ async fn main() {
       cmd::view_photo,
       cmd::get_bing_wallpaper_list,
       cmd::get_config,
-      cmd::set_auto_shuffle,
-      cmd::set_interval,
-      cmd::set_randomly,
-      cmd::set_auto_save,
+      cmd::set_auto_daily_update,
+      cmd::set_history_range_days,
       cmd::set_show_layer,
       cmd::reveal_log_file,
+      cmd::get_today_wallpaper,
+      cmd::get_recent_wallpapers,
+      cmd::list_favorites,
+      cmd::add_favorite,
+      cmd::remove_favorite,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())
