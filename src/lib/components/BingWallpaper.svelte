@@ -4,11 +4,13 @@
   let { titles, urls, startdates, copyrights, copyrightlinks }: BingImage =
     $props();
 
-  let title = titles[0];
-  let url = urls[0];
-  let startdate = startdates[0];
-  let copyright = copyrights[0];
-  let copyrightlink = copyrightlinks[0];
+  let title = $derived(titles[0]);
+  let url = $derived(urls[0]);
+  let startdate = $derived(startdates[0]);
+  let copyright = $derived(copyrights[0]);
+  let copyrightlink = $derived(copyrightlinks[0]);
+  let filename = $derived(url.split("/").pop() ?? "");
+  let favorite = false;
 
   function view_photo() {}
 </script>
@@ -45,7 +47,7 @@
     <div class="grid gap-1">
       <div class="flex justify-between items-center">
         <div class="font-semibold">{title}</div>
-        <Toolbar service={"Bing"} {url} href={copyrightlink} />
+        <Toolbar service={"Bing"} {url} href={copyrightlink} {filename} {favorite} />
       </div>
       <div class="text-xs text-neutral-700">
         <span class="font-normal text-xs text-right text-neutral-700"

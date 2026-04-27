@@ -1,44 +1,43 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
-  import { A, Button } from "flowbite-svelte";
+  import { A } from "flowbite-svelte";
   import { getName, getVersion } from "@tauri-apps/api/app";
   import CheckCircleSolid from "flowbite-svelte-icons/CheckCircleSolid.svelte";
 
-  let version = $state("");
-  let name = $state("");
+  let appName = $state("");
+  let appVersion = $state("");
 
   $effect(() => {
-    getVersion().then((res) => {
-      console.log("🚀 ~ file: about.svelte:10 ~ getVersion ~ res:", res);
-      version = res;
-    });
-    getName().then((res) => {
-      console.log("🚀 ~ file: about.svelte:10 ~ getVersion ~ res:", res);
-      name = res;
-    });
+    getName().then((n) => (appName = n));
+    getVersion().then((v) => (appVersion = v));
   });
 </script>
 
-<div class="flex gap-2 flex-col">
-  <div class="flex items-center justify-center mt-5">
-    <img src="/icon.png" width="90px" alt={name} />
+<div class="flex gap-2 flex-col items-center">
+  <div class="flex items-center gap-2 mt-2">
+    <img src="/icon.png" width="48px" alt={appName} />
+    <div>
+      <div class="text-sm font-medium">{appName}</div>
+      <div class="text-xs text-neutral-500 flex items-center gap-1">
+        <span>v{appVersion}</span>
+        <CheckCircleSolid size="xs" color="green" />
+      </div>
+    </div>
   </div>
-  <div class="text-xl text-center">{name}</div>
-  <div class="text-sm mt-6 flex gap-3 items-center justify-center">
-    <span>version {version}</span><span
-      ><CheckCircleSolid stroke-width="1.5" size="sm" color="green" /></span
+  <div class="text-xs text-neutral-400 flex gap-2 items-center justify-center">
+    <A
+      class="hover:underline text-xs"
+      href="https://github.com/zhanglun/pavo"
+      target="_blank"
     >
+      GitHub
+    </A>
+    <span class="w-px h-3 bg-gray-300"></span>
+    <A
+      class="hover:underline text-xs"
+      href="https://github.com/zhanglun/pavo/issues"
+      target="_blank"
+    >
+      反馈问题
+    </A>
   </div>
-  <div class="text-sm font-light flex gap-2 items-center justify-center mt-5">
-    <A class="hover:underline" href="https://github.com/zhanglun/pavo" target="_blank"
-      >Github Repo</A
-    >
-    <span class="w-[1px] h-3 bg-gray-200"></span>
-    <A class="hover:underline" href="https://github.com/zhanglun/pavo/issues" target="_blank"
-      >Report Issue</A
-    >
-  </div>
-  <!-- <div class="flex gap-2 items-center justify-center">
-    <Button size="sm">Check for Updates</Button>
-  </div> -->
 </div>

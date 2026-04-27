@@ -5,7 +5,6 @@ import { relaunch } from "@tauri-apps/plugin-process";
 export async function checkUpdate() {
   try {
     const update = await check();
-    console.log("🚀 ~ file: updater.ts:6 ~ checkUpdate ~ update:", update);
 
     if (update) {
       console.log(
@@ -35,9 +34,9 @@ export async function checkUpdate() {
       console.log("update installed");
       await relaunch();
     } else {
-      await message("File not found", { title: "Tauri", kind: "error" });
+      await message("当前已是最新版本", { title: "Pavo", kind: "info" });
     }
   } catch (err) {
-    await message("Error");
+    await message("检查更新失败，请稍后再试", { title: "Pavo", kind: "error" });
   }
 }

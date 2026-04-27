@@ -1,126 +1,141 @@
 <script lang="ts">
-  import { toggleDesktopUnderlay } from "tauri-plugin-desktop-underlay-api";
   import { invoke } from "@tauri-apps/api/core";
-  import { Button, Checkbox, Label, Select } from "flowbite-svelte";
-
-  let interval_options = [
-    {
-      label: "Every 1 Minutes",
-      value: 1,
-    },
-    {
-      label: "Every 5 Minutes",
-      value: 5,
-    },
-    {
-      label: "Every 10 Minutes",
-      value: 10,
-    },
-    {
-      label: "Every 15 Minutes",
-      value: 15,
-    },
-    {
-      label: "Every 30 Minutes",
-      value: 30,
-    },
-    {
-      label: "Every Hour",
-      value: 60,
-    },
-    {
-      label: "Every 2 Hours",
-      value: 120,
-    },
-    {
-      label: "Every 5 Hours",
-      value: 300,
-    },
-    {
-      label: "Every Day",
-      value: 3600,
-    },
-  ];
+  import { Button, Checkbox, Label, Select, A } from "flowbite-svelte";
+  import { getName, getVersion } from "@tauri-apps/api/app";
+  import CheckCircleSolid from "flowbite-svelte-icons/CheckCircleSolid.svelte";
+  import { checkUpdate } from "../../lib/updater";
 
   let config = $state<UserConfig>({} as UserConfig);
+  let appName = $state("");
+  let appVersion = $state("");
 
   function getUserConfig() {
     invoke("get_config").then((res) => {
       config = res as UserConfig;
-      console.log("🚀 ~ getUserConfig ~ config:", config)
     });
   }
 
   getUserConfig();
 
-  function updateConfigShuffle(key: string, value: boolean) {
-    invoke("set_auto_shuffle", { shuffle: value }).then((res) => {
-      console.log(res);
-    });
+  $effect(() => {
+    getName().then((n) => (appName = n));
+    getVersion().then((v) => (appVersion = v));
+  });
+
+  async function updateAutoDailyUpdate(enabled: boolean) {
+    await invoke("set_auto_daily_update", { enabled });
   }
 
-  async function updateConfigShowLayer(key: string, value: boolean) {
-    await invoke("set_show_layer", { showLayer: value });
-    // await toggleDesktopUnderlay("underlayer");
+  async function updateShowLayer(showLayer: boolean) {
+    await invoke("set_show_layer", { showLayer });
   }
 
-  function updateConfigInterval(key: string, value: string) {
-    invoke("set_interval", { interval: parseInt(value) }).then((res) => {
-      console.log(res);
-    });
+  async function updateHistoryRange(days: number) {
+    await invoke("set_history_range_days", { days });
   }
 
   async function handleRevealLog() {
-    await invoke("reveal_log_file")
+    await invoke("reveal_log_file");
+  }
+
+  async function handleCheckUpdate() {
+    await checkUpdate();
   }
 </script>
 
-<div class="flex gap-2 flex-col">
-  <div class="flex gap-2">
+<div class="flex gap-4 flex-col">
+  <div class="grid gap-3">
     <Checkbox
-      bind:checked={config.auto_shuffle as boolean}
-      bind:value={config.auto_shuffle as any}
+      bind:checked={config.auto_daily_update as boolean}
       on:change={(e) => {
         if (e.target) {
           const checked = (e.target as HTMLInputElement).checked;
-          updateConfigShuffle("shuffle", checked);
+          updateAutoDailyUpdate(checked);
         }
-      }}>Shuffle</Checkbox
+      }}>每日自动更新</Checkbox
     >
+
+    <div class="flex justify-between items-center">
+      <Label for="history_range" class="mb-0">历史范围</Label>
+      <Select
+        id="history_range"
+        size="sm"
+        class="w-1/2"
+        bind:value={config.history_range_days}
+        on:change={(e) => {
+          if (e.target) {
+            const value = Number((e.target as HTMLSelectElement).value);
+            updateHistoryRange(value);
+          }
+        }}
+      >
+        <option value={7}>最近 7 天</option>
+        <option value={14}>最近 14 天</option>
+      </Select>
+    </div>
+
+    <div class="text-xs text-neutral-500 pl-1">
+      缓存位置：~/.pavo/ — 壁纸图片会自动保存到本地以便离线查看
+    </div>
   </div>
-  <div class="flex gap-2">
+
+
+  <div class="border-t border-gray-200 dark:border-gray-700"></div>
+
+  <div class="grid gap-3">
+    <div class="text-xs font-medium text-neutral-400 uppercase tracking-wide">高级设置</div>
+
     <Checkbox
       bind:checked={config.show_layer as boolean}
-      bind:value={config.show_layer as any}
       on:change={(e) => {
         if (e.target) {
           const checked = (e.target as HTMLInputElement).checked;
-          updateConfigShowLayer("show_layer", checked);
+          updateShowLayer(checked);
         }
-      }}>Show desktop layer</Checkbox
+      }}>显示桌面信息层</Checkbox
     >
+
+    <div class="flex justify-between items-center">
+      <Label for="check_update" class="mb-0">检查更新</Label>
+      <Button size="sm" on:click={handleCheckUpdate}>检查</Button>
+    </div>
+
+    <div class="flex justify-between items-center">
+      <Label for="log_file" class="mb-0">日志文件</Label>
+      <Button size="sm" on:click={handleRevealLog}>打开</Button>
+    </div>
   </div>
-  <div class="flex justify-between items-center">
-    <Label for="interval" class="mb-2">Interval</Label>
-    <Select
-      id="interval"
-      size="sm"
-      class="w-1/2"
-      bind:value={config.interval}
-      on:change={(e) => {
-        if (e.target) {
-          const value = (e.target as HTMLSelectElement).value;
-          updateConfigInterval("interval", value);
-        }
-      }}
-    >
-      {#each interval_options as option}
-        <option value={option.value}>{option.label}</option>
-      {/each}
-    </Select>
-  </div>
-  <div class="flex justify-between items-center my-4">
-    <Label for="log file" class="mb-2">Log file</Label>
-    <Button size="sm" on:click={handleRevealLog}>Reveal</Button>
+
+
+  <div class="border-t border-gray-200 dark:border-gray-700"></div>
+
+  <div class="grid gap-2">
+    <div class="flex items-center gap-2 justify-center">
+      <img src="/icon.png" width="48px" alt={appName} />
+      <div>
+        <div class="text-sm font-medium">{appName}</div>
+        <div class="text-xs text-neutral-500 flex items-center gap-1">
+          <span>v{appVersion}</span>
+          <CheckCircleSolid size="xs" color="green" />
+        </div>
+      </div>
+    </div>
+    <div class="text-xs text-neutral-400 flex gap-2 items-center justify-center">
+      <A
+        class="hover:underline text-xs"
+        href="https://github.com/zhanglun/pavo"
+        target="_blank"
+      >
+        GitHub
+      </A>
+      <span class="w-px h-3 bg-gray-300"></span>
+      <A
+        class="hover:underline text-xs"
+        href="https://github.com/zhanglun/pavo/issues"
+        target="_blank"
+      >
+        反馈问题
+      </A>
+    </div>
   </div>
 </div>

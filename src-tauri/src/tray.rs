@@ -17,19 +17,15 @@ pub fn create_tray(
   let hide = MenuItemBuilder::new("Hide").id("hide").build(app).unwrap();
   // we could opt handle an error case better than calling unwrap
 
-  let previous_photo = MenuItemBuilder::new("Previous photo")
-    .id("previous_photo")
+  let previous_wallpaper = MenuItemBuilder::new("Previous Wallpaper")
+    .id("previous_wallpaper")
     .build(app)
     .unwrap();
-  let next_photo = MenuItemBuilder::new("Next photo")
-    .id("next_photo")
+  let next_wallpaper = MenuItemBuilder::new("Next Wallpaper")
+    .id("next_wallpaper")
     .build(app)
     .unwrap();
 
-  let about = MenuItemBuilder::new("About Pavo")
-    .id("about")
-    .build(app)
-    .unwrap();
   let check_for_update = MenuItemBuilder::new("Check for Updates")
     .id("check_for_updates")
     .build(app)
@@ -40,11 +36,11 @@ pub fn create_tray(
     .unwrap();
 
   let menu = MenuBuilder::new(app)
-    .items(&[&previous_photo, &next_photo])
+    .items(&[&previous_wallpaper, &next_wallpaper])
     .separator()
     .items(&[&show, &hide])
     .separator()
-    .items(&[&about, &check_for_update, &settings])
+    .items(&[&check_for_update, &settings])
     .separator()
     .items(&[&quit])
     .build()
@@ -102,27 +98,17 @@ pub fn create_tray(
           let _ = window.hide();
         }
       }
-      "previous_photo" => {
+      "previous_wallpaper" => {
         let tx = sender.clone();
         tokio::spawn(async move {
           tx.send(AsyncProcessMessage::PreviousPhoto).await.unwrap();
         });
       }
-      "next_photo" => {
+      "next_wallpaper" => {
         let tx = sender.clone();
         tokio::spawn(async move {
           tx.send(AsyncProcessMessage::NextPhoto).await.unwrap();
-          println!("send");
         });
-      }
-      "about" => {
-        let app = app.app_handle();
-
-        if let Some(window) = app.get_webview_window("main") {
-          let _ = app.emit("go-to-about", ());
-          let _ = window.show();
-          let _ = window.set_focus();
-        }
       }
       "settings" => {
         let app = app.app_handle();
@@ -137,15 +123,9 @@ pub fn create_tray(
         let _ = app.emit("check-for-updates", ());
       }
       "quit" => {
-        println!("quit menu item was clicked");
         app.exit(0);
       }
-      "toggle" => {
-        println!("toggle clicked");
-      }
-      _ => {
-        println!("menu item {:?} not handled", event.id);
-      }
+      _ => {}
     })
     .build(app);
   Ok(())

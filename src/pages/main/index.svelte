@@ -1,43 +1,64 @@
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
   import { Tabs, TabItem } from "flowbite-svelte";
-  import Bing from "./bing.svelte";
+  import Today from "./today.svelte";
+  import Recent from "./recent.svelte";
+  import Favorites from "./favorites.svelte";
   import Settings from "./settings.svelte";
-  import About from "./about.svelte";
   import { checkUpdate } from "../../lib/updater";
 
-  let current = $state("Bing");
+  let current = $state("Today");
 
   $effect(() => {
-    const sub = () => {
-      listen("go-to-about", (event) => {
-        current = "About";
-      });
+    const unlisteners: (() => void)[] = [];
 
-      listen("go-to-settings", (event) => {
-        current = "Settings";
-      });
+    listen("go-to-settings", () => {
+      current = "Settings";
+    }).then((unlisten) => unlisteners.push(unlisten));
 
-      listen("check-for-updates", (event) => {
-        checkUpdate().then(() => {});
-      });
+    listen("check-for-updates", () => {
+      checkUpdate().then(() => {});
+    }).then((unlisten) => unlisteners.push(unlisten));
+
+    return () => {
+      for (const unlisten of unlisteners) {
+        unlisten();
+      }
     };
-
-    return sub();
   });
 </script>
 
 <div class="w-full h-full flex flex-col">
   <Tabs tabStyle="underline" contentClass="flex-1 h-0">
     <TabItem
-      open={current === "Bing"}
-      title="Bing"
+      open={current === "Today"}
+      title="Today"
       divClass="p-4 pr-2 h-full overflow-y-auto overflow-x-hidden scrollbar-stable"
       onclick={() => {
-        current = "Bing";
+        current = "Today";
       }}
     >
-      <Bing />
+      <Today />
+    </TabItem>
+    <TabItem
+      open={current === "Recent"}
+      title="Recent"
+      divClass="p-4 pr-2 h-full overflow-y-auto overflow-x-hidden scrollbar-stable"
+      onclick={() => {
+        current = "Recent";
+      }}
+    >
+      <Recent />
+    </TabItem>
+    <TabItem
+      open={current === "Favorites"}
+      title="Favorites"
+      divClass="p-4 pr-2 h-full overflow-y-auto overflow-x-hidden scrollbar-stable"
+      onclick={() => {
+        current = "Favorites";
+      }}
+    >
+      <Favorites />
     </TabItem>
     <TabItem
       open={current === "Settings"}
@@ -48,16 +69,6 @@
       }}
     >
       <Settings />
-    </TabItem>
-    <TabItem
-      open={current === "About"}
-      title="About"
-      divClass="p-4 h-full overflow-y-auto overflow-x-hidden scrollbar-stable"
-      onclick={() => {
-        current = "About";
-      }}
-    >
-      <About />
     </TabItem>
   </Tabs>
 </div>

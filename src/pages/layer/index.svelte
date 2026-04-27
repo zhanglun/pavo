@@ -4,18 +4,21 @@
 
   let meta = $state({ title: "", copyright: "", startdate: "" });
 
-  onMount(async () => {
-    const unlisten = await listen<{ title: string; copyright: string; url: string; startdate: string }>(
-      "wallpaper:changed",
-      (event) => {
+  onMount(() => {
+    let unlisten: (() => void) | undefined;
+
+    (async () => {
+      unlisten = await listen<
+        { title: string; copyright: string; url: string; startdate: string }
+      >("wallpaper:changed", (event) => {
         meta.title = event.payload.title;
         meta.copyright = event.payload.copyright;
         meta.startdate = event.payload.startdate;
-      }
-    );
+      });
+    })();
 
     return () => {
-      unlisten();
+      unlisten?.();
     };
   });
 </script>

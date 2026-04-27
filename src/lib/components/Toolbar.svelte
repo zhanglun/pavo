@@ -6,11 +6,7 @@
   import DesktopPcOutline from "flowbite-svelte-icons/DesktopPcOutline.svelte";
   import ArrowUpRightFromSquareOutline from "flowbite-svelte-icons/ArrowUpRightFromSquareOutline.svelte";
 
-  let { service, url, href } = $props<{
-    service: string;
-    url: string;
-    href: string;
-  }>();
+  let { service, url, href, filename, favorite }: WallpaperActionProps = $props();
 
   function setAsDesktop() {
     invoke("set_as_desktop", { service, url }).then((res) => {
