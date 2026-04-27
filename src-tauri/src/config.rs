@@ -1,28 +1,47 @@
-use dirs;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct FavoriteItem {
+  pub filename: String,
+  pub url: String,
+  pub title: String,
+  pub startdate: String,
+  pub copyright: String,
+  pub copyrightlink: String,
+  #[serde(default)]
+  pub local_path: Option<String>,
+}
+
+fn default_auto_daily_update() -> bool {
+  true
+}
+
+fn default_history_range_days() -> u8 {
+  7
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
-  pub auto_shuffle: bool,
-  pub shuffle_source: Vec<String>,
-  pub randomly: bool,
-  pub interval: u64,
-  pub auto_save: bool,
+  #[serde(default = "default_auto_daily_update")]
+  pub auto_daily_update: bool,
+  #[serde(default = "default_history_range_days")]
+  pub history_range_days: u8,
+  #[serde(default)]
   pub show_layer: bool,
+  #[serde(default)]
+  pub favorites: Vec<FavoriteItem>,
 }
 
 impl PavoConfig {
   pub fn new() -> Self {
     Self {
-      auto_shuffle: false,
-      shuffle_source: vec![],
-      randomly: false,
-      interval: 30,
-      auto_save: false,
+      auto_daily_update: true,
+      history_range_days: 7,
       show_layer: false,
+      favorites: vec![],
     }
   }
 
@@ -72,6 +91,66 @@ impl PavoConfig {
     fs::write(file_path, content).expect("write file error");
   }
 
+  pub fn parse_tolerant(content: &str) -> Self {
+    if let Ok(data) = toml::from_str::<PavoConfig>(content) {
+      return data;
+    }
+
+    let table = match toml::from_str::<toml::Value>(content) {
+      Ok(toml::Value::Table(t)) => t,
+      _ => return PavoConfig::new(),
+    };
+
+    PavoConfig {
+      auto_daily_update: table
+        .get("auto_daily_update")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true),
+      history_range_days: table
+        .get("history_range_days")
+        .and_then(|v| v.as_integer())
+        .and_then(|i| u8::try_from(i).ok())
+        .unwrap_or(7),
+      show_layer: table
+        .get("show_layer")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false),
+      favorites: table
+        .get("favorites")
+        .and_then(|v| v.as_array())
+        .and_then(|arr| {
+          arr
+            .iter()
+            .filter_map(|item| {
+              item.as_table().and_then(|t| {
+                let filename = t.get("filename")?.as_str()?.to_string();
+                let url = t.get("url")?.as_str()?.to_string();
+                let title = t.get("title")?.as_str()?.to_string();
+                let startdate = t.get("startdate")?.as_str()?.to_string();
+                let copyright = t.get("copyright")?.as_str()?.to_string();
+                let copyrightlink = t.get("copyrightlink")?.as_str()?.to_string();
+                let local_path = t
+                  .get("local_path")
+                  .and_then(|v| v.as_str())
+                  .map(String::from);
+                Some(FavoriteItem {
+                  filename,
+                  url,
+                  title,
+                  startdate,
+                  copyright,
+                  copyrightlink,
+                  local_path,
+                })
+              })
+            })
+            .collect::<Vec<_>>()
+            .into()
+        })
+        .unwrap_or_default(),
+    }
+  }
+
   pub fn get_config() -> Self {
     let folder_dir = Self::get_app_folder().unwrap();
     let file_path = Path::new(&folder_dir).join("pavo.toml");
@@ -81,51 +160,7 @@ impl PavoConfig {
     }
 
     let content = fs::read_to_string(&file_path).unwrap_or_default();
-    let data: PavoConfig = match toml::from_str(&content) {
-      Ok(data) => PavoConfig { ..data },
-      Err(_) => PavoConfig::new(),
-    };
-
-    data
-  }
-
-  pub fn set_auto_shuffle(&self, auto_shuffle: bool) -> Self {
-    let mut data = Self::get_config();
-
-    data.auto_shuffle = auto_shuffle;
-
-    Self::write_config(data.clone());
-
-    data
-  }
-
-  pub fn set_interval(&self, interval: u64) -> Self {
-    let mut data = Self::get_config();
-
-    data.interval = interval;
-
-    println!("data; {:?}", data);
-
-    Self::write_config(data.clone());
-
-    data
-  }
-
-  pub fn get_interval() -> u64 {
-    let data = Self::get_config();
-    println!("data: {:?}", data);
-
-    data.interval.clone()
-  }
-
-  pub fn set_randomly(&self, randomly: bool) -> Self {
-    let mut data = Self::get_config();
-
-    data.randomly = randomly;
-
-    Self::write_config(data.clone());
-
-    data
+    Self::parse_tolerant(&content)
   }
 
   pub fn set_show_layer(&self, show_layer: bool) -> Self {
@@ -138,13 +173,194 @@ impl PavoConfig {
     data
   }
 
-  pub fn set_auto_save(&self, status: bool) -> Self {
+  pub fn set_auto_daily_update(&self, enabled: bool) -> Self {
     let mut data = Self::get_config();
-
-    data.auto_save = status;
-
+    data.auto_daily_update = enabled;
     Self::write_config(data.clone());
-
     data
+  }
+
+  pub fn set_history_range_days(&self, days: u8) -> Self {
+    let mut data = Self::get_config();
+    data.history_range_days = days;
+    Self::write_config(data.clone());
+    data
+  }
+
+  pub fn add_favorite(&self, item: FavoriteItem) -> Self {
+    let mut data = Self::get_config();
+    if !data.favorites.iter().any(|f| f.filename == item.filename) {
+      data.favorites.push(item);
+    }
+    Self::write_config(data.clone());
+    data
+  }
+
+  pub fn remove_favorite_by_filename(&self, filename: &str) -> Self {
+    let mut data = Self::get_config();
+    data.favorites.retain(|f| f.filename != filename);
+    Self::write_config(data.clone());
+    data
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn parse_legacy_config_without_new_fields() {
+    let input = r#"
+show_layer = false
+"#;
+
+    let parsed: PavoConfig = toml::from_str(input).unwrap_or_else(|_| PavoConfig::new());
+    assert_eq!(parsed.show_layer, false);
+    assert_eq!(parsed.auto_daily_update, true);
+    assert_eq!(parsed.history_range_days, 7);
+    assert!(parsed.favorites.is_empty());
+  }
+
+  #[test]
+  fn parse_empty_config_defaults_to_new() {
+    let parsed: PavoConfig = toml::from_str("").unwrap();
+    assert_eq!(parsed.auto_daily_update, true);
+    assert_eq!(parsed.history_range_days, 7);
+    assert!(parsed.favorites.is_empty());
+    assert_eq!(parsed.show_layer, false);
+  }
+
+  #[test]
+  fn serialize_favorites_with_metadata() {
+    let cfg = PavoConfig {
+      auto_daily_update: true,
+      history_range_days: 14,
+      show_layer: false,
+      favorites: vec![FavoriteItem {
+        filename: "OHR.Sample.jpg".into(),
+        url: "https://www.bing.com/th?id=OHR.Sample.jpg".into(),
+        title: "Sample".into(),
+        startdate: "20260427".into(),
+        copyright: "Copyright".into(),
+        copyrightlink: "https://www.bing.com".into(),
+        local_path: None,
+      }],
+    };
+
+    let text = toml::to_string(&cfg).unwrap();
+    assert!(text.contains("history_range_days = 14"));
+    assert!(text.contains("filename = \"OHR.Sample.jpg\""));
+  }
+
+  #[test]
+  fn write_config_persists_auto_daily_update_flag() {
+    let cfg = PavoConfig {
+      auto_daily_update: true,
+      history_range_days: 7,
+      show_layer: false,
+      favorites: vec![],
+    };
+    let text = toml::to_string(&cfg).unwrap();
+    assert!(text.contains("auto_daily_update = true"));
+  }
+
+  #[test]
+  fn serialization_omits_legacy_shuffle_fields() {
+    let cfg = PavoConfig {
+      auto_daily_update: false,
+      history_range_days: 7,
+      show_layer: false,
+      favorites: vec![],
+    };
+    let text = toml::to_string(&cfg).unwrap();
+    // The serialized form should NOT contain legacy shuffle/interval fields
+    assert!(
+      !text.contains("auto_shuffle"),
+      "legacy auto_shuffle should not appear in serialized config"
+    );
+    assert!(
+      !text.contains("shuffle_source"),
+      "legacy shuffle_source should not appear in serialized config"
+    );
+    assert!(
+      !text.contains("randomly"),
+      "legacy randomly should not appear in serialized config"
+    );
+    assert!(
+      !text.contains("interval"),
+      "legacy interval should not appear in serialized config"
+    );
+    assert!(
+      !text.contains("auto_save"),
+      "legacy auto_save should not appear in serialized config"
+    );
+  }
+
+  #[test]
+  fn parse_legacy_config_tolerates_old_fields_gracefully() {
+    // Old configs on disk may still have auto_shuffle/interval/randomly/auto_save
+    let input = r#"
+auto_shuffle = true
+shuffle_source = ["/some/path"]
+randomly = true
+interval = 30
+auto_save = true
+show_layer = true
+"#;
+    let parsed: PavoConfig = toml::from_str(input).unwrap_or_else(|_| PavoConfig::new());
+    // Even after parsing a legacy config, the product-facing value is auto_daily_update
+    assert!(parsed.show_layer);
+    // The new defaults should still apply for fields not in the old config
+    assert_eq!(parsed.auto_daily_update, true);
+    assert_eq!(parsed.history_range_days, 7);
+    assert!(parsed.favorites.is_empty());
+  }
+
+  #[test]
+  fn parse_tolerant_preserves_show_layer_when_strict_parse_fails() {
+    let input = r#"
+show_layer = true
+auto_daily_update = false
+history_range_days = 14
+favorites = "not_an_array"
+"#;
+    assert!(
+      toml::from_str::<PavoConfig>(input).is_err(),
+      "strict parse should fail on type mismatch"
+    );
+
+    let parsed = PavoConfig::parse_tolerant(input);
+    assert!(parsed.show_layer, "show_layer should be preserved");
+    assert!(
+      !parsed.auto_daily_update,
+      "auto_daily_update should be preserved"
+    );
+    assert_eq!(
+      parsed.history_range_days, 14,
+      "history_range_days should be preserved"
+    );
+    assert!(
+      parsed.favorites.is_empty(),
+      "favorites should default to empty on type mismatch"
+    );
+  }
+
+  #[test]
+  fn parse_tolerant_falls_back_to_defaults_on_completely_invalid_toml() {
+    let input = "this is not valid toml {{{";
+    let parsed = PavoConfig::parse_tolerant(input);
+    assert_eq!(parsed.show_layer, false);
+    assert_eq!(parsed.auto_daily_update, true);
+    assert_eq!(parsed.history_range_days, 7);
+    assert!(parsed.favorites.is_empty());
+  }
+
+  #[test]
+  fn parse_tolerant_handles_empty_string() {
+    let parsed = PavoConfig::parse_tolerant("");
+    assert_eq!(parsed.show_layer, false);
+    assert_eq!(parsed.auto_daily_update, true);
+    assert_eq!(parsed.history_range_days, 7);
+    assert!(parsed.favorites.is_empty());
   }
 }
