@@ -3,7 +3,15 @@
 </p>
 <h1 align="center">Pavo</h1>
 
-Pavo is a lightweight desktop wallpaper app that lets you easily customize and change your desktop background. With Pavo, you can quickly switch between different wallpapers, set random wallpapers from your local directory, and even adjust the wallpaper's position and scaling. It's simple to use and perfect for anyone who wants to personalize their desktop with minimal effort.
+Pavo 是一个极简的 Bing 每日壁纸桌面工具。每天自动获取 Bing 首页壁纸，一键设为桌面背景，还可以浏览近期壁纸和收藏喜欢的图片。
+
+## 功能
+
+- **Today** — 每日 Bing 壁纸，一键设为壁纸
+- **Recent** — 浏览最近 7 天或 14 天的 Bing 壁纸历史
+- **Favorites** — 收藏喜欢的壁纸，跨重启持久保存
+- **每日自动更新** — 运行期间自动获取最新壁纸
+- **本地缓存** — 壁纸图片自动保存到本地，支持离线查看
 
 ## Screenshot
 
