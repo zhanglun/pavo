@@ -150,6 +150,14 @@ pub async fn get_recent_wallpapers(days: u8) -> Vec<scheduler::SchedulerPhoto> {
 }
 
 #[tauri::command]
+pub async fn get_today_collection() -> Vec<scheduler::SchedulerPhoto> {
+  let mut scheduler = scheduler::SCHEDULER.lock().await;
+  let list = scheduler.batch_fetch().await.unwrap_or_default();
+  let today = chrono::Local::now().format("%Y%m%d").to_string();
+  scheduler::Scheduler::filter_today(&list, &today)
+}
+
+#[tauri::command]
 pub async fn list_favorites() -> Vec<config::FavoriteItem> {
   config::PavoConfig::get_config().favorites
 }

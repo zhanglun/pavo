@@ -282,6 +282,15 @@ impl Scheduler {
           .cloned()
       })
   }
+
+  /// 从列表中筛选 startdate 包含指定日期的所有 SchedulerPhoto
+  pub fn filter_today(list: &[SchedulerPhoto], today: &str) -> Vec<SchedulerPhoto> {
+    list
+      .iter()
+      .filter(|photo| photo.startdates.iter().any(|sd| sd.as_str() == today))
+      .cloned()
+      .collect()
+  }
 }
 
 fn within_recent_days(startdate: &str, today: &str, days: u8) -> bool {
@@ -377,5 +386,32 @@ mod scheduler_tests {
     let list: Vec<SchedulerPhoto> = vec![];
     let today = Scheduler::pick_today(&list, "20260427");
     assert!(today.is_none());
+  }
+
+  #[test]
+  fn filter_today_returns_all_matching_date() {
+    let list = vec![
+      photo("a", "20260427"),
+      photo("b", "20260427"),
+      photo("c", "20260426"),
+      photo("d", "20260427"),
+    ];
+
+    let today_list = Scheduler::filter_today(&list, "20260427");
+    assert_eq!(today_list.len(), 3);
+    assert_eq!(
+      today_list
+        .iter()
+        .map(|p| p.filename.clone())
+        .collect::<Vec<_>>(),
+      vec!["a", "b", "d"]
+    );
+  }
+
+  #[test]
+  fn filter_today_empty_when_no_match() {
+    let list = vec![photo("a", "20260426")];
+    let today_list = Scheduler::filter_today(&list, "20260427");
+    assert!(today_list.is_empty());
   }
 }

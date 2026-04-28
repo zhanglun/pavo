@@ -152,6 +152,7 @@ async fn main() {
       cmd::reveal_log_file,
       cmd::get_today_wallpaper,
       cmd::get_recent_wallpapers,
+      cmd::get_today_collection,
       cmd::list_favorites,
       cmd::add_favorite,
       cmd::remove_favorite,
