@@ -8,10 +8,9 @@
   import SettingsPanel from "../../lib/components/SettingsPanel.svelte";
   import Skeleton from "../../lib/components/Skeleton.svelte";
 
-  // 今日 Hero
-  let todayImage = $state<BingImage | null>(null);
+  // 今日 Hero — 轮播（所有地区今日壁纸）
+  let todayImages = $state<SchedulerPhoto[]>([]);
   let todayLoading = $state(true);
-  let todayFavorite = $state(false);
 
   // 共享收藏集合
   let favoritesSet = $state<Set<string>>(new Set());
@@ -27,36 +26,16 @@
   async function loadTodayHero() {
     todayLoading = true;
     try {
-      todayImage = (await invoke("get_today_wallpaper")) as BingImage | null;
-      await loadFavorites();
-      if (todayImage) {
-        const filename = todayImage.urls[0].split("/").pop() ?? "";
-        todayFavorite = favoritesSet.has(filename);
+      let collection = (await invoke("get_today_collection")) as SchedulerPhoto[];
+      if (collection.length <= 1) {
+        const recent = (await invoke("get_recent_wallpapers", { days: 7 })) as SchedulerPhoto[];
+        collection = recent.slice(0, 10);
       }
+      todayImages = collection;
+      await loadFavorites();
     } finally {
       todayLoading = false;
     }
-  }
-
-  async function toggleTodayFavorite() {
-    if (!todayImage) return;
-    const url = todayImage.urls[0];
-    const filename = url.split("/").pop() ?? "";
-    if (todayFavorite) {
-      await invoke("remove_favorite", { filename });
-    } else {
-      const item: FavoriteItem = {
-        filename,
-        url,
-        title: todayImage.titles[0],
-        startdate: todayImage.startdates[0],
-        copyright: todayImage.copyrights[0],
-        copyrightlink: todayImage.copyrightlinks[0],
-      };
-      await invoke("add_favorite", { item });
-    }
-    todayFavorite = !todayFavorite;
-    await loadFavorites();
   }
 
   // 刷新全部
@@ -88,16 +67,16 @@
   refreshAll();
 </script>
 
-<div class="w-full h-full flex flex-col" style="background: #f5f5f6">
-  <div class="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-100">
-    <div class="flex items-center gap-2">
-      <div class="w-2 h-2 rounded-full bg-gradient-to-br from-bayOfMany-900 to-apple-500"></div>
-      <span class="text-sm font-semibold">Pavo</span>
+<div class="main-root">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">Pavo</span>
     </div>
-    <div class="flex gap-2">
+    <div class="topbar-actions">
       <button
         type="button"
-        class="text-neutral-500 hover:text-neutral-700 cursor-pointer"
+        class="topbar-btn"
         onclick={refreshAll}
         title="刷新"
       >
@@ -105,7 +84,7 @@
       </button>
       <button
         type="button"
-        class="text-neutral-500 hover:text-neutral-700 cursor-pointer"
+        class="topbar-btn"
         onclick={() => (settingsOpen = true)}
         title="设置"
       >
@@ -114,33 +93,27 @@
     </div>
   </div>
 
-  <div class="flex-1 h-0 overflow-y-auto overflow-x-hidden scrollbar-stable p-3">
-    <div class="grid gap-4">
-      <div class="bg-white rounded-[10px] p-4" style="box-shadow: 0 1px 4px rgba(0,0,0,0.06)">
-        {#if todayLoading}
-          <Skeleton />
-        {:else if todayImage}
-          <TodayHero
-            image={todayImage}
-            favorite={todayFavorite}
-            onToggleFavorite={toggleTodayFavorite}
-          />
-        {:else}
-          <div class="text-sm text-neutral-500">今日壁纸暂不可用</div>
-        {/if}
-      </div>
+  <div class="main-scroll scrollbar-stable">
+    <div class="hero-section">
+      {#if todayLoading}
+        <Skeleton />
+      {:else if todayImages.length > 0}
+        <TodayHero images={todayImages} {favoritesSet} />
+      {:else}
+        <div class="empty-hint">今日壁纸暂不可用</div>
+      {/if}
+    </div>
 
-      <div class="bg-white rounded-[10px] p-4" style="box-shadow: 0 1px 4px rgba(0,0,0,0.06)">
-        <RecentCollection {favoritesSet} />
-      </div>
+    <div class="section">
+      <RecentCollection {favoritesSet} />
+    </div>
 
-      <div class="bg-white rounded-[10px] p-4" style="box-shadow: 0 1px 4px rgba(0,0,0,0.06)">
-        <RecentPreview {favoritesSet} />
-      </div>
+    <div class="section">
+      <RecentPreview {favoritesSet} />
+    </div>
 
-      <div class="bg-white rounded-[10px] p-4" style="box-shadow: 0 1px 4px rgba(0,0,0,0.06)">
-        <FavoritesPreview />
-      </div>
+    <div class="section">
+      <FavoritesPreview />
     </div>
   </div>
 </div>
@@ -148,14 +121,83 @@
 <SettingsPanel open={settingsOpen} onClose={() => (settingsOpen = false)} />
 
 <style>
-  @keyframes fadeInSection {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .main-root {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg);
+  }
+
+  /* 顶部栏 */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--topbar-border);
+  }
+
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .brand-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--accent);
+  }
+
+  .brand-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .topbar-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .topbar-btn {
+    font-size: 14px;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .topbar-btn:hover {
+    color: var(--text-primary);
+  }
+
+  /* 主滚动区域 */
+  .main-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Hero 区域：无包裹，贴边 */
+  .hero-section {
+    margin-bottom: 14px;
+  }
+
+  /* 各 section 统一布局 */
+  .section {
+    padding: 0 16px;
+    margin-top: 14px;
+  }
+
+  .empty-hint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 16px;
   }
 </style>
