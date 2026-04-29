@@ -7,7 +7,14 @@
 	</head>
 	<body>
 		<div id="app">
-
+			<script>
+				// 主题跟随系统偏好，在渲染前执行避免闪烁
+				(function() {
+					var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+					var el = document.getElementById('app');
+					if (el) el.classList.add(dark ? 'theme-dark' : 'theme-light');
+				})();
+			</script>
     </div>
     <script type="module" src="./src/pages/main/index.ts"></script>
 	</body>

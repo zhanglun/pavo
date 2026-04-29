@@ -1,6 +1,8 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
   import { tick } from "svelte";
+  import OverflowMenu from "./OverflowMenu.svelte";
+  import { open } from "@tauri-apps/plugin-shell";
 
   let {
     onFavoritesChanged,
@@ -37,6 +39,27 @@
     }
   }
 
+  function setAsBackground(url: string) {
+    invoke("set_as_desktop", { service: "Bing", url });
+  }
+
+  function downloadImage(url: string) {
+    invoke("download", { service: "Bing", url });
+  }
+
+  function openDetail(copyrightlink: string) {
+          open(copyrightlink);
+  }
+
+  function buildMenuItems(item: FavoriteItem) {
+    return [
+      { label: "设为背景", action: () => setAsBackground(item.url) },
+      { label: "下载", action: () => downloadImage(item.url) },
+      { label: "详情", action: () => openDetail(item.copyrightlink) },
+      { label: "取消收藏", action: () => removeFavorite(item.filename), danger: true },
+    ];
+  }
+
   loadFavorites();
 
   let hasMore = $derived(favorites.length > PREVIEW_COUNT);
@@ -44,10 +67,7 @@
 
 <div class="favorites-section" bind:this={sectionRef}>
   <div class="favorites-header">
-    <div class="favorites-title">
-      <span class="title-bar"></span>
-      <span class="title-text">收藏</span>
-    </div>
+    <span class="title-text">收藏</span>
     {#if hasMore}
       <button
         type="button"
@@ -72,16 +92,19 @@
             src={item.url}
             alt={item.title}
           />
-          <span class="favorite-name">{item.title}</span>
-          <button
-            type="button"
-            class="remove-btn"
-            title="移除收藏"
-            onclick={() => removeFavorite(item.filename)}
-          >✕</button>
+          <div class="favorite-info">
+            <span class="favorite-name">{item.title}</span>
+            <span class="favorite-date">{item.startdate}</span>
+          </div>
+          <span class="heart-icon">♥</span>
+          <OverflowMenu items={buildMenuItems(item)} />
         </div>
       {/each}
     </div>
+
+    {#if favorites.length > 0}
+      <div class="divider"></div>
+    {/if}
   {/if}
 </div>
 
@@ -98,46 +121,30 @@
     align-items: center;
   }
 
-  .favorites-title {
-    display: flex;
-    align-items: center;
-  }
-
-  .title-bar {
-    display: inline-block;
-    width: 3px;
-    height: 16px;
-    background: #4a7c96;
-    border-radius: 1px;
-    margin-right: 8px;
-  }
-
   .title-text {
     font-size: 13px;
-    letter-spacing: 1px;
-    color: #333;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
   .view-all-btn {
-    border: 1px dashed #ddd;
+    border: none;
     border-radius: 4px;
     padding: 4px 12px;
     font-size: 12px;
-    color: #999;
+    color: var(--accent);
     background: transparent;
     cursor: pointer;
-    transition: color 0.2s, border-color 0.2s;
+    transition: opacity 0.15s;
   }
 
   .view-all-btn:hover {
-    color: #666;
-    border-color: #bbb;
+    opacity: 0.8;
   }
 
   .empty-hint {
     font-size: 12px;
-    color: #999;
+    color: var(--text-tertiary);
   }
 
   .favorites-list {
@@ -151,13 +158,13 @@
     align-items: center;
     padding: 6px 4px;
     border-radius: 4px;
-    transition: background 0.15s;
+    transition: background-color 0.15s;
     cursor: default;
-    animation: fadeInUp 0.25s ease forwards;
+    gap: 8px;
   }
 
   .favorite-row:hover {
-    background: #f5f5f6;
+    background: var(--bg);
   }
 
   .favorite-row.hidden {
@@ -165,49 +172,45 @@
   }
 
   .favorite-thumb {
-    width: 72px;
-    aspect-ratio: 16 / 9;
+    width: 64px;
+    height: 36px;
     border-radius: 4px;
     object-fit: cover;
     flex-shrink: 0;
   }
 
-  .favorite-name {
+  .favorite-info {
     flex: 1;
-    padding-left: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .favorite-name {
     font-size: 12px;
-    color: #333;
+    font-weight: 500;
+    color: var(--text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .remove-btn {
-    font-size: 14px;
-    color: #999;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 2px 6px;
-    line-height: 1;
-    border-radius: 3px;
-    transition: color 0.15s, background 0.15s;
+  .favorite-date {
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+
+  .heart-icon {
+    font-size: 13px;
+    color: var(--heart-active);
     flex-shrink: 0;
+    line-height: 1;
   }
 
-  .remove-btn:hover {
-    color: #e55;
-    background: #fde8e8;
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin-top: 4px;
   }
 </style>

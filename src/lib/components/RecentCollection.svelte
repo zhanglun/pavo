@@ -23,9 +23,6 @@
 
   let totalCount = $derived(items.length);
   let hasMore = $derived(totalCount > PREVIEW_COUNT);
-  let headerText = $derived(
-    expanded ? `近期合集 · 共 ${totalCount} 张` : `近期合集 · ${Math.min(PREVIEW_COUNT, totalCount)} / ${totalCount}`
-  );
 
   async function toggleExpand() {
     expanded = !expanded;
@@ -58,96 +55,64 @@
 </script>
 
 {#if items.length > 0}
-  <div class="grid gap-2" bind:this={sectionRef}>
-    <div class="flex justify-between items-center">
-      <div class="flex items-center">
-        <span class="section-indicator"></span>
-        <span class="section-title">{headerText}</span>
-      </div>
+  <div class="section" bind:this={sectionRef}>
+    <div class="header">
+      <span class="title">近期合集</span>
       {#if hasMore}
-        <button
-          type="button"
-          class="view-all-btn"
-          onclick={toggleExpand}
-        >
+        <button type="button" class="toggle-btn" onclick={toggleExpand}>
           {expanded ? "收起" : "查看全部"}
         </button>
       {/if}
     </div>
-    <div class="card-grid" class:collapsed={!expanded}>
+    <div class="card-grid">
       {#each items as img, i}
-        <div class="card-wrapper" class:hidden={!expanded && i >= PREVIEW_COUNT}>
+        {#if expanded || i < PREVIEW_COUNT}
           <CollectionCard
             image={img}
             regionIndex={0}
             favorite={favoritesSet.has(img.urls[0].split("/").pop() ?? "")}
             onToggleFavorite={() => toggleFavorite(img, 0)}
           />
-        </div>
+        {/if}
       {/each}
     </div>
   </div>
 {/if}
 
 <style>
-  .section-indicator {
-    display: inline-block;
-    width: 3px;
-    height: 16px;
-    background: #4a7c96;
-    border-radius: 1px;
-    margin-right: 8px;
+  .section {
+    display: grid;
+    gap: 8px;
   }
 
-  .section-title {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .title {
     font-size: 13px;
-    letter-spacing: 1px;
-    color: #333;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
-  .view-all-btn {
-    border: 1px dashed #ddd;
-    border-radius: 4px;
-    padding: 4px 12px;
-    color: #888;
+  .toggle-btn {
+    font-size: 11px;
+    color: var(--accent);
     background: transparent;
+    border: none;
     cursor: pointer;
-    font-size: 12px;
+    padding: 0;
   }
 
-  .view-all-btn:hover {
-    color: #666;
-    border-color: #bbb;
+  .toggle-btn:hover {
+    opacity: 0.8;
   }
 
   .card-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    overflow: hidden;
-    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .card-grid:not(.collapsed) {
-    grid-template-columns: 1fr;
-  }
-
-  .card-wrapper {
-    animation: fadeInUp 0.3s ease forwards;
-  }
-
-  .card-wrapper.hidden {
-    display: none;
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    gap: 4px;
   }
 </style>

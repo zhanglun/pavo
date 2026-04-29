@@ -2,7 +2,7 @@
   import { invoke } from "@tauri-apps/api/core";
   import { tick } from "svelte";
   import Skeleton from "./Skeleton.svelte";
-  import { Select } from "flowbite-svelte";
+  import OverflowMenu from "./OverflowMenu.svelte";
 
   let {
     favoritesSet,
@@ -62,6 +62,21 @@
     }
   }
 
+  async function setAsDesktop(url: string) {
+    await invoke("set_as_desktop", { service: "Bing", url });
+  }
+
+  async function downloadImage(url: string) {
+    await invoke("download", { service: "Bing", url });
+  }
+
+  function getMenuItems(img: BingImage) {
+    return [
+      { label: "设为背景", icon: "🖥", action: () => setAsDesktop(img.urls[0]) },
+      { label: "下载", icon: "⬇", action: () => downloadImage(img.urls[0]) },
+    ];
+  }
+
   $effect(() => {
     range;
     loadRecent();
@@ -72,18 +87,11 @@
 
 <div class="recent-preview" bind:this={sectionRef}>
   <div class="header">
-    <div class="header-left">
-      <span class="section-indicator"></span>
-      <span class="section-title">近期壁纸</span>
-    </div>
-    <Select
-      size="sm"
-      style="font-size: 11px"
-      bind:value={range}
-    >
+    <span class="section-title">近期壁纸</span>
+    <select class="range-select" bind:value={range}>
       <option value={7}>7天</option>
       <option value={14}>14天</option>
-    </Select>
+    </select>
   </div>
 
   {#if loading}
@@ -113,8 +121,9 @@
           onclick={() => toggleFavorite(img)}
           title={isFav ? "取消收藏" : "收藏"}
         >
-          {isFav ? "★" : "☆"}
+          {isFav ? "♥" : "♡"}
         </button>
+        <OverflowMenu items={getMenuItems(img)} />
       </div>
     {/each}
 
@@ -128,6 +137,8 @@
       </button>
     {/if}
   {/if}
+
+  <div class="divider"></div>
 </div>
 
 <style>
@@ -145,30 +156,32 @@
     margin-bottom: 4px;
   }
 
-  .header-left {
-    display: flex;
-    align-items: center;
-  }
-
-  .section-indicator {
-    display: inline-block;
-    width: 3px;
-    height: 16px;
-    background: #4a7c96;
-    border-radius: 1px;
-    margin-right: 8px;
-  }
-
   .section-title {
     font-size: 13px;
-    letter-spacing: 1px;
-    color: #333;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .range-select {
+    font-size: 11px;
+    padding: 2px 4px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    outline: none;
+    line-height: 1.2;
+  }
+
+  .range-select:focus {
+    border-color: var(--accent);
   }
 
   /* 空状态 */
   .empty-text {
     font-size: 12px;
-    color: #999;
+    color: var(--text-tertiary);
     padding: 8px 0;
   }
 
@@ -176,15 +189,15 @@
   .item-row {
     display: flex;
     align-items: center;
+    gap: 6px;
     padding: 6px 4px;
     border-radius: 4px;
     transition: background 0.15s;
     cursor: default;
-    animation: fadeInUp 0.25s ease forwards;
   }
 
   .item-row:hover {
-    background: #f5f5f6;
+    background: var(--menu-hover);
   }
 
   .item-row.hidden {
@@ -193,8 +206,8 @@
 
   /* 缩略图 */
   .thumb {
-    width: 72px;
-    aspect-ratio: 16 / 9;
+    width: 64px;
+    height: 36px;
     border-radius: 4px;
     object-fit: cover;
     flex-shrink: 0;
@@ -203,13 +216,13 @@
   /* 中间信息区 */
   .item-info {
     flex: 1;
-    padding-left: 8px;
     min-width: 0;
   }
 
   .item-title {
     font-size: 12px;
-    color: #333;
+    font-weight: 500;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -217,7 +230,7 @@
 
   .item-date {
     font-size: 10px;
-    color: #999;
+    color: var(--text-tertiary);
     margin-top: 2px;
   }
 
@@ -226,27 +239,24 @@
     flex-shrink: 0;
     background: none;
     border: none;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
     padding: 2px 4px;
-    color: #ccc;
+    color: var(--heart);
     line-height: 1;
-  }
-
-  .fav-btn:hover {
-    color: #e8b74a;
+    transition: color 0.15s;
   }
 
   .fav-active {
-    color: #e8b74a;
+    color: var(--heart-active);
   }
 
   /* 查看全部按钮 */
   .view-all-btn {
-    border: 1px dashed #ddd;
+    border: none;
     border-radius: 4px;
     padding: 4px 12px;
-    color: #888;
+    color: var(--accent);
     background: transparent;
     cursor: pointer;
     font-size: 12px;
@@ -255,18 +265,13 @@
   }
 
   .view-all-btn:hover {
-    color: #666;
-    border-color: #bbb;
+    opacity: 0.85;
   }
 
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  /* 底部分割线 */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin-top: 8px;
   }
 </style>
