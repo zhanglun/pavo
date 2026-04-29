@@ -10,6 +10,7 @@ mod daily_update_thread;
 mod desktop_layer;
 mod events;
 mod plugins;
+mod rotation_thread;
 mod scheduler;
 mod services;
 mod tray;
@@ -156,6 +157,9 @@ async fn main() {
       cmd::list_favorites,
       cmd::add_favorite,
       cmd::remove_favorite,
+      cmd::set_auto_rotate,
+      cmd::set_rotate_interval,
+      cmd::set_rotate_mode,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())

@@ -3,6 +3,14 @@ use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
 
+/// 轮播模式
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub enum RotateMode {
+  #[default]
+  Sequential,
+  Random,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct FavoriteItem {
   pub filename: String,
@@ -19,6 +27,18 @@ fn default_auto_daily_update() -> bool {
   true
 }
 
+fn default_auto_rotate() -> bool {
+  false
+}
+
+fn default_rotate_interval_minutes() -> u16 {
+  60
+}
+
+fn default_rotate_mode() -> RotateMode {
+  RotateMode::Sequential
+}
+
 fn default_history_range_days() -> u8 {
   7
 }
@@ -33,6 +53,12 @@ pub struct PavoConfig {
   pub show_layer: bool,
   #[serde(default)]
   pub favorites: Vec<FavoriteItem>,
+  #[serde(default = "default_auto_rotate")]
+  pub auto_rotate: bool,
+  #[serde(default = "default_rotate_interval_minutes")]
+  pub rotate_interval_minutes: u16,
+  #[serde(default = "default_rotate_mode")]
+  pub rotate_mode: RotateMode,
 }
 
 impl PavoConfig {
@@ -42,6 +68,9 @@ impl PavoConfig {
       history_range_days: 7,
       show_layer: false,
       favorites: vec![],
+      auto_rotate: false,
+      rotate_interval_minutes: 60,
+      rotate_mode: RotateMode::Sequential,
     }
   }
 
@@ -148,6 +177,24 @@ impl PavoConfig {
             .into()
         })
         .unwrap_or_default(),
+      auto_rotate: table
+        .get("auto_rotate")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false),
+      rotate_interval_minutes: table
+        .get("rotate_interval_minutes")
+        .and_then(|v| v.as_integer())
+        .and_then(|i| u16::try_from(i).ok())
+        .unwrap_or(60),
+      rotate_mode: table
+        .get("rotate_mode")
+        .and_then(|v| v.as_str())
+        .and_then(|s| match s {
+          "Random" => Some(RotateMode::Random),
+          "Sequential" => Some(RotateMode::Sequential),
+          _ => None,
+        })
+        .unwrap_or_default(),
     }
   }
 
@@ -202,6 +249,27 @@ impl PavoConfig {
     Self::write_config(data.clone());
     data
   }
+
+  pub fn set_auto_rotate(&self, enabled: bool) -> Self {
+    let mut data = Self::get_config();
+    data.auto_rotate = enabled;
+    Self::write_config(data.clone());
+    data
+  }
+
+  pub fn set_rotate_interval(&self, minutes: u16) -> Self {
+    let mut data = Self::get_config();
+    data.rotate_interval_minutes = minutes;
+    Self::write_config(data.clone());
+    data
+  }
+
+  pub fn set_rotate_mode(&self, mode: RotateMode) -> Self {
+    let mut data = Self::get_config();
+    data.rotate_mode = mode;
+    Self::write_config(data.clone());
+    data
+  }
 }
 
 #[cfg(test)]
@@ -245,6 +313,9 @@ show_layer = false
         copyrightlink: "https://www.bing.com".into(),
         local_path: None,
       }],
+      auto_rotate: false,
+      rotate_interval_minutes: 60,
+      rotate_mode: RotateMode::Sequential,
     };
 
     let text = toml::to_string(&cfg).unwrap();
@@ -259,6 +330,9 @@ show_layer = false
       history_range_days: 7,
       show_layer: false,
       favorites: vec![],
+      auto_rotate: false,
+      rotate_interval_minutes: 60,
+      rotate_mode: RotateMode::Sequential,
     };
     let text = toml::to_string(&cfg).unwrap();
     assert!(text.contains("auto_daily_update = true"));
@@ -271,6 +345,9 @@ show_layer = false
       history_range_days: 7,
       show_layer: false,
       favorites: vec![],
+      auto_rotate: false,
+      rotate_interval_minutes: 60,
+      rotate_mode: RotateMode::Sequential,
     };
     let text = toml::to_string(&cfg).unwrap();
     // The serialized form should NOT contain legacy shuffle/interval fields
@@ -287,7 +364,7 @@ show_layer = false
       "legacy randomly should not appear in serialized config"
     );
     assert!(
-      !text.contains("interval"),
+      !text.contains("\ninterval ="),
       "legacy interval should not appear in serialized config"
     );
     assert!(

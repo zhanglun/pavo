@@ -15,6 +15,9 @@ declare global {
     history_range_days: number;
     show_layer: boolean;
     favorites: FavoriteItem[];
+    auto_rotate: boolean;
+    rotate_interval_minutes: number;
+    rotate_mode: "Sequential" | "Random";
   }
   type BingImage = {
     copyrights: string[];
@@ -22,6 +25,16 @@ declare global {
     startdates: string[];
     titles: string[];
     urls: string[];
+  };
+
+  type SchedulerPhoto = {
+    filename: string;
+    regions: string[];
+    urls: string[];
+    titles: string[];
+    startdates: string[];
+    copyrights: string[];
+    copyrightlinks: string[];
   };
 
   type WallpaperActionProps = {

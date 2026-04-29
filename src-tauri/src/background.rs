@@ -5,7 +5,9 @@ use tokio::{
   time,
 };
 
-use crate::{config, daily_update_thread, scheduler, services::AsyncProcessMessage};
+use crate::{
+  config, daily_update_thread, rotation_thread, scheduler, services::AsyncProcessMessage,
+};
 
 const BING_EXPIRE_TIME: u64 = 60 * 60 * 12;
 
@@ -19,6 +21,7 @@ impl Background {
     let mut scheduler = scheduler::Scheduler::new();
     scheduler.setup_list().await;
     let mut daily_update_worker = daily_update_thread::DailyUpdateWorker::new();
+    let mut rotation_worker = rotation_thread::RotationWorker::new();
     let mut scheduler_clone = scheduler.clone();
 
     let cfg = config::PavoConfig::get_config();
@@ -26,6 +29,17 @@ impl Background {
     if cfg.auto_daily_update {
       daily_update_worker
         .start_daily_update(app.clone(), Arc::new(Mutex::new(scheduler.clone())))
+        .await;
+    }
+
+    if cfg.auto_rotate {
+      rotation_worker
+        .start(
+          app.clone(),
+          Arc::new(Mutex::new(scheduler.clone())),
+          cfg.rotate_interval_minutes,
+          cfg.rotate_mode,
+        )
         .await;
     }
 

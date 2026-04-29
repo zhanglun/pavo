@@ -1,8 +1,7 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
-  import { Button, Checkbox, Label, Select, A } from "flowbite-svelte";
   import { getName, getVersion } from "@tauri-apps/api/app";
-  import CheckCircleSolid from "flowbite-svelte-icons/CheckCircleSolid.svelte";
+  import { open as openLink } from "@tauri-apps/plugin-shell";
   import { checkUpdate } from "../../lib/updater";
 
   let {
@@ -16,6 +15,7 @@
   let config = $state<UserConfig>({} as UserConfig);
   let appName = $state("");
   let appVersion = $state("");
+  let theme = $state<"light" | "dark">("light");
 
   function getUserConfig() {
     invoke("get_config").then((res) => {
@@ -43,6 +43,18 @@
     await invoke("set_history_range_days", { days });
   }
 
+  async function updateAutoRotate(enabled: boolean) {
+    await invoke("set_auto_rotate", { enabled });
+  }
+
+  async function updateRotateInterval(minutes: number) {
+    await invoke("set_rotate_interval", { minutes });
+  }
+
+  async function updateRotateMode(mode: string) {
+    await invoke("set_rotate_mode", { mode });
+  }
+
   async function handleRevealLog() {
     await invoke("reveal_log_file");
   }
@@ -50,130 +62,463 @@
   async function handleCheckUpdate() {
     await checkUpdate();
   }
+
+  function toggleTheme() {
+    theme = theme === "light" ? "dark" : "light";
+    const app = document.getElementById("app");
+    if (app) {
+      app.classList.remove("theme-light", "theme-dark");
+      app.classList.add(`theme-${theme}`);
+    }
+  }
+
+  function handleOpenUrl(url: string) {
+    openLink(url);
+  }
+
+  $effect(() => {
+    const app = document.getElementById("app");
+    if (app) {
+      if (app.classList.contains("theme-dark")) {
+        theme = "dark";
+      }
+    }
+  });
 </script>
 
 {#if open}
-  <!-- 遮罩 -->
-  <div
-    class="fixed inset-0 bg-black/20 z-50"
-    onclick={onClose}
-    role="presentation"
-  ></div>
+  <div class="overlay" onclick={onClose} role="presentation"></div>
 
-  <!-- 面板 -->
-  <div
-    class="fixed top-0 right-0 bottom-0 w-full bg-white z-50 overflow-y-auto scrollbar-stable"
-  >
-    <div class="p-4 grid gap-4">
-      <!-- 顶部栏 -->
-      <div class="flex justify-between items-center">
-        <span class="text-sm font-medium">设置</span>
-        <button
-          type="button"
-          class="text-neutral-500 hover:text-neutral-700 cursor-pointer text-lg"
-          onclick={onClose}
-        >
-          ✕
-        </button>
+  <div class="panel scrollbar-stable">
+    <div class="panel-inner">
+      <div class="topbar">
+        <span class="topbar-title">设置</span>
+        <button type="button" class="close-btn" onclick={onClose}>✕</button>
       </div>
 
-      <!-- 基本设置 -->
-      <div class="grid gap-3">
-        <Checkbox
-          bind:checked={config.auto_daily_update as boolean}
-          on:change={(e) => {
-            if (e.target) {
-              const checked = (e.target as HTMLInputElement).checked;
-              updateAutoDailyUpdate(checked);
-            }
-          }}>每日自动更新</Checkbox
-        >
+      <div class="section">
+        <div class="row">
+          <span class="row-label">外观主题</span>
+          <button type="button" class="theme-toggle-btn" onclick={toggleTheme}>
+            <span class="theme-label">{theme === "light" ? "浅色" : "深色"}</span>
+            <span class="theme-icon">{theme === "light" ? "☀" : "☾"}</span>
+          </button>
+        </div>
 
-        <div class="flex justify-between items-center">
-          <Label for="history_range" class="mb-0">历史范围</Label>
-          <Select
-            id="history_range"
-            size="sm"
-            class="w-1/2"
+        <label class="toggle-row">
+          <input
+            type="checkbox"
+            bind:checked={config.auto_daily_update}
+            onchange={(e) => {
+              updateAutoDailyUpdate((e.target as HTMLInputElement).checked);
+            }}
+          />
+          <span>每日自动更新</span>
+        </label>
+
+        <div class="subsection">
+          <label class="toggle-row">
+            <input
+              type="checkbox"
+              bind:checked={config.auto_rotate}
+              onchange={(e) => {
+                updateAutoRotate((e.target as HTMLInputElement).checked);
+              }}
+            />
+            <span>自动轮播壁纸</span>
+          </label>
+
+          {#if config.auto_rotate}
+            <div class="sub-options">
+              <div class="row">
+                <span class="row-label">切换间隔</span>
+                <select
+                  class="settings-select"
+                  bind:value={config.rotate_interval_minutes}
+                  onchange={(e) => {
+                    updateRotateInterval(Number((e.target as HTMLSelectElement).value));
+                  }}
+                >
+                  <option value={10}>10 分钟</option>
+                  <option value={30}>30 分钟</option>
+                  <option value={60}>1 小时</option>
+                  <option value={120}>2 小时</option>
+                  <option value={360}>6 小时</option>
+                  <option value={720}>12 小时</option>
+                  <option value={1440}>24 小时</option>
+                </select>
+              </div>
+
+              <div class="row">
+                <span class="row-label">轮播模式</span>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="rotate-mode"
+                      value="Sequential"
+                      bind:group={config.rotate_mode}
+                      onchange={() => updateRotateMode("Sequential")}
+                    />
+                    <span>顺序</span>
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="rotate-mode"
+                      value="Random"
+                      bind:group={config.rotate_mode}
+                      onchange={() => updateRotateMode("Random")}
+                    />
+                    <span>随机</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          {/if}
+        </div>
+
+        <div class="row">
+          <span class="row-label">历史范围</span>
+          <select
+            class="settings-select"
             bind:value={config.history_range_days}
-            on:change={(e) => {
-              if (e.target) {
-                const value = Number((e.target as HTMLSelectElement).value);
-                updateHistoryRange(value);
-              }
+            onchange={(e) => {
+              updateHistoryRange(Number((e.target as HTMLSelectElement).value));
             }}
           >
             <option value={7}>最近 7 天</option>
             <option value={14}>最近 14 天</option>
-          </Select>
+          </select>
         </div>
 
-        <div class="text-xs text-neutral-500 pl-1">
+        <div class="hint-text">
           缓存位置：~/.pavo/ — 壁纸图片会自动保存到本地以便离线查看
         </div>
       </div>
 
-      <div class="border-t border-gray-200 dark:border-gray-700"></div>
+      <div class="divider"></div>
 
-      <!-- 高级设置 -->
-      <div class="grid gap-3">
-        <div class="text-xs font-medium text-neutral-400 uppercase tracking-wide">
-          高级设置
+      <div class="section">
+        <div class="section-title">高级设置</div>
+
+        <label class="toggle-row">
+          <input
+            type="checkbox"
+            bind:checked={config.show_layer}
+            onchange={(e) => {
+              updateShowLayer((e.target as HTMLInputElement).checked);
+            }}
+          />
+          <span>显示桌面信息层</span>
+        </label>
+
+        <div class="row">
+          <span class="row-label">检查更新</span>
+          <button type="button" class="settings-btn" onclick={handleCheckUpdate}>检查</button>
         </div>
 
-        <Checkbox
-          bind:checked={config.show_layer as boolean}
-          on:change={(e) => {
-            if (e.target) {
-              const checked = (e.target as HTMLInputElement).checked;
-              updateShowLayer(checked);
-            }
-          }}>显示桌面信息层</Checkbox
-        >
-
-        <div class="flex justify-between items-center">
-          <Label for="check_update" class="mb-0">检查更新</Label>
-          <Button size="sm" on:click={handleCheckUpdate}>检查</Button>
-        </div>
-
-        <div class="flex justify-between items-center">
-          <Label for="log_file" class="mb-0">日志文件</Label>
-          <Button size="sm" on:click={handleRevealLog}>打开</Button>
+        <div class="row">
+          <span class="row-label">日志文件</span>
+          <button type="button" class="settings-btn" onclick={handleRevealLog}>打开</button>
         </div>
       </div>
 
-      <div class="border-t border-gray-200 dark:border-gray-700"></div>
+      <div class="divider"></div>
 
-      <!-- 关于 -->
-      <div class="grid gap-2">
-        <div class="flex items-center gap-2 justify-center">
+      <div class="section about-section">
+        <div class="about-info">
           <img src="/icon.png" width="48px" alt={appName} />
           <div>
-            <div class="text-sm font-medium">{appName}</div>
-            <div class="text-xs text-neutral-500 flex items-center gap-1">
+            <div class="about-name">{appName}</div>
+            <div class="about-version">
               <span>v{appVersion}</span>
-              <CheckCircleSolid size="xs" color="green" />
+              <span class="version-dot"></span>
             </div>
           </div>
         </div>
-        <div class="text-xs text-neutral-400 flex gap-2 items-center justify-center">
-          <A
-            class="hover:underline text-xs"
-            href="https://github.com/zhanglun/pavo"
-            target="_blank"
-          >
+        <div class="about-links">
+          <button type="button" class="link-btn" onclick={() => handleOpenUrl("https://github.com/zhanglun/pavo")}>
             GitHub
-          </A>
-          <span class="w-px h-3 bg-gray-300"></span>
-          <A
-            class="hover:underline text-xs"
-            href="https://github.com/zhanglun/pavo/issues"
-            target="_blank"
-          >
+          </button>
+          <span class="link-sep"></span>
+          <button type="button" class="link-btn" onclick={() => handleOpenUrl("https://github.com/zhanglun/pavo/issues")}>
             反馈问题
-          </A>
+          </button>
         </div>
       </div>
     </div>
   </div>
 {/if}
+
+<style>
+  /* 遮罩 */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background-color: var(--overlay);
+    z-index: 50;
+  }
+
+  /* 面板 */
+  .panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    z-index: 50;
+    overflow-y: auto;
+    background-color: var(--bg);
+  }
+
+  .panel-inner {
+    padding: 16px;
+    display: grid;
+    gap: 16px;
+  }
+
+  /* 顶部栏 */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .topbar-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .close-btn {
+    font-size: 16px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .close-btn:hover {
+    color: var(--text-primary);
+  }
+
+  /* 区块 */
+  .section {
+    display: grid;
+    gap: 12px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* 行 */
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .row-label {
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  /* 分割线 */
+  .divider {
+    border-top: 1px solid var(--border);
+  }
+
+  /* 提示文字 */
+  .hint-text {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    padding-left: 4px;
+  }
+
+  /* 主题切换按钮 */
+  .theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  .theme-toggle-btn:hover {
+    background: var(--menu-hover);
+  }
+
+  .theme-label {
+    font-size: 12px;
+  }
+
+  .theme-icon {
+    font-size: 13px;
+  }
+
+  /* Checkbox toggle 行 */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* Select */
+  .settings-select {
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .settings-select:focus {
+    border-color: var(--accent);
+  }
+
+  .subsection {
+    display: grid;
+    gap: 8px;
+  }
+
+  .sub-options {
+    display: grid;
+    gap: 8px;
+    padding-left: 24px;
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 12px;
+  }
+
+  .radio-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .radio-label input[type="radio"] {
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* 按钮 */
+  .settings-btn {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+
+  .settings-btn:hover {
+    background: var(--menu-hover);
+  }
+
+  .settings-btn:active {
+    border-color: var(--accent);
+  }
+
+  /* 关于 */
+  .about-section {
+    gap: 12px;
+  }
+
+  .about-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .about-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .about-version {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .version-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--accent);
+  }
+
+  .about-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s;
+  }
+
+  .link-btn:hover {
+    color: var(--text-primary);
+    text-decoration: underline;
+  }
+
+  .link-sep {
+    width: 1px;
+    height: 10px;
+    background-color: var(--border-strong);
+  }
+</style>

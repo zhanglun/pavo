@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use crate::config::RotateMode;
 use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
@@ -171,4 +172,19 @@ pub async fn add_favorite(item: config::FavoriteItem) -> serde_json::Value {
 pub async fn remove_favorite(filename: String) -> serde_json::Value {
   serde_json::to_value(config::PavoConfig::get_config().remove_favorite_by_filename(&filename))
     .unwrap()
+}
+
+#[tauri::command]
+pub async fn set_auto_rotate(enabled: bool) {
+  config::PavoConfig::get_config().set_auto_rotate(enabled);
+}
+
+#[tauri::command]
+pub async fn set_rotate_interval(minutes: u16) {
+  config::PavoConfig::get_config().set_rotate_interval(minutes);
+}
+
+#[tauri::command]
+pub async fn set_rotate_mode(mode: RotateMode) {
+  config::PavoConfig::get_config().set_rotate_mode(mode);
 }
