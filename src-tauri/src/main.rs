@@ -7,7 +7,6 @@ mod background;
 mod cmd;
 mod config;
 mod daily_update_thread;
-mod desktop_layer;
 mod events;
 mod plugins;
 mod rotation_thread;
@@ -76,7 +75,9 @@ async fn main() {
         background::Background::new(Arc::new(Mutex::new(async_process_input_rx)), handle.clone())
           .await;
 
-        update(handle).await.unwrap();
+        if let Err(e) = update(handle).await {
+          log::error!("update check failed: {}", e);
+        }
       });
 
       let app = app.app_handle();

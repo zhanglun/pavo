@@ -1,3 +1,4 @@
+use crate::config::RotateMode;
 use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -17,6 +18,12 @@ pub enum AsyncProcessMessage {
   StopDailyUpdate,
   PreviousPhoto,
   NextPhoto,
+  StartRotation,
+  StopRotation,
+  UpdateRotationConfig {
+    interval_minutes: u16,
+    mode: RotateMode,
+  },
 }
 
 pub async fn create_or_truncate_file(
@@ -102,20 +109,31 @@ pub async fn download_file(
 }
 
 pub fn view_photo(handle: tauri::AppHandle, href: String) {
-  let _label = href.clone();
-  let label = "view_photo";
+  let label = format!("view_{}", rand::random::<u32>());
 
-  println!("{:?}", label);
+  // Only allow https:// URLs to prevent file:// or javascript: scheme attacks
+  if !href.starts_with("https://") {
+    log::error!("view_photo rejected non-https URL: {}", href);
+    return;
+  }
 
-  let _view_window = tauri::webview::WebviewWindowBuilder::new(
+  let url = match href.parse() {
+    Ok(u) => u,
+    Err(e) => {
+      log::error!("view_photo failed to parse URL '{}': {}", href, e);
+      return;
+    }
+  };
+
+  if let Err(e) = tauri::webview::WebviewWindowBuilder::new(
     &handle,
-    label,
-    tauri::WebviewUrl::External(href.parse().unwrap()),
+    &label,
+    tauri::WebviewUrl::External(url),
   )
   .build()
-  .unwrap();
-
-  println!("{:?} ", href);
+  {
+    log::error!("view_photo failed to create window '{}': {}", label, e);
+  }
 }
 
 #[cfg(test)]

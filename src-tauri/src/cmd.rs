@@ -46,17 +46,21 @@ pub async fn download(url: &str, service: PhotoService) -> Result<String, String
 
 #[tauri::command]
 pub async fn get_bing_wallpaper_list() -> Vec<scheduler::SchedulerPhoto> {
+  {
+    let scheduler = scheduler::SCHEDULER.lock().await;
+    if scheduler.is_cache_valid() {
+      return scheduler.cache_list.clone();
+    }
+  }
   let mut scheduler = scheduler::SCHEDULER.lock().await;
-  let res = scheduler.batch_fetch().await.unwrap();
-
-  res
+  scheduler.batch_fetch().await.unwrap_or_default()
 }
 
 #[tauri::command]
 pub async fn get_config() -> serde_json::Value {
   let pavo_config = config::PavoConfig::get_config();
 
-  serde_json::to_value(pavo_config).unwrap()
+  serde_json::to_value(pavo_config).unwrap_or_default()
 }
 
 #[tauri::command]
@@ -92,41 +96,33 @@ pub async fn set_show_layer<R: Runtime>(app_handler: AppHandle<R>, show_layer: b
   pavo_config.set_show_layer(show_layer);
 
   if show_layer {
-    print!("show layer");
-    // app_handler.get_webview_window("underlayer").unwrap().show().unwrap();
-    // app_handler.get_webview_window("underlayer").unwrap().set_desktop_underlay(true).unwrap();
-    app_handler
-      .get_webview_window("underlayer")
-      .unwrap()
-      .toggle_desktop_underlay()
-      .unwrap();
-    app_handler
-      .get_webview_window("main")
-      .unwrap()
-      .set_focus()
-      .unwrap();
+    if let Some(window) = app_handler.get_webview_window("underlayer") {
+      let _ = window.set_desktop_underlay(true);
+      let _ = window.show();
+    }
+    if let Some(window) = app_handler.get_webview_window("main") {
+      let _ = window.set_focus();
+    }
   } else {
-    // app_handler.get_webview_window("underlayer").unwrap().hide().unwrap();
-    // app_handler.get_webview_window("underlayer").unwrap().set_desktop_underlay(false).unwrap();
-    app_handler
-      .get_webview_window("underlayer")
-      .unwrap()
-      .toggle_desktop_underlay()
-      .unwrap();
-    app_handler
-      .get_webview_window("main")
-      .unwrap()
-      .set_focus()
-      .unwrap();
+    if let Some(window) = app_handler.get_webview_window("underlayer") {
+      let _ = window.set_desktop_underlay(false);
+      let _ = window.hide();
+    }
+    if let Some(window) = app_handler.get_webview_window("main") {
+      let _ = window.set_focus();
+    }
   }
 }
 
 #[tauri::command]
 pub async fn reveal_log_file() {
-  let folder_dir = config::PavoConfig::get_app_folder().unwrap();
-  let file_path = Path::new(&folder_dir).join("logs/Pavo.log");
-
-  showfile::show_path_in_file_manager(&file_path);
+  match config::PavoConfig::get_app_folder() {
+    Ok(folder_dir) => {
+      let file_path = Path::new(&folder_dir).join("logs/Pavo.log");
+      showfile::show_path_in_file_manager(&file_path);
+    }
+    Err(e) => log::error!("failed to get app folder: {:?}", e),
+  }
 }
 
 #[tauri::command]
@@ -136,6 +132,13 @@ pub async fn view_photo(handle: tauri::AppHandle, href: String) {
 
 #[tauri::command]
 pub async fn get_today_wallpaper() -> Option<scheduler::SchedulerPhoto> {
+  {
+    let scheduler = scheduler::SCHEDULER.lock().await;
+    if scheduler.is_cache_valid() {
+      let today = chrono::Local::now().format("%Y%m%d").to_string();
+      return scheduler::Scheduler::pick_today(&scheduler.cache_list, &today);
+    }
+  }
   let mut scheduler = scheduler::SCHEDULER.lock().await;
   let list = scheduler.batch_fetch().await.ok()?;
   let today = chrono::Local::now().format("%Y%m%d").to_string();
@@ -144,6 +147,13 @@ pub async fn get_today_wallpaper() -> Option<scheduler::SchedulerPhoto> {
 
 #[tauri::command]
 pub async fn get_recent_wallpapers(days: u8) -> Vec<scheduler::SchedulerPhoto> {
+  {
+    let scheduler = scheduler::SCHEDULER.lock().await;
+    if scheduler.is_cache_valid() {
+      let today = chrono::Local::now().format("%Y%m%d").to_string();
+      return scheduler::Scheduler::filter_recent_days(&scheduler.cache_list, days, &today);
+    }
+  }
   let mut scheduler = scheduler::SCHEDULER.lock().await;
   let list = scheduler.batch_fetch().await.unwrap_or_default();
   let today = chrono::Local::now().format("%Y%m%d").to_string();
@@ -152,6 +162,13 @@ pub async fn get_recent_wallpapers(days: u8) -> Vec<scheduler::SchedulerPhoto> {
 
 #[tauri::command]
 pub async fn get_today_collection() -> Vec<scheduler::SchedulerPhoto> {
+  {
+    let scheduler = scheduler::SCHEDULER.lock().await;
+    if scheduler.is_cache_valid() {
+      let today = chrono::Local::now().format("%Y%m%d").to_string();
+      return scheduler::Scheduler::filter_today(&scheduler.cache_list, &today);
+    }
+  }
   let mut scheduler = scheduler::SCHEDULER.lock().await;
   let list = scheduler.batch_fetch().await.unwrap_or_default();
   let today = chrono::Local::now().format("%Y%m%d").to_string();
@@ -165,26 +182,63 @@ pub async fn list_favorites() -> Vec<config::FavoriteItem> {
 
 #[tauri::command]
 pub async fn add_favorite(item: config::FavoriteItem) -> serde_json::Value {
-  serde_json::to_value(config::PavoConfig::get_config().add_favorite(item)).unwrap()
+  serde_json::to_value(config::PavoConfig::get_config().add_favorite(item)).unwrap_or_default()
 }
 
 #[tauri::command]
 pub async fn remove_favorite(filename: String) -> serde_json::Value {
   serde_json::to_value(config::PavoConfig::get_config().remove_favorite_by_filename(&filename))
-    .unwrap()
+    .unwrap_or_default()
 }
 
 #[tauri::command]
-pub async fn set_auto_rotate(enabled: bool) {
+pub async fn set_auto_rotate(
+  enabled: bool,
+  state: tauri::State<'_, AsyncProcInputTx>,
+) -> Result<(), ()> {
   config::PavoConfig::get_config().set_auto_rotate(enabled);
+
+  let sender = state.sender.lock().await;
+  sender
+    .send(if enabled {
+      AsyncProcessMessage::StartRotation
+    } else {
+      AsyncProcessMessage::StopRotation
+    })
+    .await
+    .map_err(|_| ())
 }
 
 #[tauri::command]
-pub async fn set_rotate_interval(minutes: u16) {
-  config::PavoConfig::get_config().set_rotate_interval(minutes);
+pub async fn set_rotate_interval(
+  minutes: u16,
+  state: tauri::State<'_, AsyncProcInputTx>,
+) -> Result<(), ()> {
+  let cfg = config::PavoConfig::get_config().set_rotate_interval(minutes);
+
+  let sender = state.sender.lock().await;
+  sender
+    .send(AsyncProcessMessage::UpdateRotationConfig {
+      interval_minutes: cfg.rotate_interval_minutes,
+      mode: cfg.rotate_mode,
+    })
+    .await
+    .map_err(|_| ())
 }
 
 #[tauri::command]
-pub async fn set_rotate_mode(mode: RotateMode) {
-  config::PavoConfig::get_config().set_rotate_mode(mode);
+pub async fn set_rotate_mode(
+  mode: RotateMode,
+  state: tauri::State<'_, AsyncProcInputTx>,
+) -> Result<(), ()> {
+  let cfg = config::PavoConfig::get_config().set_rotate_mode(mode);
+
+  let sender = state.sender.lock().await;
+  sender
+    .send(AsyncProcessMessage::UpdateRotationConfig {
+      interval_minutes: cfg.rotate_interval_minutes,
+      mode: cfg.rotate_mode,
+    })
+    .await
+    .map_err(|_| ())
 }
