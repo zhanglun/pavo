@@ -1,12 +1,10 @@
 use crate::config::RotateMode;
 use crate::events::WallpaperEvent;
-use crate::scheduler::Scheduler;
+use crate::scheduler;
 use crate::services::bing;
 use rand::Rng;
-use std::sync::Arc;
 use tauri::AppHandle;
 use tauri::Emitter;
-use tokio::sync::Mutex;
 use tokio::time;
 
 pub struct RotationWorker {
@@ -21,7 +19,6 @@ impl RotationWorker {
   pub async fn start(
     &mut self,
     app: AppHandle,
-    scheduler: Arc<Mutex<Scheduler>>,
     interval_minutes: u16,
     mode: RotateMode,
   ) {
@@ -33,11 +30,10 @@ impl RotationWorker {
     let mut interval = time::interval(time::Duration::from_secs(interval_minutes as u64 * 60));
 
     let thread = tauri::async_runtime::spawn(async move {
-      let mut current_idx: usize = 0;
       loop {
         interval.tick().await;
 
-        let mut scheduler = match scheduler.try_lock() {
+        let mut scheduler = match scheduler::SCHEDULER.try_lock() {
           Ok(s) => s,
           Err(_) => {
             log::warn!("rotation: failed to acquire scheduler lock, skipping");
@@ -60,9 +56,9 @@ impl RotationWorker {
 
         let idx = match mode {
           RotateMode::Sequential => {
-            let i = current_idx % list.len();
-            current_idx += 1;
-            i
+            let idx = scheduler.current_idx;
+            scheduler.current_idx = (idx + 1) % list.len();
+            idx
           }
           RotateMode::Random => rand::rng().random_range(0..list.len()),
         };
@@ -75,7 +71,6 @@ impl RotationWorker {
 
         match bing::Wallpaper::set_wallpaper(&url).await {
           Ok(_) => {
-            scheduler.current_idx = idx;
             let event = WallpaperEvent {
               title: photo.titles.first().cloned().unwrap_or_default(),
               copyright: photo.copyrights.first().cloned().unwrap_or_default(),

@@ -1,9 +1,7 @@
-use crate::scheduler::Scheduler;
+use crate::scheduler;
 use crate::services::bing;
-use std::sync::Arc;
 use tauri::AppHandle;
 use tauri::Emitter;
-use tokio::sync::Mutex;
 use tokio::time;
 
 use crate::events::WallpaperEvent;
@@ -23,7 +21,7 @@ impl DailyUpdateWorker {
     }
   }
 
-  pub async fn start_daily_update(&mut self, app: AppHandle, scheduler: Arc<Mutex<Scheduler>>) {
+  pub async fn start_daily_update(&mut self, app: AppHandle) {
     self.app = Some(app.clone());
 
     if let Some(thread) = self.thread.take() {
@@ -36,7 +34,7 @@ impl DailyUpdateWorker {
       loop {
         interval.tick().await;
 
-        let mut scheduler = match scheduler.try_lock() {
+        let mut scheduler = match scheduler::SCHEDULER.try_lock() {
           Ok(scheduler) => scheduler,
           Err(_) => {
             log::warn!("Failed to acquire scheduler lock, skipping this cycle");
@@ -54,7 +52,7 @@ impl DailyUpdateWorker {
           }
         };
 
-        let today_wallpaper = Scheduler::pick_today(&list, &today);
+        let today_wallpaper = scheduler::Scheduler::pick_today(&list, &today);
 
         match today_wallpaper {
           Some(photo) => {

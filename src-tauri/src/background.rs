@@ -9,8 +9,6 @@ use crate::{
   config, daily_update_thread, rotation_thread, scheduler, services::AsyncProcessMessage,
 };
 
-const BING_EXPIRE_TIME: u64 = 60 * 60 * 12;
-
 pub struct Background {}
 
 impl Background {
@@ -18,17 +16,16 @@ impl Background {
     receiver: Arc<Mutex<mpsc::Receiver<AsyncProcessMessage>>>,
     app: AppHandle,
   ) -> Self {
-    let mut scheduler = scheduler::Scheduler::new();
-    scheduler.setup_list().await;
+    scheduler::SCHEDULER.lock().await.setup_list().await;
+
     let mut daily_update_worker = daily_update_thread::DailyUpdateWorker::new();
     let mut rotation_worker = rotation_thread::RotationWorker::new();
-    let mut scheduler_clone = scheduler.clone();
 
     let cfg = config::PavoConfig::get_config();
 
     if cfg.auto_daily_update {
       daily_update_worker
-        .start_daily_update(app.clone(), Arc::new(Mutex::new(scheduler.clone())))
+        .start_daily_update(app.clone())
         .await;
     }
 
@@ -36,13 +33,13 @@ impl Background {
       rotation_worker
         .start(
           app.clone(),
-          Arc::new(Mutex::new(scheduler.clone())),
           cfg.rotate_interval_minutes,
           cfg.rotate_mode,
         )
         .await;
     }
 
+    let mut rotation_active = cfg.auto_rotate;
     let app_clone = app.clone();
     tauri::async_runtime::spawn(async move {
       loop {
@@ -54,16 +51,44 @@ impl Background {
           match message {
             AsyncProcessMessage::StartDailyUpdate => {
               daily_update_worker
-                .start_daily_update(app_clone.clone(), Arc::new(Mutex::new(scheduler.clone())))
+                .start_daily_update(app_clone.clone())
                 .await;
             }
             AsyncProcessMessage::StopDailyUpdate => {
               daily_update_worker.stop_daily_update();
             }
+            AsyncProcessMessage::StartRotation => {
+              rotation_active = true;
+              let cfg = config::PavoConfig::get_config();
+              rotation_worker
+                .start(
+                  app_clone.clone(),
+                  cfg.rotate_interval_minutes,
+                  cfg.rotate_mode,
+                )
+                .await;
+            }
+            AsyncProcessMessage::StopRotation => {
+              rotation_active = false;
+              rotation_worker.stop();
+            }
+            AsyncProcessMessage::UpdateRotationConfig {
+              interval_minutes,
+              mode,
+            } => {
+              if rotation_active {
+                rotation_worker.stop();
+                rotation_worker
+                  .start(app_clone.clone(), interval_minutes, mode)
+                  .await;
+              }
+            }
             AsyncProcessMessage::PreviousPhoto => {
+              let mut scheduler = scheduler::SCHEDULER.lock().await;
               let _ = scheduler.previous_photo_with_event(&app_clone).await;
             }
             AsyncProcessMessage::NextPhoto => {
+              let mut scheduler = scheduler::SCHEDULER.lock().await;
               let _ = scheduler.next_photo_with_event(&app_clone).await;
             }
           };
@@ -71,12 +96,12 @@ impl Background {
       }
     });
 
-    let mut interval = time::interval(time::Duration::from_secs(BING_EXPIRE_TIME));
+    let mut interval = time::interval(time::Duration::from_secs(scheduler::BING_EXPIRE_TIME as u64));
 
     tauri::async_runtime::spawn(async move {
       loop {
         interval.tick().await;
-        scheduler_clone.setup_list().await;
+        scheduler::SCHEDULER.lock().await.setup_list().await;
         log::info!("A Bright New Day!");
       }
     });

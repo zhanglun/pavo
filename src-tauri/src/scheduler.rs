@@ -13,7 +13,7 @@ fn now() -> String {
   Local::now().format("%F %T").to_string()
 }
 
-const BING_EXPIRE_TIME: i64 = 60 * 60 * 12;
+pub const BING_EXPIRE_TIME: i64 = 60 * 60 * 12;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchedulerPhoto {
@@ -51,6 +51,11 @@ impl Scheduler {
       self.last_load_time = now;
       true
     }
+  }
+
+  pub fn is_cache_valid(&self) -> bool {
+    let now = Utc::now().timestamp();
+    now - self.last_load_time < BING_EXPIRE_TIME && !self.cache_list.is_empty()
   }
 
   pub async fn batch_fetch(
@@ -150,9 +155,7 @@ impl Scheduler {
   }
 
   pub async fn setup_list(&mut self) -> Vec<SchedulerPhoto> {
-    let list = self.batch_fetch().await.unwrap();
-
-    list
+    self.batch_fetch().await.unwrap_or_default()
   }
 
   pub async fn previous_photo(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
