@@ -1,7 +1,11 @@
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
+use std::sync::Mutex as StdMutex;
+
+static CONFIG_LOCK: Lazy<StdMutex<()>> = Lazy::new(|| StdMutex::new(()));
 
 /// 轮播模式
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -107,17 +111,18 @@ impl PavoConfig {
     }
   }
 
-  pub fn write_config(data: PavoConfig) {
-    let folder_dir = Self::get_app_folder().unwrap();
+  pub fn write_config(data: PavoConfig) -> Result<(), String> {
+    let folder_dir = Self::get_app_folder().map_err(|(_, e)| e)?;
     let file_path = Path::new(&folder_dir).join("pavo.toml");
 
     if !file_path.exists() {
-      fs::File::create(&file_path).expect("create config failed");
+      fs::File::create(&file_path).map_err(|e| e.to_string())?;
     }
 
-    let content = toml::to_string(&data).unwrap();
+    let content = toml::to_string(&data).map_err(|e| e.to_string())?;
 
-    fs::write(file_path, content).expect("write file error");
+    fs::write(file_path, content).map_err(|e| e.to_string())?;
+    Ok(())
   }
 
   pub fn parse_tolerant(content: &str) -> Self {
@@ -211,63 +216,87 @@ impl PavoConfig {
   }
 
   pub fn set_show_layer(&self, show_layer: bool) -> Self {
+    let _guard = CONFIG_LOCK.lock().unwrap();
     let mut data = Self::get_config();
 
     data.show_layer = show_layer;
 
-    Self::write_config(data.clone());
+    if let Err(e) = Self::write_config(data.clone()) {
+      log::error!("Failed to write config: {}", e);
+    }
 
     data
   }
 
   pub fn set_auto_daily_update(&self, enabled: bool) -> Self {
+    let _guard = CONFIG_LOCK.lock().unwrap();
     let mut data = Self::get_config();
     data.auto_daily_update = enabled;
-    Self::write_config(data.clone());
+    if let Err(e) = Self::write_config(data.clone()) {
+      log::error!("Failed to write config: {}", e);
+    }
     data
   }
 
   pub fn set_history_range_days(&self, days: u8) -> Self {
+    let _guard = CONFIG_LOCK.lock().unwrap();
     let mut data = Self::get_config();
     data.history_range_days = days;
-    Self::write_config(data.clone());
+    if let Err(e) = Self::write_config(data.clone()) {
+      log::error!("Failed to write config: {}", e);
+    }
     data
   }
 
   pub fn add_favorite(&self, item: FavoriteItem) -> Self {
+    let _guard = CONFIG_LOCK.lock().unwrap();
     let mut data = Self::get_config();
     if !data.favorites.iter().any(|f| f.filename == item.filename) {
       data.favorites.push(item);
     }
-    Self::write_config(data.clone());
+    if let Err(e) = Self::write_config(data.clone()) {
+      log::error!("Failed to write config: {}", e);
+    }
     data
   }
 
   pub fn remove_favorite_by_filename(&self, filename: &str) -> Self {
+    let _guard = CONFIG_LOCK.lock().unwrap();
     let mut data = Self::get_config();
     data.favorites.retain(|f| f.filename != filename);
-    Self::write_config(data.clone());
+    if let Err(e) = Self::write_config(data.clone()) {
+      log::error!("Failed to write config: {}", e);
+    }
     data
   }
 
   pub fn set_auto_rotate(&self, enabled: bool) -> Self {
+    let _guard = CONFIG_LOCK.lock().unwrap();
     let mut data = Self::get_config();
     data.auto_rotate = enabled;
-    Self::write_config(data.clone());
+    if let Err(e) = Self::write_config(data.clone()) {
+      log::error!("Failed to write config: {}", e);
+    }
     data
   }
 
   pub fn set_rotate_interval(&self, minutes: u16) -> Self {
+    let _guard = CONFIG_LOCK.lock().unwrap();
     let mut data = Self::get_config();
     data.rotate_interval_minutes = minutes;
-    Self::write_config(data.clone());
+    if let Err(e) = Self::write_config(data.clone()) {
+      log::error!("Failed to write config: {}", e);
+    }
     data
   }
 
   pub fn set_rotate_mode(&self, mode: RotateMode) -> Self {
+    let _guard = CONFIG_LOCK.lock().unwrap();
     let mut data = Self::get_config();
     data.rotate_mode = mode;
-    Self::write_config(data.clone());
+    if let Err(e) = Self::write_config(data.clone()) {
+      log::error!("Failed to write config: {}", e);
+    }
     data
   }
 }
