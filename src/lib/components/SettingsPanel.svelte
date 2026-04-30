@@ -258,6 +258,7 @@
     inset: 0;
     background-color: var(--overlay);
     z-index: 50;
+    border-radius: 12px;
   }
 
   /* 面板 */
@@ -270,6 +271,7 @@
     z-index: 50;
     overflow-y: auto;
     background-color: var(--bg);
+    border-radius: 12px;
   }
 
   .panel-inner {

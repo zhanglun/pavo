@@ -62,7 +62,9 @@
         "resizable": false,
         "title": "Pavo",
         "width": 340,
-        "visible": false
+        "visible": false,
+        "decorations": false,
+        "transparent": true
       },
       {
         "url": "underlayer.html",

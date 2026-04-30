@@ -1,6 +1,7 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
   import { listen } from "@tauri-apps/api/event";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
   import TodayHero from "../../lib/components/TodayHero.svelte";
   import RecentCollection from "../../lib/components/RecentCollection.svelte";
   import RecentPreview from "../../lib/components/RecentPreview.svelte";
@@ -43,6 +44,10 @@
     await loadTodayHero();
   }
 
+  function hideWindow() {
+    getCurrentWindow().hide();
+  }
+
   // 事件监听
   $effect(() => {
     const unlisteners: (() => void)[] = [];
@@ -68,10 +73,10 @@
 </script>
 
 <div class="main-root">
-  <div class="topbar">
-    <div class="topbar-brand">
-      <span class="brand-dot"></span>
-      <span class="brand-name">Pavo</span>
+  <div class="topbar" data-tauri-drag-region>
+    <div class="topbar-brand" data-tauri-drag-region>
+      <span class="brand-dot" data-tauri-drag-region></span>
+      <span class="brand-name" data-tauri-drag-region>Pavo</span>
     </div>
     <div class="topbar-actions">
       <button
@@ -89,6 +94,14 @@
         title="设置"
       >
         ⚙
+      </button>
+      <button
+        type="button"
+        class="topbar-btn topbar-btn-hide"
+        onclick={hideWindow}
+        title="隐藏到托盘"
+      >
+        ─
       </button>
     </div>
   </div>
@@ -127,6 +140,9 @@
     display: flex;
     flex-direction: column;
     background-color: var(--bg);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
   }
 
   /* 顶部栏 */
@@ -175,6 +191,11 @@
 
   .topbar-btn:hover {
     color: var(--text-primary);
+  }
+
+  .topbar-btn-hide {
+    margin-left: 4px;
+    padding: 0 4px;
   }
 
   /* 主滚动区域 */

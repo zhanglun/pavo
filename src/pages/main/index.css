@@ -50,6 +50,11 @@
 
 body {
   overflow: hidden;
+  background: transparent;
+}
+
+html {
+  background: transparent;
 }
 
 #app {
