@@ -5,6 +5,7 @@
 .idea
 .vscode
 .vs
+.worktrees
 node_modules
 build
 .svelte-kit
