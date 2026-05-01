@@ -13,7 +13,6 @@ declare global {
   interface UserConfig {
     auto_daily_update: boolean;
     history_range_days: number;
-    show_layer: boolean;
     favorites: FavoriteItem[];
     auto_rotate: boolean;
     rotate_interval_minutes: number;

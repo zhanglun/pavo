@@ -12,7 +12,6 @@ Pavo is a cross-platform desktop wallpaper app built with Tauri v2. It features 
 - **Multi-region Daily Wallpapers** — Browse Bing daily wallpapers from different regions worldwide
 - **Auto Rotation** — Automatically change wallpapers at intervals from 10 minutes to 24 hours, in sequential or random mode
 - **Favorites** — Save your favorite wallpapers with persistent storage across restarts
-- **Desktop Info Overlay** — Display information as an underlay on your desktop
 - **Frameless Window** — Minimal UI that auto-positions near the system tray
 - **Light/Dark Theme** — Follow the system preference or switch manually
 - **Auto Update** — Automatically checks for updates on launch

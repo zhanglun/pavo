@@ -4155,48 +4155,6 @@
           "markdownDescription": "Denies the unminimize command without any pre-configured scope."
         },
         {
-          "description": "Allow all permissions for the plugin.\n#### This default permission set includes:\n\n- `allow-is-desktop-underlay`\n- `allow-set-desktop-underlay`\n- `allow-toggle-desktop-underlay`",
-          "type": "string",
-          "const": "desktop-underlay:default",
-          "markdownDescription": "Allow all permissions for the plugin.\n#### This default permission set includes:\n\n- `allow-is-desktop-underlay`\n- `allow-set-desktop-underlay`\n- `allow-toggle-desktop-underlay`"
-        },
-        {
-          "description": "Enables the is_desktop_underlay command without any pre-configured scope.",
-          "type": "string",
-          "const": "desktop-underlay:allow-is-desktop-underlay",
-          "markdownDescription": "Enables the is_desktop_underlay command without any pre-configured scope."
-        },
-        {
-          "description": "Enables the set_desktop_underlay command without any pre-configured scope.",
-          "type": "string",
-          "const": "desktop-underlay:allow-set-desktop-underlay",
-          "markdownDescription": "Enables the set_desktop_underlay command without any pre-configured scope."
-        },
-        {
-          "description": "Enables the toggle_desktop_underlay command without any pre-configured scope.",
-          "type": "string",
-          "const": "desktop-underlay:allow-toggle-desktop-underlay",
-          "markdownDescription": "Enables the toggle_desktop_underlay command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the is_desktop_underlay command without any pre-configured scope.",
-          "type": "string",
-          "const": "desktop-underlay:deny-is-desktop-underlay",
-          "markdownDescription": "Denies the is_desktop_underlay command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the set_desktop_underlay command without any pre-configured scope.",
-          "type": "string",
-          "const": "desktop-underlay:deny-set-desktop-underlay",
-          "markdownDescription": "Denies the set_desktop_underlay command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the toggle_desktop_underlay command without any pre-configured scope.",
-          "type": "string",
-          "const": "desktop-underlay:deny-toggle-desktop-underlay",
-          "markdownDescription": "Denies the toggle_desktop_underlay command without any pre-configured scope."
-        },
-        {
           "description": "This permission set configures the types of dialogs\navailable from the dialog plugin.\n\n#### Granted Permissions\n\nAll dialog types are enabled.\n\n\n\n#### This default permission set includes:\n\n- `allow-ask`\n- `allow-confirm`\n- `allow-message`\n- `allow-save`\n- `allow-open`",
           "type": "string",
           "const": "dialog:default",

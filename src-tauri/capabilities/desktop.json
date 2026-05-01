@@ -13,8 +13,6 @@
     "updater:allow-check",
     "updater:allow-download",
     "updater:allow-download-and-install",
-    "dialog:default",
-    "desktop-underlay:allow-toggle-desktop-underlay",
-    "desktop-underlay:default"
+    "dialog:default"
   ]
 }

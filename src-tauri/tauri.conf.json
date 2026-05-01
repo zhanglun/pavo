@@ -65,16 +65,6 @@
         "visible": false,
         "decorations": false,
         "transparent": true
-      },
-      {
-        "url": "underlayer.html",
-        "label": "underlayer",
-        "width": 450,
-        "height": 100,
-        "center": false,
-        "decorations": false,
-        "transparent": true,
-        "skipTaskbar": true
       }
     ],
     "macOSPrivateApi": true,

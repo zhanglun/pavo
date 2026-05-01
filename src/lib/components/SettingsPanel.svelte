@@ -35,10 +35,6 @@
     await invoke("set_auto_daily_update", { enabled });
   }
 
-  async function updateShowLayer(showLayer: boolean) {
-    await invoke("set_show_layer", { showLayer });
-  }
-
   async function updateHistoryRange(days: number) {
     await invoke("set_history_range_days", { days });
   }
@@ -201,17 +197,6 @@
 
       <div class="section">
         <div class="section-title">高级设置</div>
-
-        <label class="toggle-row">
-          <input
-            type="checkbox"
-            bind:checked={config.show_layer}
-            onchange={(e) => {
-              updateShowLayer((e.target as HTMLInputElement).checked);
-            }}
-          />
-          <span>显示桌面信息层</span>
-        </label>
 
         <div class="row">
           <span class="row-label">检查更新</span>

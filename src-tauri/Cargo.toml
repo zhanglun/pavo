@@ -36,7 +36,6 @@ tauri-plugin-log = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-fs = "2"
 showfile = "0.1.1"
-tauri-plugin-desktop-underlay = "0.2.0"
 
 [features]
 # by default Tauri runs in production mode

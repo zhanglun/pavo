@@ -3000,7 +3000,6 @@ dependencies = [
  "showfile",
  "tauri",
  "tauri-build",
- "tauri-plugin-desktop-underlay",
  "tauri-plugin-dialog",
  "tauri-plugin-fs",
  "tauri-plugin-log",
@@ -4803,21 +4802,6 @@ dependencies = [
  "tauri-utils",
  "toml 0.9.11+spec-1.1.0",
  "walkdir",
-]
-
-[[package]]
-name = "tauri-plugin-desktop-underlay"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31b02b7107611390645f6554069d1c5bcb7c9368e563b8d2b2fa22185392257e"
-dependencies = [
- "anyhow",
- "gdk",
- "gtk",
- "objc2",
- "tauri",
- "tauri-plugin",
- "windows 0.61.3",
 ]
 
 [[package]]

@@ -54,8 +54,6 @@ pub struct PavoConfig {
   #[serde(default = "default_history_range_days")]
   pub history_range_days: u8,
   #[serde(default)]
-  pub show_layer: bool,
-  #[serde(default)]
   pub favorites: Vec<FavoriteItem>,
   #[serde(default = "default_auto_rotate")]
   pub auto_rotate: bool,
@@ -70,7 +68,6 @@ impl PavoConfig {
     Self {
       auto_daily_update: true,
       history_range_days: 7,
-      show_layer: false,
       favorites: vec![],
       auto_rotate: false,
       rotate_interval_minutes: 60,
@@ -145,10 +142,6 @@ impl PavoConfig {
         .and_then(|v| v.as_integer())
         .and_then(|i| u8::try_from(i).ok())
         .unwrap_or(7),
-      show_layer: table
-        .get("show_layer")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false),
       favorites: table
         .get("favorites")
         .and_then(|v| v.as_array())
@@ -213,19 +206,6 @@ impl PavoConfig {
 
     let content = fs::read_to_string(&file_path).unwrap_or_default();
     Self::parse_tolerant(&content)
-  }
-
-  pub fn set_show_layer(&self, show_layer: bool) -> Self {
-    let _guard = CONFIG_LOCK.lock().unwrap();
-    let mut data = Self::get_config();
-
-    data.show_layer = show_layer;
-
-    if let Err(e) = Self::write_config(data.clone()) {
-      log::error!("Failed to write config: {}", e);
-    }
-
-    data
   }
 
   pub fn set_auto_daily_update(&self, enabled: bool) -> Self {
@@ -312,7 +292,6 @@ show_layer = false
 "#;
 
     let parsed: PavoConfig = toml::from_str(input).unwrap_or_else(|_| PavoConfig::new());
-    assert_eq!(parsed.show_layer, false);
     assert_eq!(parsed.auto_daily_update, true);
     assert_eq!(parsed.history_range_days, 7);
     assert!(parsed.favorites.is_empty());
@@ -324,7 +303,6 @@ show_layer = false
     assert_eq!(parsed.auto_daily_update, true);
     assert_eq!(parsed.history_range_days, 7);
     assert!(parsed.favorites.is_empty());
-    assert_eq!(parsed.show_layer, false);
   }
 
   #[test]
@@ -332,7 +310,6 @@ show_layer = false
     let cfg = PavoConfig {
       auto_daily_update: true,
       history_range_days: 14,
-      show_layer: false,
       favorites: vec![FavoriteItem {
         filename: "OHR.Sample.jpg".into(),
         url: "https://www.bing.com/th?id=OHR.Sample.jpg".into(),
@@ -357,7 +334,6 @@ show_layer = false
     let cfg = PavoConfig {
       auto_daily_update: true,
       history_range_days: 7,
-      show_layer: false,
       favorites: vec![],
       auto_rotate: false,
       rotate_interval_minutes: 60,
@@ -372,7 +348,6 @@ show_layer = false
     let cfg = PavoConfig {
       auto_daily_update: false,
       history_range_days: 7,
-      show_layer: false,
       favorites: vec![],
       auto_rotate: false,
       rotate_interval_minutes: 60,
@@ -414,18 +389,14 @@ auto_save = true
 show_layer = true
 "#;
     let parsed: PavoConfig = toml::from_str(input).unwrap_or_else(|_| PavoConfig::new());
-    // Even after parsing a legacy config, the product-facing value is auto_daily_update
-    assert!(parsed.show_layer);
-    // The new defaults should still apply for fields not in the old config
     assert_eq!(parsed.auto_daily_update, true);
     assert_eq!(parsed.history_range_days, 7);
     assert!(parsed.favorites.is_empty());
   }
 
   #[test]
-  fn parse_tolerant_preserves_show_layer_when_strict_parse_fails() {
+  fn parse_tolerant_preserves_fields_when_strict_parse_fails() {
     let input = r#"
-show_layer = true
 auto_daily_update = false
 history_range_days = 14
 favorites = "not_an_array"
@@ -436,7 +407,6 @@ favorites = "not_an_array"
     );
 
     let parsed = PavoConfig::parse_tolerant(input);
-    assert!(parsed.show_layer, "show_layer should be preserved");
     assert!(
       !parsed.auto_daily_update,
       "auto_daily_update should be preserved"
@@ -455,7 +425,6 @@ favorites = "not_an_array"
   fn parse_tolerant_falls_back_to_defaults_on_completely_invalid_toml() {
     let input = "this is not valid toml {{{";
     let parsed = PavoConfig::parse_tolerant(input);
-    assert_eq!(parsed.show_layer, false);
     assert_eq!(parsed.auto_daily_update, true);
     assert_eq!(parsed.history_range_days, 7);
     assert!(parsed.favorites.is_empty());
@@ -464,7 +433,6 @@ favorites = "not_an_array"
   #[test]
   fn parse_tolerant_handles_empty_string() {
     let parsed = PavoConfig::parse_tolerant("");
-    assert_eq!(parsed.show_layer, false);
     assert_eq!(parsed.auto_daily_update, true);
     assert_eq!(parsed.history_range_days, 7);
     assert!(parsed.favorites.is_empty());

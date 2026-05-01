@@ -5,8 +5,7 @@ use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
 
-use tauri::{AppHandle, Manager, Runtime};
-use tauri_plugin_desktop_underlay::DesktopUnderlayExt;
+use tauri::{AppHandle, Runtime};
 use tokio::sync::{mpsc, Mutex};
 
 pub struct AsyncProcInputTx {
@@ -87,31 +86,6 @@ pub async fn set_auto_daily_update(
 pub async fn set_history_range_days(days: u8) {
   let pavo_config = config::PavoConfig::get_config();
   pavo_config.set_history_range_days(days);
-}
-
-#[tauri::command]
-pub async fn set_show_layer<R: Runtime>(app_handler: AppHandle<R>, show_layer: bool) {
-  let pavo_config = config::PavoConfig::get_config();
-
-  pavo_config.set_show_layer(show_layer);
-
-  if show_layer {
-    if let Some(window) = app_handler.get_webview_window("underlayer") {
-      let _ = window.set_desktop_underlay(true);
-      let _ = window.show();
-    }
-    if let Some(window) = app_handler.get_webview_window("main") {
-      let _ = window.set_focus();
-    }
-  } else {
-    if let Some(window) = app_handler.get_webview_window("underlayer") {
-      let _ = window.set_desktop_underlay(false);
-      let _ = window.hide();
-    }
-    if let Some(window) = app_handler.get_webview_window("main") {
-      let _ = window.set_focus();
-    }
-  }
 }
 
 #[tauri::command]
