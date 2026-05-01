@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.14](https://github.com/zhanglun/pavo/compare/pavo-v0.0.13...pavo-v0.0.14) (2026-05-01)
+
+
+### Bug Fixes
+
+* 统一 Tauri Rust crate 和 NPM API 包版本到 2.9.x ([4d7d566](https://github.com/zhanglun/pavo/commit/4d7d566ea21f6aa616580117628fdfc2508f5128))
+
 ## [0.0.13](https://github.com/zhanglun/pavo/compare/pavo-v0.0.12...pavo-v0.0.13) (2026-05-01)
 
 
