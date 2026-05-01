@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@tauri-apps/api':
-        specifier: ^2.9.1
+        specifier: ~2.9
         version: 2.9.1
       '@tauri-apps/plugin-dialog':
         specifier: ~2.6.0
@@ -29,9 +29,6 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: ~2.9.0
         version: 2.9.0
-      tauri-plugin-desktop-underlay-api:
-        specifier: ^0.2.0
-        version: 0.2.0
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^4.0.4
@@ -923,9 +920,6 @@ packages:
     engines: {node: '>=14.0.0'}
     hasBin: true
 
-  tauri-plugin-desktop-underlay-api@0.2.0:
-    resolution: {integrity: sha512-kwS2IXdUCT+7vhgONYqKAPAC7jc5TRf+HfPIcRvayMweHacx9vfnkpknrJnJpTyNYmydwmYiGMu4I4PXUM/Ovg==}
-
   thenify-all@1.6.0:
     resolution: {integrity: sha512-RNxQH/qI8/t3thXJDwcstUO4zeqo64+Uy/+sNVRBx4Xn2OX+OZ9oP+iJnNFqplFra2ZUVeKCSa2oVWi3T4uVmA==}
     engines: {node: '>=0.8'}
@@ -1735,10 +1729,6 @@ snapshots:
     transitivePeerDependencies:
       - tsx
       - yaml
-
-  tauri-plugin-desktop-underlay-api@0.2.0:
-    dependencies:
-      '@tauri-apps/api': 2.9.1
 
   thenify-all@1.6.0:
     dependencies:
