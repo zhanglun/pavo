@@ -1,0 +1,19 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e7]: Pavo
+    - generic [ref=e8]:
+      - button "↻" [ref=e9] [cursor=pointer]
+      - button "⚙" [ref=e10] [cursor=pointer]
+      - button "─" [ref=e11] [cursor=pointer]
+  - generic [ref=e12]:
+    - generic [ref=e14]: 今日壁纸暂不可用
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - generic [ref=e18]: 近期壁纸
+        - combobox [ref=e19] [cursor=pointer]:
+          - option "7天" [selected]
+          - option "14天"
+      - generic [ref=e20]: 暂无近期壁纸
+    - generic [ref=e23]:
+      - generic [ref=e25]: 收藏
+      - generic [ref=e26]: 还没有收藏，点击壁纸右下方的 ☆ 收藏

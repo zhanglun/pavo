@@ -60,7 +60,7 @@ impl RotationWorker {
             scheduler.current_idx = (idx + 1) % list.len();
             idx
           }
-          RotateMode::Random => rand::rng().random_range(0..list.len()),
+          RotateMode::Random => rand::thread_rng().gen_range(0..list.len()),
         };
 
         let photo = &list[idx];
