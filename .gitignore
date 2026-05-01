@@ -10,3 +10,9 @@ node_modules
 build
 .svelte-kit
 .svelte-kit/generated/server/internal.js
+
+# Agent / tool artifacts
+.playwright-mcp/
+.sisyphus/
+AGENTS.md
+docs/superpowers/
