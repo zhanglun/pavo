@@ -5,7 +5,7 @@
 </p>
 <h1 align="center">Pavo</h1>
 
-Pavo 是一个跨平台桌面壁纸应用，基于 Tauri v2 构建。支持多地区 Bing 每日壁纸轮播、自动切换壁纸、桌面信息层，以及收藏管理。
+Pavo 是一个跨平台桌面壁纸应用，基于 Tauri v2 构建。支持多地区 Bing 每日壁纸轮播、自动切换壁纸，以及收藏管理。
 
 ## 功能
 
@@ -58,12 +58,7 @@ pnpm tauri build
 
 ## 发布流程
 
-本项目使用 [Release Please](https://github.com/googleapis/release-please) 自动管理版本和发布：
-
-1. 合并 conventional commit（`feat`/`fix`）到 `main` 分支
-2. Release Please 自动创建 Release PR 并更新版本号
-3. Merge Release PR 后自动创建 GitHub Release
-4. CI 自动构建并上传多平台安装包
+运行 `pnpm release`，选择版本号，脚本会自动更新版本、创建 tag、推送到 `release` 分支，CI 自动构建并发布 GitHub Release。
 
 ## Repo Activity
 

@@ -5,7 +5,7 @@
 </p>
 <h1 align="center">Pavo</h1>
 
-Pavo is a cross-platform desktop wallpaper app built with Tauri v2. It features multi-region Bing daily wallpapers, auto-rotating wallpapers, a desktop info overlay, and favorites management.
+Pavo is a cross-platform desktop wallpaper app built with Tauri v2. It features multi-region Bing daily wallpapers, auto-rotating wallpapers, and favorites management.
 
 ## Features
 
@@ -58,12 +58,7 @@ For more details, see the [Tauri distribution guide](https://v2.tauri.app/distri
 
 ## Release Process
 
-This project uses [Release Please](https://github.com/googleapis/release-please) for automated versioning and releases:
-
-1. Merge conventional commits (`feat`/`fix`) into `main`
-2. Release Please creates a Release PR and bumps the version
-3. Merging the Release PR triggers a GitHub Release
-4. CI builds and uploads multi-platform installers automatically
+Run `pnpm release`, choose a version number, and the script will automatically bump the version, create a tag, push to the `release` branch, and CI will build and publish a GitHub Release.
 
 ## Repo Activity
 
