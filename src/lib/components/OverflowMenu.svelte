@@ -4,6 +4,7 @@
     icon?: string;
     action: () => void;
     danger?: boolean;
+    disabled?: boolean;
   }
 
   let { items }: { items: MenuItem[] } = $props();
@@ -42,6 +43,8 @@
         <button
           class="menu-item"
           class:menu-item-danger={item.danger}
+          class:menu-item-disabled={item.disabled}
+          disabled={item.disabled}
           onclick={() => handleItemClick(item)}
         >
           {#if item.icon}
@@ -123,6 +126,15 @@
 
   .menu-item-danger {
     color: #e55;
+  }
+
+  .menu-item-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .menu-item-disabled:hover {
+    background-color: transparent;
   }
 
   .menu-item-icon {
