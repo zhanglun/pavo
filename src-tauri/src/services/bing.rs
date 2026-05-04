@@ -109,6 +109,11 @@ impl Wallpaper {
       },
     )?;
     let path = Path::new(&app_folder).join(filename);
+    // 缓存检查：文件已存在且非空则跳过下载
+    if path.exists() && path.metadata().map_or(false, |m| m.len() > 0) {
+      log::info!("Wallpaper already cached: {}", filename);
+      return Ok(path.to_string_lossy().to_string());
+    }
     let client = GLOBAL_CLIENT.clone();
     let path_str = path.to_string_lossy().to_string();
     let res = download_file(&client, url, &path_str).await;
