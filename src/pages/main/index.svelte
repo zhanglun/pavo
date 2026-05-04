@@ -8,6 +8,7 @@
   import FavoritesPreview from "../../lib/components/FavoritesPreview.svelte";
   import SettingsPanel from "../../lib/components/SettingsPanel.svelte";
   import Skeleton from "../../lib/components/Skeleton.svelte";
+  import Toast from "../../lib/components/Toast.svelte";
 
   // 今日 Hero — 轮播（所有地区今日壁纸）
   let todayImages = $state<SchedulerPhoto[]>([]);
@@ -136,6 +137,7 @@
 </div>
 
 <SettingsPanel open={settingsOpen} onClose={() => (settingsOpen = false)} />
+<Toast />
 
 <style>
   .main-root {
