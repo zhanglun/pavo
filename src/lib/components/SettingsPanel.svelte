@@ -2,6 +2,7 @@
   import { invoke } from "@tauri-apps/api/core";
   import { getName, getVersion } from "@tauri-apps/api/app";
   import { open as openLink } from "@tauri-apps/plugin-shell";
+  import { isEnabled } from "@tauri-apps/plugin-autostart";
   import { checkUpdate } from "../../lib/updater";
 
   let {
@@ -17,10 +18,17 @@
   let appVersion = $state("");
   let theme = $state<"light" | "dark">("light");
 
-  function getUserConfig() {
-    invoke("get_config").then((res) => {
-      config = res as UserConfig;
-    });
+  async function getUserConfig() {
+    const res = await invoke("get_config");
+    let cfg = res as UserConfig;
+    try {
+      const osEnabled = await isEnabled();
+      if (cfg.auto_start !== osEnabled) {
+        await invoke("set_auto_start", { enabled: osEnabled });
+        cfg.auto_start = osEnabled;
+      }
+    } catch {}
+    config = cfg;
   }
 
   $effect(() => {

@@ -62,10 +62,10 @@ async fn main() {
       #[cfg(target_os = "macos")]
       app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-      // 检测是否为自启动，如果是则隐藏主窗口到托盘
-      if std::env::args().any(|arg| arg == "--autostart") {
+      // 非自启动时显示主窗口（tauri.conf.json 默认 visible: false 防止闪烁）
+      if !std::env::args().any(|arg| arg == "--autostart") {
         if let Some(window) = app.get_webview_window("main") {
-          let _ = window.hide();
+          let _ = window.show();
         }
       }
 
