@@ -45,13 +45,10 @@ pub async fn download(url: &str, service: PhotoService) -> Result<String, String
 
 #[tauri::command]
 pub async fn get_bing_wallpaper_list() -> Vec<scheduler::SchedulerPhoto> {
-  {
-    let scheduler = scheduler::SCHEDULER.lock().await;
-    if scheduler.is_cache_valid() {
-      return scheduler.cache_list.clone();
-    }
-  }
   let mut scheduler = scheduler::SCHEDULER.lock().await;
+  if scheduler.is_cache_valid() {
+    return scheduler.cache_list.clone();
+  }
   scheduler.batch_fetch().await.unwrap_or_default()
 }
 
@@ -106,45 +103,36 @@ pub async fn view_photo(handle: tauri::AppHandle, href: String) {
 
 #[tauri::command]
 pub async fn get_today_wallpaper() -> Option<scheduler::SchedulerPhoto> {
-  {
-    let scheduler = scheduler::SCHEDULER.lock().await;
-    if scheduler.is_cache_valid() {
-      let today = chrono::Local::now().format("%Y%m%d").to_string();
-      return scheduler::Scheduler::pick_today(&scheduler.cache_list, &today);
-    }
-  }
   let mut scheduler = scheduler::SCHEDULER.lock().await;
-  let list = scheduler.batch_fetch().await.ok()?;
+  let list = if scheduler.is_cache_valid() {
+    scheduler.cache_list.clone()
+  } else {
+    scheduler.batch_fetch().await.ok()?
+  };
   let today = chrono::Local::now().format("%Y%m%d").to_string();
   scheduler::Scheduler::pick_today(&list, &today)
 }
 
 #[tauri::command]
 pub async fn get_recent_wallpapers(days: u8) -> Vec<scheduler::SchedulerPhoto> {
-  {
-    let scheduler = scheduler::SCHEDULER.lock().await;
-    if scheduler.is_cache_valid() {
-      let today = chrono::Local::now().format("%Y%m%d").to_string();
-      return scheduler::Scheduler::filter_recent_days(&scheduler.cache_list, days, &today);
-    }
-  }
   let mut scheduler = scheduler::SCHEDULER.lock().await;
-  let list = scheduler.batch_fetch().await.unwrap_or_default();
+  let list = if scheduler.is_cache_valid() {
+    scheduler.cache_list.clone()
+  } else {
+    scheduler.batch_fetch().await.unwrap_or_default()
+  };
   let today = chrono::Local::now().format("%Y%m%d").to_string();
   scheduler::Scheduler::filter_recent_days(&list, days, &today)
 }
 
 #[tauri::command]
 pub async fn get_today_collection() -> Vec<scheduler::SchedulerPhoto> {
-  {
-    let scheduler = scheduler::SCHEDULER.lock().await;
-    if scheduler.is_cache_valid() {
-      let today = chrono::Local::now().format("%Y%m%d").to_string();
-      return scheduler::Scheduler::filter_today(&scheduler.cache_list, &today);
-    }
-  }
   let mut scheduler = scheduler::SCHEDULER.lock().await;
-  let list = scheduler.batch_fetch().await.unwrap_or_default();
+  let list = if scheduler.is_cache_valid() {
+    scheduler.cache_list.clone()
+  } else {
+    scheduler.batch_fetch().await.unwrap_or_default()
+  };
   let today = chrono::Local::now().format("%Y%m%d").to_string();
   scheduler::Scheduler::filter_today(&list, &today)
 }
