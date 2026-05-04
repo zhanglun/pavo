@@ -62,6 +62,13 @@ async fn main() {
       #[cfg(target_os = "macos")]
       app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
+      // 检测是否为自启动，如果是则隐藏主窗口到托盘
+      if std::env::args().any(|arg| arg == "--autostart") {
+        if let Some(window) = app.get_webview_window("main") {
+          let _ = window.hide();
+        }
+      }
+
       let sender = tx.clone();
       let _ = tray::create_tray(app, sender);
 
@@ -99,6 +106,7 @@ async fn main() {
       cmd::set_auto_rotate,
       cmd::set_rotate_interval,
       cmd::set_rotate_mode,
+      cmd::set_auto_start,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())

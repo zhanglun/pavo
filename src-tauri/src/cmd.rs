@@ -216,3 +216,16 @@ pub async fn set_rotate_mode(
     .await
     .map_err(|_| ())
 }
+
+#[tauri::command]
+pub async fn set_auto_start(enabled: bool, app: tauri::AppHandle) -> Result<(), String> {
+  use tauri_plugin_autostart::ManagerExt;
+  let manager = app.autolaunch();
+  if enabled {
+    manager.enable().map_err(|e| e.to_string())?;
+  } else {
+    manager.disable().map_err(|e| e.to_string())?;
+  }
+  config::PavoConfig::get_config().set_auto_start(enabled);
+  Ok(())
+}
