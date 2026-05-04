@@ -7,10 +7,10 @@ use crate::config;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-use once_cell::sync::Lazy;
 use std::sync::Arc;
+use std::sync::LazyLock;
 
-static GLOBAL_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| Arc::new(Client::new()));
+static GLOBAL_CLIENT: LazyLock<Arc<Client>> = LazyLock::new(|| Arc::new(Client::new()));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tooltips {
@@ -108,26 +108,15 @@ impl Wallpaper {
         ))
       },
     )?;
-    let path = Path::new(&app_folder).join(&*filename);
+    let path = Path::new(&app_folder).join(filename);
     let client = GLOBAL_CLIENT.clone();
     let path_str = path.to_string_lossy().to_string();
-    let res = download_file(&client, &url, &path_str).await;
+    let res = download_file(&client, url, &path_str).await;
 
-    println!("{:?}", res);
+    log::debug!("save_wallpaper result: {:?}", res);
 
-    return res;
+    res
   }
-
-  /// set wallpaper from local file
-  // pub async fn set_wallpaper_from_local(a: String) -> String {
-  //   wallpaper::set_from_path(a.as_str()).unwrap();
-
-  //   if cfg!(not(target_os = "macos")) {
-  //     wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
-  //   }
-
-  //   a
-  // }
 
   pub async fn set_wallpaper_from_local(path: &str) -> Result<String> {
     let path_owned = path.to_string();
@@ -165,7 +154,7 @@ fn get_url(index: u8, number: u8, mkt: Option<String>) -> String {
     url.push_str(mkt_val.as_str());
   }
 
-  println!("url: {:?}", url);
+  log::debug!("url: {:?}", url);
 
   url
 }

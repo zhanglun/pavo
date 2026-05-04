@@ -3021,7 +3021,6 @@ dependencies = [
  "futures-util",
  "indicatif",
  "log",
- "once_cell",
  "rand 0.8.5",
  "reqwest 0.11.27",
  "serde",

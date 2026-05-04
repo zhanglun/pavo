@@ -1,5 +1,5 @@
 use chrono::offset::Utc;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
@@ -298,7 +298,7 @@ fn within_recent_days(startdate: &str, today: &str, days: u8) -> bool {
   diff >= 0 && diff <= days as i64
 }
 
-pub static SCHEDULER: Lazy<Mutex<Scheduler>> = Lazy::new(|| Mutex::new(Scheduler::new()));
+pub static SCHEDULER: LazyLock<Mutex<Scheduler>> = LazyLock::new(|| Mutex::new(Scheduler::new()));
 
 #[cfg(test)]
 mod scheduler_tests {

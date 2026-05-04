@@ -46,7 +46,7 @@ impl Background {
         let message = receiver.lock().await.recv().await;
 
         if let Some(message) = message {
-          println!("output: {:?}", message);
+          log::debug!("output: {:?}", message);
 
           match message {
             AsyncProcessMessage::StartDailyUpdate => {

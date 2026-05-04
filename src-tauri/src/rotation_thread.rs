@@ -95,7 +95,6 @@ impl RotationWorker {
     self.thread = Some(thread);
   }
 
-  #[allow(dead_code)]
   pub fn stop(&mut self) {
     if let Some(thread) = self.thread.take() {
       log::info!("rotation worker stopped");

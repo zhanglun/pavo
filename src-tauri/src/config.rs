@@ -1,11 +1,11 @@
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
 use std::sync::Mutex as StdMutex;
 
-static CONFIG_LOCK: Lazy<StdMutex<()>> = Lazy::new(|| StdMutex::new(()));
+static CONFIG_LOCK: LazyLock<StdMutex<()>> = LazyLock::new(|| StdMutex::new(()));
 
 /// 轮播模式
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]

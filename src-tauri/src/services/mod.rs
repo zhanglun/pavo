@@ -59,7 +59,7 @@ pub async fn download_file(
     .content_length()
     .ok_or_else(|| format!("Server did not provide Content-Length for '{}'", url))?;
 
-  println!(
+  log::info!(
     "Downloading {} ({} bytes) to {}",
     url,
     total_size,
@@ -71,7 +71,7 @@ pub async fn download_file(
   let mut stream = res.bytes_stream();
   let mut downloaded: u64 = 0;
 
-  println!("Starting download...");
+  log::debug!("Starting download...");
 
   while let Some(chunk_result) = stream.next().await {
     let chunk = chunk_result.map_err(|e| format!("Error while downloading chunk: {}", e))?;
@@ -88,7 +88,7 @@ pub async fn download_file(
     if total_size > 0 {
       let percent = (downloaded as f64 / total_size as f64) * 100.0;
       if downloaded % (1024 * 1024) < chunk_size {
-        println!("Progress: {:.1}% ({}/{})", percent, downloaded, total_size);
+        log::debug!("Progress: {:.1}% ({}/{})", percent, downloaded, total_size);
       }
     }
   }
@@ -103,7 +103,7 @@ pub async fn download_file(
     );
   }
 
-  println!("Successfully downloaded {} to {}", url, path.display());
+  log::info!("Successfully downloaded {} to {}", url, path.display());
 
   Ok(path.to_string_lossy().into_owned())
 }

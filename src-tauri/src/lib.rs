@@ -24,15 +24,15 @@ pub async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
       .download_and_install(
         |chunk_length, content_length| {
           downloaded += chunk_length;
-          println!("downloaded {downloaded} from {content_length:?}");
+          log::info!("downloaded {downloaded} from {content_length:?}");
         },
         || {
-          println!("download finished");
+          log::info!("download finished");
         },
       )
       .await?;
 
-    println!("update installed");
+    log::info!("update installed");
     app.restart();
   }
 
