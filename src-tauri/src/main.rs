@@ -16,6 +16,7 @@ mod tray;
 
 use cmd::AsyncProcInputTx;
 use plugins::register_plugins;
+use services::bing;
 use services::AsyncProcessMessage;
 use std::sync::Arc;
 use tauri::Manager;
@@ -70,6 +71,12 @@ async fn main() {
       }
 
       let sender = tx.clone();
+
+      {
+        let retention_days = config::PavoConfig::get_config().cache_retention_days;
+        let _ = bing::clean_cache(retention_days);
+      }
+
       let _ = tray::create_tray(app, sender);
 
       use pavo::update;
@@ -107,6 +114,7 @@ async fn main() {
       cmd::set_rotate_interval,
       cmd::set_rotate_mode,
       cmd::set_auto_start,
+      cmd::set_cache_retention_days,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())

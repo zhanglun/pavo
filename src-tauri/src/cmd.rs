@@ -37,9 +37,30 @@ pub async fn set_as_desktop<R: Runtime>(
 #[tauri::command]
 pub async fn download(url: &str, service: PhotoService) -> Result<String, String> {
   match service {
-    PhotoService::Bing => bing::Wallpaper::save_wallpaper(url, None)
-      .await
-      .map_err(|e| e.to_string()),
+    PhotoService::Bing => {
+      let filename = bing::Images::get_filename(url).map_err(|e| e.to_string())?;
+      let downloads_dir = dirs::download_dir()
+        .ok_or("无法获取下载目录".to_string())?
+        .join("Pavo");
+      std::fs::create_dir_all(&downloads_dir).map_err(|e| e.to_string())?;
+      let dest = downloads_dir.join(&filename);
+      let dest_str = dest.to_string_lossy().to_string();
+
+      let app_folder = config::PavoConfig::get_app_folder().map_err(|e| e.to_string())?;
+      let cache_path = Path::new(&app_folder).join(&filename);
+
+      // 如果缓存中有，直接复制；否则先下载到缓存再复制
+      if cache_path.exists() {
+        std::fs::copy(&cache_path, &dest).map_err(|e| e.to_string())?;
+        Ok(dest_str)
+      } else {
+        let _cached = bing::Wallpaper::save_wallpaper(url, None)
+          .await
+          .map_err(|e| e.to_string())?;
+        std::fs::copy(&cache_path, &dest).map_err(|e| e.to_string())?;
+        Ok(dest_str)
+      }
+    }
   }
 }
 
@@ -216,4 +237,9 @@ pub async fn set_auto_start(enabled: bool, app: tauri::AppHandle) -> Result<(), 
   }
   config::PavoConfig::get_config().set_auto_start(enabled);
   Ok(())
+}
+
+#[tauri::command]
+pub async fn set_cache_retention_days(days: u32) {
+  config::PavoConfig::get_config().set_cache_retention_days(days);
 }
