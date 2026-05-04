@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
+  import { setAsDesktop } from "../utils/wallpaper";
   import { tick } from "svelte";
   import OverflowMenu from "./OverflowMenu.svelte";
   import { open } from "@tauri-apps/plugin-shell";
@@ -40,7 +41,7 @@
   }
 
   function setAsBackground(url: string) {
-    invoke("set_as_desktop", { service: "Bing", url });
+    setAsDesktop(url);
   }
 
   function downloadImage(url: string) {

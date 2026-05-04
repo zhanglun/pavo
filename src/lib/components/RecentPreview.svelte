@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
+  import { setAsDesktop } from "../utils/wallpaper";
   import { tick } from "svelte";
   import Skeleton from "./Skeleton.svelte";
   import OverflowMenu from "./OverflowMenu.svelte";
@@ -60,10 +61,6 @@
       await tick();
       sectionRef?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }
-
-  async function setAsDesktop(url: string) {
-    await invoke("set_as_desktop", { service: "Bing", url });
   }
 
   async function downloadImage(url: string) {

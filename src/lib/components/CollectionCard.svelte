@@ -1,6 +1,7 @@
 <script lang="ts">
   import OverflowMenu from "./OverflowMenu.svelte";
   import { invoke } from "@tauri-apps/api/core";
+  import { setAsDesktop } from "../utils/wallpaper";
   import { open } from "@tauri-apps/plugin-shell";
 
   let {
@@ -35,9 +36,7 @@
   let menuItems = $derived([
     {
       label: "设为背景",
-      action: () => {
-        invoke("set_as_desktop", { service: "Bing", url });
-      },
+      action: () => setAsDesktop(url),
     },
     {
       label: "下载",

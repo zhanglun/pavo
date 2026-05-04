@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
+  import { setAsDesktop } from "../utils/wallpaper";
 
   let {
     images,
@@ -64,8 +65,8 @@
     paused = false;
   }
 
-  async function setAsDesktop() {
-    await invoke("set_as_desktop", { service: "Bing", url });
+  async function handleSetAsDesktop() {
+    await setAsDesktop(url);
   }
 
   async function download() {
@@ -119,7 +120,7 @@
     </div>
 
     <div class="actions">
-      <button class="pill" type="button" onclick={setAsDesktop}>设为背景</button>
+      <button class="pill" type="button" onclick={handleSetAsDesktop}>设为背景</button>
       <button class="pill" type="button" onclick={download}>下载</button>
       <button
         class="fav"
