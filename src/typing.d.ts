@@ -17,6 +17,7 @@ declare global {
     auto_rotate: boolean;
     rotate_interval_minutes: number;
     rotate_mode: "Sequential" | "Random";
+    auto_start: boolean;
   }
   type BingImage = {
     copyrights: string[];

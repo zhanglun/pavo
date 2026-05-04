@@ -51,6 +51,10 @@
     await invoke("set_rotate_mode", { mode });
   }
 
+  async function updateAutoStart(enabled: boolean) {
+    await invoke("set_auto_start", { enabled });
+  }
+
   async function handleRevealLog() {
     await invoke("reveal_log_file");
   }
@@ -110,6 +114,17 @@
             }}
           />
           <span>每日自动更新</span>
+        </label>
+
+        <label class="toggle-row">
+          <input
+            type="checkbox"
+            bind:checked={config.auto_start}
+            onchange={(e) => {
+              updateAutoStart((e.target as HTMLInputElement).checked);
+            }}
+          />
+          <span>开机启动</span>
         </label>
 
         <div class="subsection">
