@@ -63,6 +63,10 @@
     await invoke("set_auto_start", { enabled });
   }
 
+  async function updateCacheRetentionDays(days: number) {
+    await invoke("set_cache_retention_days", { days });
+  }
+
   async function handleRevealLog() {
     await invoke("reveal_log_file");
   }
@@ -208,6 +212,22 @@
           >
             <option value={7}>最近 7 天</option>
             <option value={14}>最近 14 天</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <span class="row-label">缓存保留天数</span>
+          <select
+            class="settings-select"
+            bind:value={config.cache_retention_days}
+            onchange={(e) => {
+              updateCacheRetentionDays(Number((e.target as HTMLSelectElement).value));
+            }}
+          >
+            <option value={3}>3 天</option>
+            <option value={7}>7 天</option>
+            <option value={14}>14 天</option>
+            <option value={30}>30 天</option>
           </select>
         </div>
 
