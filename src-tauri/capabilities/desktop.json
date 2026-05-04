@@ -13,6 +13,9 @@
     "updater:allow-check",
     "updater:allow-download",
     "updater:allow-download-and-install",
-    "dialog:default"
+    "dialog:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
   ]
 }

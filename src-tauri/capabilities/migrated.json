@@ -8,6 +8,9 @@
   "permissions": [
     "core:default",
     "core:window:allow-hide",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
     "fs:allow-read-file",
     "shell:allow-open",
     "shell:default",
