@@ -1,6 +1,6 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
-  import { setAsDesktop } from "../utils/wallpaper";
+  import { setAsDesktop, downloadWallpaper, isSettingWallpaper, isDownloading } from "../utils/wallpaper";
 
   let {
     images,
@@ -70,7 +70,7 @@
   }
 
   async function download() {
-    await invoke("download", { service: "Bing", url });
+    await downloadWallpaper(url);
   }
 
   async function toggleFavorite() {
@@ -120,8 +120,8 @@
     </div>
 
     <div class="actions">
-      <button class="pill" type="button" onclick={handleSetAsDesktop}>设为背景</button>
-      <button class="pill" type="button" onclick={download}>下载</button>
+      <button class="pill" type="button" onclick={handleSetAsDesktop} disabled={$isSettingWallpaper}>设为背景</button>
+      <button class="pill" type="button" onclick={download} disabled={$isDownloading}>下载</button>
       <button
         class="fav"
         type="button"
@@ -274,6 +274,11 @@
 
   .pill:hover {
     background: rgba(255, 255, 255, 0.22);
+  }
+
+  .pill:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   .fav {

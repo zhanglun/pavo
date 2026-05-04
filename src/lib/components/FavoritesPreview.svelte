@@ -1,6 +1,6 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
-  import { setAsDesktop } from "../utils/wallpaper";
+  import { setAsDesktop, downloadWallpaper, isSettingWallpaper, isDownloading } from "../utils/wallpaper";
   import { tick } from "svelte";
   import OverflowMenu from "./OverflowMenu.svelte";
   import { open } from "@tauri-apps/plugin-shell";
@@ -45,7 +45,7 @@
   }
 
   function downloadImage(url: string) {
-    invoke("download", { service: "Bing", url });
+    downloadWallpaper(url);
   }
 
   function openDetail(copyrightlink: string) {
@@ -54,8 +54,8 @@
 
   function buildMenuItems(item: FavoriteItem) {
     return [
-      { label: "设为背景", action: () => setAsBackground(item.url) },
-      { label: "下载", action: () => downloadImage(item.url) },
+      { label: "设为背景", action: () => setAsBackground(item.url), disabled: $isSettingWallpaper },
+      { label: "下载", action: () => downloadImage(item.url), disabled: $isDownloading },
       { label: "详情", action: () => openDetail(item.copyrightlink) },
       { label: "取消收藏", action: () => removeFavorite(item.filename), danger: true },
     ];

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
-  import { setAsDesktop } from "../utils/wallpaper";
+  import { setAsDesktop, downloadWallpaper, isSettingWallpaper, isDownloading } from "../utils/wallpaper";
   import { tick } from "svelte";
   import Skeleton from "./Skeleton.svelte";
   import OverflowMenu from "./OverflowMenu.svelte";
@@ -64,13 +64,13 @@
   }
 
   async function downloadImage(url: string) {
-    await invoke("download", { service: "Bing", url });
+    await downloadWallpaper(url);
   }
 
   function getMenuItems(img: BingImage) {
     return [
-      { label: "设为背景", icon: "🖥", action: () => setAsDesktop(img.urls[0]) },
-      { label: "下载", icon: "⬇", action: () => downloadImage(img.urls[0]) },
+      { label: "设为背景", icon: "🖥", action: () => setAsDesktop(img.urls[0]), disabled: $isSettingWallpaper },
+      { label: "下载", icon: "⬇", action: () => downloadImage(img.urls[0]), disabled: $isDownloading },
     ];
   }
 
