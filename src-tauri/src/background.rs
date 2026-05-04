@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use tauri::AppHandle;
+use tauri::{AppHandle, Emitter};
 use tokio::{
   sync::{mpsc, Mutex},
   time,
@@ -97,11 +97,13 @@ impl Background {
     });
 
     let mut interval = time::interval(time::Duration::from_secs(scheduler::BING_EXPIRE_TIME as u64));
+    let app_timer = app.clone();
 
     tauri::async_runtime::spawn(async move {
       loop {
         interval.tick().await;
         scheduler::SCHEDULER.lock().await.setup_list().await;
+        let _ = app_timer.emit("wallpapers:cache-refreshed", ());
         log::info!("A Bright New Day!");
       }
     });

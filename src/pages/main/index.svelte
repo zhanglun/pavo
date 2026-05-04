@@ -61,6 +61,10 @@
       checkUpdate();
     }).then((unlisten) => unlisteners.push(unlisten));
 
+    listen("wallpapers:cache-refreshed", () => {
+      refreshAll();
+    }).then((unlisten) => unlisteners.push(unlisten));
+
     return () => {
       for (const unlisten of unlisteners) {
         unlisten();
