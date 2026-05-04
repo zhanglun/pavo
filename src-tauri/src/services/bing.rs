@@ -163,3 +163,48 @@ fn get_url(index: u8, number: u8, mkt: Option<String>) -> String {
 
   url
 }
+
+/// 清理超过保留天数的壁纸缓存文件
+pub fn clean_cache(retention_days: u32) -> Result<()> {
+  let app_folder = config::PavoConfig::get_app_folder().map_err(
+    |e| -> Box<dyn std::error::Error + Send + Sync> {
+      Box::new(std::io::Error::new(
+        std::io::ErrorKind::Other,
+        e,
+      ))
+    },
+  )?;
+
+  let entries = std::fs::read_dir(&app_folder)?;
+  let now = std::time::SystemTime::now();
+  let retention = std::time::Duration::from_secs(retention_days as u64 * 24 * 60 * 60);
+
+  for entry in entries {
+    let entry = entry?;
+    let path = entry.path();
+
+    if !path.is_file() {
+      continue;
+    }
+
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+    if !matches!(ext, "jpg" | "jpeg" | "png" | "bmp" | "webp") {
+      continue;
+    }
+
+    if let Ok(metadata) = path.metadata() {
+      if let Ok(modified) = metadata.modified() {
+        if let Ok(age) = now.duration_since(modified) {
+          if age > retention {
+            match std::fs::remove_file(&path) {
+              Ok(_) => log::info!("Cleaned cache: {:?}", path),
+              Err(e) => log::warn!("Failed to clean cache {:?}: {}", path, e),
+            }
+          }
+        }
+      }
+    }
+  }
+
+  Ok(())
+}
