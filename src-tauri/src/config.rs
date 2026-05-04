@@ -51,6 +51,10 @@ fn default_auto_start() -> bool {
   false
 }
 
+fn default_cache_retention_days() -> u32 {
+  7
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
   #[serde(default = "default_auto_daily_update")]
@@ -67,6 +71,8 @@ pub struct PavoConfig {
   pub rotate_mode: RotateMode,
   #[serde(default = "default_auto_start")]
   pub auto_start: bool,
+  #[serde(default = "default_cache_retention_days")]
+  pub cache_retention_days: u32,
 }
 
 impl PavoConfig {
@@ -79,6 +85,7 @@ impl PavoConfig {
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
       auto_start: false,
+      cache_retention_days: 7,
     }
   }
 
@@ -202,6 +209,11 @@ impl PavoConfig {
         .get("auto_start")
         .and_then(|v| v.as_bool())
         .unwrap_or(false),
+      cache_retention_days: table
+        .get("cache_retention_days")
+        .and_then(|v| v.as_integer())
+        .map(|v| v as u32)
+        .unwrap_or(7),
     }
   }
 
@@ -279,6 +291,10 @@ impl PavoConfig {
   pub fn set_auto_start(&self, enabled: bool) -> Self {
     Self::update_config(|cfg| cfg.auto_start = enabled)
   }
+
+  pub fn set_cache_retention_days(&self, days: u32) -> Self {
+    Self::update_config(|cfg| cfg.cache_retention_days = days)
+  }
 }
 
 #[cfg(test)]
@@ -323,6 +339,7 @@ show_layer = false
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
       auto_start: false,
+      cache_retention_days: 7,
     };
 
     let text = toml::to_string(&cfg).unwrap();
@@ -340,6 +357,7 @@ show_layer = false
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
       auto_start: false,
+      cache_retention_days: 7,
     };
     let text = toml::to_string(&cfg).unwrap();
     assert!(text.contains("auto_daily_update = true"));
@@ -355,6 +373,7 @@ show_layer = false
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
       auto_start: false,
+      cache_retention_days: 7,
     };
     let text = toml::to_string(&cfg).unwrap();
     // The serialized form should NOT contain legacy shuffle/interval fields
