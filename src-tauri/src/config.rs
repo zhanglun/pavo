@@ -47,6 +47,10 @@ fn default_history_range_days() -> u8 {
   7
 }
 
+fn default_auto_start() -> bool {
+  false
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
   #[serde(default = "default_auto_daily_update")]
@@ -61,6 +65,8 @@ pub struct PavoConfig {
   pub rotate_interval_minutes: u16,
   #[serde(default = "default_rotate_mode")]
   pub rotate_mode: RotateMode,
+  #[serde(default = "default_auto_start")]
+  pub auto_start: bool,
 }
 
 impl PavoConfig {
@@ -72,6 +78,7 @@ impl PavoConfig {
       auto_rotate: false,
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
+      auto_start: false,
     }
   }
 
@@ -193,6 +200,10 @@ impl PavoConfig {
           _ => None,
         })
         .unwrap_or_default(),
+      auto_start: table
+        .get("auto_start")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false),
     }
   }
 
@@ -279,6 +290,16 @@ impl PavoConfig {
     }
     data
   }
+
+  pub fn set_auto_start(&self, enabled: bool) -> Self {
+    let _guard = CONFIG_LOCK.lock().unwrap();
+    let mut data = Self::get_config();
+    data.auto_start = enabled;
+    if let Err(e) = Self::write_config(data.clone()) {
+      log::error!("Failed to write config: {}", e);
+    }
+    data
+  }
 }
 
 #[cfg(test)]
@@ -322,6 +343,7 @@ show_layer = false
       auto_rotate: false,
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
+      auto_start: false,
     };
 
     let text = toml::to_string(&cfg).unwrap();
@@ -338,6 +360,7 @@ show_layer = false
       auto_rotate: false,
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
+      auto_start: false,
     };
     let text = toml::to_string(&cfg).unwrap();
     assert!(text.contains("auto_daily_update = true"));
@@ -352,6 +375,7 @@ show_layer = false
       auto_rotate: false,
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
+      auto_start: false,
     };
     let text = toml::to_string(&cfg).unwrap();
     // The serialized form should NOT contain legacy shuffle/interval fields
