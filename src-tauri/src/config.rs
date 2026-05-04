@@ -90,7 +90,9 @@ impl PavoConfig {
         let app_config_dir = Path::new(&home_dir).join(".pavo");
 
         match fs::create_dir_all(app_config_dir.clone()) {
-          Ok(_) => Ok(app_config_dir.clone().to_str().unwrap().to_string()),
+          Ok(_) => app_config_dir.to_str().map(|s| s.to_string()).ok_or_else(|| {
+            Error::new(ErrorKind::InvalidData, "home path contains non-UTF-8 characters")
+          }),
           Err(e) => Err(e),
         }
       }
@@ -98,25 +100,21 @@ impl PavoConfig {
     }
   }
 
-  pub fn get_app_folder() -> Result<String, (usize, String)> {
-    let home_dir = dirs::home_dir();
+  pub fn get_app_folder() -> Result<String, String> {
+    let home_dir = dirs::home_dir().ok_or("home directory not found".to_string())?;
+    let app_config_dir = Path::new(&home_dir).join(".pavo");
 
-    match home_dir {
-      Some(home_dir) => {
-        let app_config_dir = Path::new(&home_dir).join(".pavo");
-
-        if app_config_dir.exists() {
-          Ok(app_config_dir.clone().to_str().unwrap().to_string())
-        } else {
-          Ok(Self::create_app_folder().unwrap())
-        }
-      }
-      None => Err((2, "no home dir".to_string())),
+    if app_config_dir.exists() {
+      app_config_dir.to_str().map(|s| s.to_string()).ok_or_else(|| {
+        "home path contains non-UTF-8 characters".to_string()
+      })
+    } else {
+      Self::create_app_folder().map_err(|e| e.to_string())
     }
   }
 
   pub fn write_config(data: PavoConfig) -> Result<(), String> {
-    let folder_dir = Self::get_app_folder().map_err(|(_, e)| e)?;
+    let folder_dir = Self::get_app_folder().map_err(|e| e)?;
     let file_path = Path::new(&folder_dir).join("pavo.toml");
 
     if !file_path.exists() {
@@ -208,97 +206,78 @@ impl PavoConfig {
   }
 
   pub fn get_config() -> Self {
-    let folder_dir = Self::get_app_folder().unwrap();
+    let folder_dir = match Self::get_app_folder() {
+      Ok(dir) => dir,
+      Err(e) => {
+        log::error!("Failed to get app folder: {}", e);
+        return Self::new();
+      }
+    };
     let file_path = Path::new(&folder_dir).join("pavo.toml");
 
     if !file_path.exists() {
-      fs::File::create(&file_path).expect("create config failed");
+      if let Err(e) = fs::File::create(&file_path).map_err(|e| e.to_string()) {
+        log::error!("Failed to create config file: {}", e);
+      }
+      return Self::new();
     }
 
     let content = fs::read_to_string(&file_path).unwrap_or_default();
     Self::parse_tolerant(&content)
   }
 
-  pub fn set_auto_daily_update(&self, enabled: bool) -> Self {
-    let _guard = CONFIG_LOCK.lock().unwrap();
+  fn update_config(modifier: impl FnOnce(&mut PavoConfig)) -> Self {
+    let _guard = match CONFIG_LOCK.lock() {
+      Ok(g) => g,
+      Err(e) => {
+        log::error!("Config lock poisoned: {}", e);
+        return Self::get_config();
+      }
+    };
     let mut data = Self::get_config();
-    data.auto_daily_update = enabled;
+    modifier(&mut data);
     if let Err(e) = Self::write_config(data.clone()) {
       log::error!("Failed to write config: {}", e);
     }
     data
+  }
+
+  pub fn set_auto_daily_update(&self, enabled: bool) -> Self {
+    Self::update_config(|cfg| cfg.auto_daily_update = enabled)
   }
 
   pub fn set_history_range_days(&self, days: u8) -> Self {
-    let _guard = CONFIG_LOCK.lock().unwrap();
-    let mut data = Self::get_config();
-    data.history_range_days = days;
-    if let Err(e) = Self::write_config(data.clone()) {
-      log::error!("Failed to write config: {}", e);
-    }
-    data
+    Self::update_config(|cfg| cfg.history_range_days = days)
   }
 
   pub fn add_favorite(&self, item: FavoriteItem) -> Self {
-    let _guard = CONFIG_LOCK.lock().unwrap();
-    let mut data = Self::get_config();
-    if !data.favorites.iter().any(|f| f.filename == item.filename) {
-      data.favorites.push(item);
-    }
-    if let Err(e) = Self::write_config(data.clone()) {
-      log::error!("Failed to write config: {}", e);
-    }
-    data
+    Self::update_config(|cfg| {
+      if !cfg.favorites.iter().any(|f| f.filename == item.filename) {
+        cfg.favorites.push(item);
+      }
+    })
   }
 
   pub fn remove_favorite_by_filename(&self, filename: &str) -> Self {
-    let _guard = CONFIG_LOCK.lock().unwrap();
-    let mut data = Self::get_config();
-    data.favorites.retain(|f| f.filename != filename);
-    if let Err(e) = Self::write_config(data.clone()) {
-      log::error!("Failed to write config: {}", e);
-    }
-    data
+    Self::update_config(|cfg| {
+      cfg.favorites.retain(|f| f.filename != filename);
+    })
   }
 
   pub fn set_auto_rotate(&self, enabled: bool) -> Self {
-    let _guard = CONFIG_LOCK.lock().unwrap();
-    let mut data = Self::get_config();
-    data.auto_rotate = enabled;
-    if let Err(e) = Self::write_config(data.clone()) {
-      log::error!("Failed to write config: {}", e);
-    }
-    data
+    Self::update_config(|cfg| cfg.auto_rotate = enabled)
   }
 
   pub fn set_rotate_interval(&self, minutes: u16) -> Self {
-    let _guard = CONFIG_LOCK.lock().unwrap();
-    let mut data = Self::get_config();
-    data.rotate_interval_minutes = minutes;
-    if let Err(e) = Self::write_config(data.clone()) {
-      log::error!("Failed to write config: {}", e);
-    }
-    data
+    Self::update_config(|cfg| cfg.rotate_interval_minutes = minutes)
   }
 
   pub fn set_rotate_mode(&self, mode: RotateMode) -> Self {
-    let _guard = CONFIG_LOCK.lock().unwrap();
-    let mut data = Self::get_config();
-    data.rotate_mode = mode;
-    if let Err(e) = Self::write_config(data.clone()) {
-      log::error!("Failed to write config: {}", e);
-    }
-    data
+    Self::update_config(|cfg| cfg.rotate_mode = mode)
   }
 
   pub fn set_auto_start(&self, enabled: bool) -> Self {
-    let _guard = CONFIG_LOCK.lock().unwrap();
-    let mut data = Self::get_config();
-    data.auto_start = enabled;
-    if let Err(e) = Self::write_config(data.clone()) {
-      log::error!("Failed to write config: {}", e);
-    }
-    data
+    Self::update_config(|cfg| cfg.auto_start = enabled)
   }
 }
 

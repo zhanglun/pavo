@@ -104,7 +104,7 @@ impl Wallpaper {
       |e| -> Box<dyn std::error::Error + Send + Sync> {
         Box::new(std::io::Error::new(
           std::io::ErrorKind::Other,
-          format!("Error code: {}, message: {}", e.0, e.1),
+          e,
         ))
       },
     )?;
