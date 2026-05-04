@@ -1,5 +1,4 @@
 use chrono::offset::Utc;
-use chrono::Local;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
@@ -7,11 +6,6 @@ use tokio::sync::Mutex;
 use crate::events::WallpaperEvent;
 use crate::services::bing;
 use tauri::Emitter;
-
-#[allow(dead_code)]
-fn now() -> String {
-  Local::now().format("%F %T").to_string()
-}
 
 pub const BING_EXPIRE_TIME: i64 = 60 * 60 * 12;
 
@@ -73,8 +67,7 @@ impl Scheduler {
 
     for region_code in region_codes {
       let region = region_code.to_string();
-      let mut scheduler = self.clone();
-      let handle = tokio::spawn(async move { scheduler.fetch_list_with_region(region).await });
+      let handle = tokio::spawn(async move { fetch_list_with_region(region).await });
       handles.push(handle);
     }
 
@@ -87,27 +80,26 @@ impl Scheduler {
 
     let mut formatted_list = vec![];
 
-    for i in res {
-      let unique_name = i.filename.clone().split("_").collect::<Vec<_>>()[0].to_string();
+    for mut i in res {
+      let unique_name = i.filename.split('_').next().unwrap_or(&i.filename).to_string();
 
       let idx = formatted_list.iter().position(|x: &SchedulerPhoto| {
-        x.filename.clone().split("_").collect::<Vec<_>>()[0] == unique_name
+        x.filename.split('_').next().unwrap_or(&x.filename) == unique_name
       });
 
       match idx {
         Some(idx) => {
           let item = &mut formatted_list[idx];
 
-          item.regions.append(&mut i.clone().regions);
-          item.urls.append(&mut i.clone().urls);
-          item.titles.append(&mut i.clone().titles);
-          item.startdates.append(&mut i.clone().startdates);
-          item.copyrights.append(&mut i.clone().copyrights);
-          item.copyrightlinks.append(&mut i.clone().copyrightlinks);
+          item.regions.append(&mut i.regions);
+          item.urls.append(&mut i.urls);
+          item.titles.append(&mut i.titles);
+          item.startdates.append(&mut i.startdates);
+          item.copyrights.append(&mut i.copyrights);
+          item.copyrightlinks.append(&mut i.copyrightlinks);
         }
         None => {
-          let item = i.clone();
-          formatted_list.push(item);
+          formatted_list.push(i);
         }
       }
     }
@@ -115,43 +107,6 @@ impl Scheduler {
     self.cache_list = formatted_list.clone();
 
     Ok(formatted_list)
-  }
-
-  pub async fn fetch_list_with_region(
-    &mut self,
-    region: String,
-  ) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
-    let res1 = bing::Wallpaper::new(0, 8, Some(region.clone())).await?;
-    let res2 = bing::Wallpaper::new(7, 8, Some(region.clone())).await?;
-    let res3 = bing::Wallpaper::new(14, 8, Some(region.clone())).await?;
-
-    let images1 = res1.json.images;
-    let images2 = res2.json.images;
-    let images3 = res3.json.images;
-
-    let mut res: Vec<SchedulerPhoto> = images1
-      .into_iter()
-      .chain(images2)
-      .chain(images3)
-      .map(
-        |i| -> Result<SchedulerPhoto, Box<dyn std::error::Error + Send + Sync>> {
-          let filename = bing::Images::get_filename(&i.url)?;
-          Ok(SchedulerPhoto {
-            filename,
-            urls: vec![["https://www.bing.com", &i.url].concat()],
-            regions: vec![region.clone()],
-            titles: vec![i.clone().title],
-            startdates: vec![i.clone().startdate],
-            copyrights: vec![i.clone().copyright],
-            copyrightlinks: vec![i.clone().copyrightlink],
-          })
-        },
-      )
-      .collect::<Result<_, _>>()?;
-
-    res.dedup_by(|a, b| a.filename == b.filename);
-
-    Ok(res)
   }
 
   pub async fn setup_list(&mut self) -> Vec<SchedulerPhoto> {
@@ -294,6 +249,42 @@ impl Scheduler {
       .cloned()
       .collect()
   }
+}
+
+async fn fetch_list_with_region(
+  region: String,
+) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
+  let res1 = bing::Wallpaper::new(0, 8, Some(region.clone())).await?;
+  let res2 = bing::Wallpaper::new(7, 8, Some(region.clone())).await?;
+  let res3 = bing::Wallpaper::new(14, 8, Some(region.clone())).await?;
+
+  let images1 = res1.json.images;
+  let images2 = res2.json.images;
+  let images3 = res3.json.images;
+
+  let mut res: Vec<SchedulerPhoto> = images1
+    .into_iter()
+    .chain(images2)
+    .chain(images3)
+    .map(
+      |i| -> Result<SchedulerPhoto, Box<dyn std::error::Error + Send + Sync>> {
+        let filename = bing::Images::get_filename(&i.url)?;
+        Ok(SchedulerPhoto {
+          filename,
+          urls: vec![["https://www.bing.com", &i.url].concat()],
+          regions: vec![region.clone()],
+          titles: vec![i.clone().title],
+          startdates: vec![i.clone().startdate],
+          copyrights: vec![i.clone().copyright],
+          copyrightlinks: vec![i.clone().copyrightlink],
+        })
+      },
+    )
+    .collect::<Result<_, _>>()?;
+
+  res.dedup_by(|a, b| a.filename == b.filename);
+
+  Ok(res)
 }
 
 fn within_recent_days(startdate: &str, today: &str, days: u8) -> bool {
