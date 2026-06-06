@@ -11,7 +11,7 @@ pub struct DailyUpdateWorker {
   thread: Option<tauri::async_runtime::JoinHandle<()>>,
 }
 
-const DAILY_UPDATE_INTERVAL_SECS: u64 = 60 * 60 * 12;
+const DAILY_UPDATE_INTERVAL_SECS: u64 = scheduler::BING_EXPIRE_TIME as u64;
 
 impl DailyUpdateWorker {
   pub fn new() -> Self {

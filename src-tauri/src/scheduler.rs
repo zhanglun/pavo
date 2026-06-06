@@ -7,7 +7,7 @@ use crate::events::WallpaperEvent;
 use crate::services::bing;
 use tauri::Emitter;
 
-pub const BING_EXPIRE_TIME: i64 = 60 * 60 * 12;
+pub const BING_EXPIRE_TIME: i64 = 60 * 60 * 6;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchedulerPhoto {
@@ -36,15 +36,9 @@ impl Scheduler {
     }
   }
 
-  pub fn should_refresh(&mut self) -> bool {
+  pub fn should_refresh(&self) -> bool {
     let now = Utc::now().timestamp();
-
-    if now - self.last_load_time < BING_EXPIRE_TIME {
-      false
-    } else {
-      self.last_load_time = now;
-      true
-    }
+    now - self.last_load_time >= BING_EXPIRE_TIME
   }
 
   pub fn is_cache_valid(&self) -> bool {
@@ -58,7 +52,18 @@ impl Scheduler {
     if !self.should_refresh() && !self.cache_list.is_empty() {
       return Ok(self.cache_list.clone());
     }
+    self.fetch_from_api().await
+  }
 
+  pub async fn force_fetch(
+    &mut self,
+  ) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
+    self.fetch_from_api().await
+  }
+
+  async fn fetch_from_api(
+    &mut self,
+  ) -> Result<Vec<SchedulerPhoto>, Box<dyn std::error::Error + Send + Sync>> {
     let region_codes = [
       "zh-CN", "en-US", "fr-FR", "de-DE", "ja-JP", "en-CA", "en-GB", "en-IN", "it-IT",
     ];
@@ -105,6 +110,7 @@ impl Scheduler {
     }
 
     self.cache_list = formatted_list.clone();
+    self.last_load_time = Utc::now().timestamp();
 
     Ok(formatted_list)
   }
@@ -407,5 +413,48 @@ mod scheduler_tests {
     let list = vec![photo("a", "20260426")];
     let today_list = Scheduler::filter_today(&list, "20260427");
     assert!(today_list.is_empty());
+  }
+
+  #[test]
+  fn should_refresh_returns_false_when_cache_is_fresh() {
+    let scheduler = Scheduler::new();
+    assert!(!scheduler.should_refresh());
+  }
+
+  #[test]
+  fn should_refresh_returns_true_when_cache_is_expired() {
+    let mut scheduler = Scheduler::new();
+    scheduler.last_load_time = Utc::now().timestamp() - BING_EXPIRE_TIME - 1;
+    assert!(scheduler.should_refresh());
+  }
+
+  #[test]
+  fn should_refresh_has_no_side_effects() {
+    let mut scheduler = Scheduler::new();
+    scheduler.last_load_time = Utc::now().timestamp() - BING_EXPIRE_TIME - 1;
+    let before = scheduler.last_load_time;
+    let _ = scheduler.should_refresh();
+    assert_eq!(scheduler.last_load_time, before);
+  }
+
+  #[test]
+  fn is_cache_valid_returns_true_when_fresh_and_non_empty() {
+    let mut scheduler = Scheduler::new();
+    scheduler.cache_list = vec![photo("a", "20260427")];
+    assert!(scheduler.is_cache_valid());
+  }
+
+  #[test]
+  fn is_cache_valid_returns_false_when_expired() {
+    let mut scheduler = Scheduler::new();
+    scheduler.cache_list = vec![photo("a", "20260427")];
+    scheduler.last_load_time = Utc::now().timestamp() - BING_EXPIRE_TIME - 1;
+    assert!(!scheduler.is_cache_valid());
+  }
+
+  #[test]
+  fn is_cache_valid_returns_false_when_empty() {
+    let scheduler = Scheduler::new();
+    assert!(!scheduler.is_cache_valid());
   }
 }

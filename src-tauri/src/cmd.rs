@@ -159,6 +159,12 @@ pub async fn get_today_collection() -> Vec<scheduler::SchedulerPhoto> {
 }
 
 #[tauri::command]
+pub async fn force_refresh() -> Vec<scheduler::SchedulerPhoto> {
+  let mut scheduler = scheduler::SCHEDULER.lock().await;
+  scheduler.force_fetch().await.unwrap_or_default()
+}
+
+#[tauri::command]
 pub async fn list_favorites() -> Vec<config::FavoriteItem> {
   config::PavoConfig::get_config().favorites
 }

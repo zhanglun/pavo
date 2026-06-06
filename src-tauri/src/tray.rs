@@ -147,12 +147,14 @@ pub fn create_tray(
               position_window_near_tray(&app, &window);
               let _ = window.show();
               let _ = window.set_focus();
+              let _ = app.emit("window:shown", ());
             } else if window.is_visible().unwrap_or(false) {
               let _ = window.hide();
             } else {
               position_window_near_tray(&app, &window);
               let _ = window.show();
               let _ = window.set_focus();
+              let _ = app.emit("window:shown", ());
             }
           }
         }
@@ -170,6 +172,7 @@ pub fn create_tray(
           position_window_near_tray(&app, &window);
           let _ = window.show();
           let _ = window.set_focus();
+          let _ = app.emit("window:shown", ());
         }
       }
       "hide" => {

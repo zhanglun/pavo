@@ -107,6 +107,7 @@ async fn main() {
       cmd::get_today_wallpaper,
       cmd::get_recent_wallpapers,
       cmd::get_today_collection,
+      cmd::force_refresh,
       cmd::list_favorites,
       cmd::add_favorite,
       cmd::remove_favorite,

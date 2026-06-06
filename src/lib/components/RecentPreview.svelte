@@ -7,8 +7,10 @@
 
   let {
     favoritesSet,
+    refreshKey,
   }: {
     favoritesSet: Set<string>;
+    refreshKey: number;
   } = $props();
 
   let range = $state(7);
@@ -76,6 +78,7 @@
 
   $effect(() => {
     range;
+    refreshKey;
     loadRecent();
   });
 

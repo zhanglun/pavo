@@ -17,6 +17,9 @@
   // 共享收藏集合
   let favoritesSet = $state<Set<string>>(new Set());
 
+  // 子组件刷新信号
+  let refreshKey = $state(0);
+
   // Settings 面板
   let settingsOpen = $state(false);
 
@@ -43,6 +46,12 @@
   // 刷新全部
   async function refreshAll() {
     await loadTodayHero();
+    refreshKey++;
+  }
+
+  async function forceRefresh() {
+    await invoke("force_refresh");
+    await refreshAll();
   }
 
   function hideWindow() {
@@ -63,6 +72,10 @@
     }).then((unlisten) => unlisteners.push(unlisten));
 
     listen("wallpapers:cache-refreshed", () => {
+      refreshAll();
+    }).then((unlisten) => unlisteners.push(unlisten));
+
+    listen("window:shown", () => {
       refreshAll();
     }).then((unlisten) => unlisteners.push(unlisten));
 
@@ -87,7 +100,7 @@
       <button
         type="button"
         class="topbar-btn"
-        onclick={refreshAll}
+        onclick={forceRefresh}
         title="刷新"
       >
         ↻
@@ -123,11 +136,11 @@
     </div>
 
     <div class="section">
-      <RecentCollection {favoritesSet} />
+      <RecentCollection {favoritesSet} {refreshKey} />
     </div>
 
     <div class="section">
-      <RecentPreview {favoritesSet} />
+      <RecentPreview {favoritesSet} {refreshKey} />
     </div>
 
     <div class="section">

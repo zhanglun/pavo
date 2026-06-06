@@ -5,8 +5,10 @@
 
   let {
     favoritesSet,
+    refreshKey,
   }: {
     favoritesSet: Set<string>;
+    refreshKey: number;
   } = $props();
 
   let expanded = $state(false);
@@ -16,6 +18,7 @@
   const PREVIEW_COUNT = 4;
 
   $effect(() => {
+    refreshKey;
     invoke<BingImage[]>("get_recent_wallpapers", { days: 7 }).then((data) => {
       items = data;
     });
