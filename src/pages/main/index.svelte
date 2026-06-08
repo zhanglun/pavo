@@ -9,6 +9,8 @@
   import SettingsPanel from "../../lib/components/SettingsPanel.svelte";
   import Skeleton from "../../lib/components/Skeleton.svelte";
   import Toast from "../../lib/components/Toast.svelte";
+  import RefreshCcw from "../../lib/components/icons/refresh-ccw.svelte";
+  import Settings from "../../lib/components/icons/settings.svelte";
 
   // 今日 Hero — 轮播（所有地区今日壁纸）
   let todayImages = $state<SchedulerPhoto[]>([]);
@@ -103,7 +105,7 @@
         onclick={forceRefresh}
         title="刷新"
       >
-        ↻
+        <RefreshCcw size={16} />
       </button>
       <button
         type="button"
@@ -111,7 +113,7 @@
         onclick={() => (settingsOpen = true)}
         title="设置"
       >
-        ⚙
+        <Settings size={16} />
       </button>
       <button
         type="button"
@@ -198,6 +200,9 @@
   }
 
   .topbar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 14px;
     color: var(--text-secondary);
     background: none;

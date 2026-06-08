@@ -4,6 +4,9 @@
   import { tick } from "svelte";
   import Skeleton from "./Skeleton.svelte";
   import OverflowMenu from "./OverflowMenu.svelte";
+  import MonitorCheck from "./icons/monitor-check.svelte";
+  import Download from "./icons/download.svelte";
+  import ChevronRight from "./icons/chevron-right.svelte";
 
   let {
     favoritesSet,
@@ -71,8 +74,8 @@
 
   function getMenuItems(img: BingImage) {
     return [
-      { label: "设为背景", icon: "🖥", action: () => setAsDesktop(img.urls[0]), disabled: $isSettingWallpaper },
-      { label: "下载", icon: "⬇", action: () => downloadImage(img.urls[0]), disabled: $isDownloading },
+      { label: "设为背景", icon: MonitorCheck, action: () => setAsDesktop(img.urls[0]), disabled: $isSettingWallpaper },
+      { label: "下载", icon: Download, action: () => downloadImage(img.urls[0]), disabled: $isDownloading },
     ];
   }
 
@@ -134,6 +137,7 @@
         onclick={toggleExpand}
       >
         {expanded ? "收起" : "查看全部"}
+        <ChevronRight size={12} class="chevron {expanded ? 'chevron-up' : ''}" />
       </button>
     {/if}
   {/if}
@@ -253,6 +257,10 @@
 
   /* 查看全部按钮 */
   .view-all-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
     border: none;
     border-radius: 4px;
     padding: 4px 12px;
@@ -266,6 +274,15 @@
 
   .view-all-btn:hover {
     opacity: 0.85;
+  }
+
+  .view-all-btn :global(.chevron) {
+    transition: transform 0.2s ease;
+    transform: rotate(90deg);
+  }
+
+  .view-all-btn :global(.chevron-up) {
+    transform: rotate(-90deg);
   }
 
   /* 底部分割线 */

@@ -1,7 +1,10 @@
 <script lang="ts">
+  import type { Component } from "svelte";
+  import type { IconProps } from "./icons";
+
   interface MenuItem {
     label: string;
-    icon?: string;
+    icon?: Component<IconProps>;
     action: () => void;
     danger?: boolean;
     disabled?: boolean;
@@ -9,6 +12,11 @@
 
   let { items }: { items: MenuItem[] } = $props();
   let open = $state(false);
+  let hoveredIndex = $state(-1);
+
+  $effect(() => {
+    if (!open) hoveredIndex = -1;
+  });
 
   function toggle() {
     open = !open;
@@ -39,16 +47,18 @@
 
   {#if open}
     <div class="menu">
-      {#each items as item}
+      {#each items as item, i}
         <button
           class="menu-item"
           class:menu-item-danger={item.danger}
           class:menu-item-disabled={item.disabled}
           disabled={item.disabled}
           onclick={() => handleItemClick(item)}
+          onmouseenter={() => !item.disabled && (hoveredIndex = i)}
+          onmouseleave={() => (hoveredIndex = -1)}
         >
           {#if item.icon}
-            <span class="menu-item-icon">{item.icon}</span>
+            <span class="menu-item-icon"><item.icon size={12} animate={hoveredIndex === i} /></span>
           {/if}
           {item.label}
         </button>

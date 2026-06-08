@@ -2,6 +2,7 @@
   import CollectionCard from "./CollectionCard.svelte";
   import { invoke } from "@tauri-apps/api/core";
   import { tick } from "svelte";
+  import ChevronRight from "./icons/chevron-right.svelte";
 
   let {
     favoritesSet,
@@ -64,6 +65,7 @@
       {#if hasMore}
         <button type="button" class="toggle-btn" onclick={toggleExpand}>
           {expanded ? "收起" : "查看全部"}
+          <ChevronRight size={12} class="chevron {expanded ? 'chevron-up' : ''}" />
         </button>
       {/if}
     </div>
@@ -101,6 +103,9 @@
   }
 
   .toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 2px;
     font-size: 11px;
     color: var(--accent);
     background: transparent;
@@ -111,6 +116,15 @@
 
   .toggle-btn:hover {
     opacity: 0.8;
+  }
+
+  .toggle-btn :global(.chevron) {
+    transition: transform 0.2s ease;
+    transform: rotate(90deg);
+  }
+
+  .toggle-btn :global(.chevron-up) {
+    transform: rotate(-90deg);
   }
 
   .card-grid {

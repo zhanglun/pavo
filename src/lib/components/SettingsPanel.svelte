@@ -4,6 +4,7 @@
   import { open as openLink } from "@tauri-apps/plugin-shell";
   import { isEnabled } from "@tauri-apps/plugin-autostart";
   import { checkUpdate } from "../../lib/updater";
+  import X from "./icons/x.svelte";
 
   let {
     open = false,
@@ -105,7 +106,7 @@
     <div class="panel-inner">
       <div class="topbar">
         <span class="topbar-title">设置</span>
-        <button type="button" class="close-btn" onclick={onClose}>✕</button>
+        <button type="button" class="close-btn" onclick={onClose}><X size={16} /></button>
       </div>
 
       <div class="section">
