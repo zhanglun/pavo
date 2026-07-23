@@ -8,8 +8,13 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
+    "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": ["./node_modules", "./src/typing.d.ts"]
+    "jsx": "react-jsx",
+    "composite": true,
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/.cache/pavo.tsbuildinfo",
+    "types": ["vitest/globals"]
   },
   "include": ["src"]
 

@@ -59,7 +59,10 @@
       {
         "fullscreen": false,
         "height": 800,
-        "resizable": false,
+        "resizable": true,
+        "minHeight": 720,
+        "minWidth": 340,
+        "maxWidth": 340,
         "title": "Pavo",
         "width": 340,
         "visible": false,
