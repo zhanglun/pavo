@@ -16,6 +16,18 @@ static TRAY_RECT_CACHE: LazyLock<
   Mutex<Option<(tauri::PhysicalPosition<f64>, tauri::PhysicalSize<f64>)>>,
 > = LazyLock::new(|| Mutex::new(None));
 
+fn tray_icon_resource_name() -> &'static str {
+  if cfg!(target_os = "windows") {
+    "tray-windows.png"
+  } else {
+    "tray.png"
+  }
+}
+
+fn tray_icon_is_template() -> bool {
+  cfg!(target_os = "macos")
+}
+
 /// Cache tray rect from any tray icon event that carries position info.
 fn cache_tray_rect(event: &TrayIconEvent) {
   let rect = match event {
@@ -122,13 +134,14 @@ pub fn create_tray(
     .items(&[&quit])
     .build()?;
 
-  let icon_path = app
-    .path()
-    .resolve("icons/tray.png", tauri::path::BaseDirectory::Resource)?;
+  let icon_path = app.path().resolve(
+    format!("icons/{}", tray_icon_resource_name()),
+    tauri::path::BaseDirectory::Resource,
+  )?;
 
   let _ = TrayIconBuilder::with_id("main-tray")
     .menu(&menu)
-    .icon_as_template(true)
+    .icon_as_template(tray_icon_is_template())
     .icon(Image::from_path(icon_path)?)
     .on_tray_icon_event(|tray, event| {
       let app = tray.app_handle();
@@ -218,4 +231,23 @@ pub fn create_tray(
     })
     .build(app);
   Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+  use super::{tray_icon_is_template, tray_icon_resource_name};
+
+  #[test]
+  fn tray_icon_resource_matches_current_platform() {
+    #[cfg(target_os = "windows")]
+    assert_eq!(tray_icon_resource_name(), "tray-windows.png");
+
+    #[cfg(not(target_os = "windows"))]
+    assert_eq!(tray_icon_resource_name(), "tray.png");
+  }
+
+  #[test]
+  fn only_macos_uses_template_tray_icons() {
+    assert_eq!(tray_icon_is_template(), cfg!(target_os = "macos"));
+  }
 }
