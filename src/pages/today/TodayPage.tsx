@@ -74,7 +74,6 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
   return <section className={styles.page} aria-labelledby="today-title">
     <header className={styles.dateSeal}>
       <span>{date.monthDay}</span><span>{date.year} · {date.weekday}</span>
-      {isFallback && <em>近期内容</em>}
     </header>
     <div className={styles.hero}><WallpaperImage wallpaper={selected} /></div>
     <div className={styles.metaBlock}>
@@ -99,8 +98,8 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
       </div>
     </div>
     <div className={styles.regions}>
-      <div className={styles.regionsHeading}><p>{isFallback ? "近期内容" : "今日各地"}</p><span>{items.length} {isFallback ? "幅" : "地区"}</span></div>
-      <RegionRail items={items} selectedId={selected.id} onSelect={(item) => { closeDescription(); setSelectedId(item.id); }} />
+      <div className={styles.regionsHeading}><p>{isFallback ? "各地" : "今日各地"}</p><span>{items.length}</span></div>
+      <RegionRail items={items} selectedId={selected.id} showDate={isFallback} onSelect={(item) => { closeDescription(); setSelectedId(item.id); }} />
     </div>
   </section>;
 }

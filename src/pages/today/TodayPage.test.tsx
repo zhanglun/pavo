@@ -67,7 +67,7 @@ test("renders a numbered folio index with count and current-region semantics", a
   const china = await screen.findByRole("button", { name: "中国大陆" });
   const unitedStates = screen.getByRole("button", { name: "美国" });
 
-  expect(screen.getByText("2 地区")).toBeVisible();
+  expect(screen.getByText("2")).toBeVisible();
   expect(china).toHaveAttribute("aria-current", "true");
   expect(unitedStates).not.toHaveAttribute("aria-current");
   expect(within(china).getByText("01")).toBeVisible();
@@ -79,9 +79,11 @@ test("falls back to recent wallpapers when todays collection is insufficient", a
   vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([photo("recent.jpg", "近期")]);
   render(<ToastProvider><TodayPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
   await waitFor(() => expect(tauri.wallpapers.getRecent).toHaveBeenCalledWith(7));
-  expect(await screen.findAllByText("近期内容")).toHaveLength(2);
-  expect(screen.getByText("1 幅")).toBeVisible();
+  expect(await screen.findByText("各地")).toBeVisible();
+  expect(screen.getByText("1")).toBeVisible();
+  expect(screen.queryByText("近期内容")).not.toBeInTheDocument();
   expect(screen.queryByText("今日各地")).not.toBeInTheDocument();
+  expect(within(screen.getByRole("button", { name: "中国大陆" })).getByText("07.23")).toBeVisible();
 });
 
 test("fallback renders each region once with distinct recent images", async () => {
