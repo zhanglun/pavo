@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, test, vi } from "vitest";
 import { ToastProvider } from "../../shared/ui/toast/ToastProvider";
@@ -33,12 +33,55 @@ test("renders the daily folio and sets the selected wallpaper", async () => {
   expect(screen.getByRole("button", { name: "美国" })).toBeVisible();
 });
 
+test("closes the introduction card when another region is selected", async () => {
+  vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([
+    photo("cn.jpg", "山谷"), photo("us.jpg", "海岸", "en-US"),
+  ]);
+  const user = userEvent.setup();
+  render(<ToastProvider><TodayPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
+  await screen.findByRole("heading", { name: "山谷" });
+
+  await user.click(screen.getByRole("button", { name: "查看完整介绍" }));
+  const dialog = screen.getByRole("dialog", { name: "山谷完整介绍" });
+  expect(dialog).toBeVisible();
+  expect(dialog).toHaveFocus();
+
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole("button", { name: "查看完整介绍" })).toHaveFocus());
+
+  await user.click(screen.getByRole("button", { name: "查看完整介绍" }));
+
+  await user.click(screen.getByRole("button", { name: "美国" }));
+
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "查看完整介绍" })).toHaveAttribute("aria-expanded", "false");
+});
+
+test("renders a numbered folio index with count and current-region semantics", async () => {
+  vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([
+    photo("cn.jpg", "山谷"), photo("us.jpg", "海岸", "en-US"),
+  ]);
+  render(<ToastProvider><TodayPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
+
+  const china = await screen.findByRole("button", { name: "中国大陆" });
+  const unitedStates = screen.getByRole("button", { name: "美国" });
+
+  expect(screen.getByText("2 地区")).toBeVisible();
+  expect(china).toHaveAttribute("aria-current", "true");
+  expect(unitedStates).not.toHaveAttribute("aria-current");
+  expect(within(china).getByText("01")).toBeVisible();
+  expect(within(unitedStates).getByText("02")).toBeVisible();
+});
+
 test("falls back to recent wallpapers when todays collection is insufficient", async () => {
   vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([photo("only.jpg", "唯一")]);
   vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([photo("recent.jpg", "近期")]);
   render(<ToastProvider><TodayPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
   await waitFor(() => expect(tauri.wallpapers.getRecent).toHaveBeenCalledWith(7));
-  expect(await screen.findByText("近期内容")).toBeVisible();
+  expect(await screen.findAllByText("近期内容")).toHaveLength(2);
+  expect(screen.getByText("1 幅")).toBeVisible();
+  expect(screen.queryByText("今日各地")).not.toBeInTheDocument();
 });
 
 test("fallback renders each region once with distinct recent images", async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { selectRegionalFallbackWallpapers, selectTodayWallpapers } from "../../entities/wallpaper/model/normalize";
 import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
@@ -25,8 +25,19 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
   const [error, setError] = useState(false);
   const [isFallback, setIsFallback] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const descriptionTriggerRef = useRef<HTMLButtonElement>(null);
+  const descriptionCardRef = useRef<HTMLElement>(null);
   const setWallpaper = useSetWallpaper();
   const download = useDownloadWallpaper();
+
+  useEffect(() => {
+    if (descriptionExpanded) descriptionCardRef.current?.focus();
+  }, [descriptionExpanded]);
+
+  const closeDescription = (restoreFocus = false) => {
+    setDescriptionExpanded(false);
+    if (restoreFocus) queueMicrotask(() => descriptionTriggerRef.current?.focus());
+  };
 
   useEffect(() => {
     let active = true;
@@ -66,13 +77,18 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
       {isFallback && <em>近期内容</em>}
     </header>
     <div className={styles.hero}><WallpaperImage wallpaper={selected} /></div>
-    <div className={styles.metaBlock} key={selected.id}>
+    <div className={styles.metaBlock}>
       <div className={styles.story}>
         <p className={styles.region}>{selected.region}</p>
         <h1 id="today-title">{selected.title}</h1>
-        <p className={`${styles.description} ${descriptionExpanded ? styles.descriptionExpanded : ""}`}>{selected.copyright}</p>
-        {selected.copyright && <button className={styles.descToggle} aria-expanded={descriptionExpanded} onClick={() => setDescriptionExpanded((value) => !value)}>{descriptionExpanded ? "收起" : "查看完整介绍"}</button>}
+        <p className={styles.description}>{selected.copyright}</p>
+        <button ref={descriptionTriggerRef} className={`${styles.descToggle} ${selected.copyright ? "" : styles.descTogglePlaceholder}`} aria-expanded={descriptionExpanded} aria-controls="today-description-card" tabIndex={selected.copyright ? 0 : -1} onClick={() => descriptionExpanded ? closeDescription(true) : setDescriptionExpanded(true)}>{descriptionExpanded ? "收起介绍" : "查看完整介绍"}</button>
       </div>
+      {descriptionExpanded && selected.copyright && <aside ref={descriptionCardRef} id="today-description-card" className={styles.descriptionCard} role="dialog" aria-label={`${selected.title}完整介绍`} tabIndex={-1} onKeyDown={(event) => { if (event.key === "Escape") closeDescription(true); }}>
+        <div><span>{selected.region}</span><button aria-label="关闭介绍" onClick={() => closeDescription(true)}>×</button></div>
+        <strong>{selected.title}</strong>
+        <p>{selected.copyright}</p>
+      </aside>}
       <div className={styles.actions}>
         <button className={styles.primary} disabled={setWallpaper.pending} onClick={() => void setWallpaper.setWallpaper(selected.imageUrl)}>设为桌面</button>
         <Tooltip label={favorite ? "取消收藏" : "收藏"}><button className={styles.iconButton} aria-label={favorite ? `取消收藏：${selected.title}` : `收藏：${selected.title}`} onClick={() => void onToggleFavorite(selected)}>{favorite ? "♥" : "♡"}</button></Tooltip>
@@ -82,6 +98,9 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
         ]} />
       </div>
     </div>
-    <div className={styles.regions}><p>今日各地</p><RegionRail items={items} selectedId={selected.id} onSelect={(item) => setSelectedId(item.id)} /></div>
+    <div className={styles.regions}>
+      <div className={styles.regionsHeading}><p>{isFallback ? "近期内容" : "今日各地"}</p><span>{items.length} {isFallback ? "幅" : "地区"}</span></div>
+      <RegionRail items={items} selectedId={selected.id} onSelect={(item) => { closeDescription(); setSelectedId(item.id); }} />
+    </div>
   </section>;
 }

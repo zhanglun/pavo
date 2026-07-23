@@ -7,36 +7,48 @@
 .hero { position:relative; height:192px; overflow:hidden; background:var(--line); }
 .hero::after { position:absolute;inset:0;background:linear-gradient(145deg,var(--selection),transparent 42%);content:"";pointer-events:none;opacity:.35; }
 .hero img, .hero [role="img"] { width:100%; height:100%; object-fit:cover; display:grid; place-items:center; }
-/* 切换地区稳定容器：固定最小高度，吸收标题/版权长度变化，消除主体抖动。
- * key={selected.id} 触发淡入，仅 opacity 过渡，不触发布局。 */
-.metaBlock { min-height:168px; animation:metaIn var(--dur-short) var(--ease-out); }
-@keyframes metaIn { from { opacity:0; } to { opacity:1; } }
-.story { padding:15px 0 12px; }
+/* 固定作品说明版面：地区、标题、摘要、入口和操作区各占稳定行。 */
+.metaBlock { position:relative; height:219px; }
+.story { display:grid;grid-template-rows:15px 56px 31px 15px;row-gap:6px;padding:15px 0 10px; }
 .region { margin:0 0 6px; color:var(--muted); font-size:9px; letter-spacing:.1em; text-transform:uppercase; }
-.story h1 { min-width:0;margin:0;font-family:var(--font-display);font-size:28px;font-weight:500;line-height:1;letter-spacing:-.055em;overflow-wrap:anywhere; }
-.description { display:-webkit-box; margin:9px 0 0; overflow:hidden; color:var(--muted); font-size:var(--text-xs); line-height:1.55; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
-.descriptionExpanded { -webkit-line-clamp:unset; overflow:visible; }
-.descToggle { display:inline-block; margin:6px 0 0; padding:0; border:0; background:transparent; color:var(--accent); font-size:9px; line-height:1; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.story h1 { display:-webkit-box;min-width:0;margin:0;overflow:hidden;font-family:var(--font-display);font-size:28px;font-weight:500;line-height:1;letter-spacing:-.055em;overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:2; }
+.description { display:-webkit-box; margin:0; overflow:hidden; color:var(--muted); font-size:var(--text-xs); line-height:1.55; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.descToggle { justify-self:start;align-self:start;display:inline-block;margin:0;padding:0;border:0;background:transparent;color:var(--accent);font-size:9px;line-height:1;text-decoration:underline;text-underline-offset:3px;cursor:pointer; }
+.descTogglePlaceholder { visibility:hidden;pointer-events:none; }
 .descToggle:hover { filter:brightness(1.1); }
 .descToggle:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
-.actions { display:grid; grid-template-columns:minmax(0,1fr) 36px 36px; gap:6px; padding:0 0 18px; }
+.descriptionCard { position:absolute;z-index:4;inset:12px 0 64px;padding:12px;border:1px solid var(--line);background:var(--paper-raised);box-shadow:var(--shadow-menu);overflow:auto; }
+.descriptionCard > div { display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:9px;letter-spacing:.08em; }
+.descriptionCard > div button { width:24px;height:24px;border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1; }
+.descriptionCard strong { display:block;margin-top:5px;font-family:var(--font-display);font-size:18px;font-weight:500;line-height:1.15; }
+.descriptionCard p { margin:8px 0 0;color:var(--muted);font-size:var(--text-xs);line-height:1.6; }
+.descriptionCard:focus-visible { outline:2px solid var(--focus);outline-offset:2px; }
+.descriptionCard button:focus-visible { outline:2px solid var(--focus);outline-offset:1px; }
+.actions { position:absolute;right:0;bottom:0;left:0;display:grid;grid-template-columns:minmax(0,1fr) 36px 36px;gap:6px;padding:0 0 18px; }
 .actions button { min-height:36px; border:0; background:transparent; color:inherit; }
 .primary { min-height:46px!important;background:var(--accent)!important;color:var(--accent-ink)!important;border-radius:var(--radius-control);font-weight:650;transition:filter var(--dur-short) var(--ease-out),transform var(--dur-short) var(--ease-out); }
 .primary:hover { filter:brightness(1.06); }
 .primary:active { transform:translateY(1px); }
 .iconButton { width:36px;align-self:center;font-size:18px; }
 /* Hallmark · component: region rail · genre: editorial · theme: locked token
- * redesign: 选中态回归文字变色，移除图片描边与饱和度压制；克制。
+ * redesign: 双列作品索引；图片、地区与序号形成册页目录，不使用卡片容器。
  * states: default · hover · focus-visible · active · aria-pressed · disabled(无) */
 .regions { padding-top:15px; border-top:1px solid var(--line); }
-.regions > p { margin:0 0 9px; color:var(--muted); font-size:9px; letter-spacing:.08em; }
-.regions > div { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; overflow:visible; padding:0; }
-.regions button { min-width:0;overflow:hidden;border:0;padding:0;background:var(--line);color:var(--muted);font-size:8px;transition:background var(--dur-short) var(--ease-out); }
-.regions button:hover { background:color-mix(in srgb,var(--muted) 22%,var(--line)); }
-.regions button:focus-visible { outline:2px solid var(--focus);outline-offset:1px; }
+.regionsHeading { display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;color:var(--muted);font-size:9px;letter-spacing:.08em; }
+.regionsHeading p { margin:0; }
+.regionsHeading span { font-family:var(--font-utility);font-variant-numeric:tabular-nums;letter-spacing:.02em; }
+.regions > div:last-child { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;overflow:visible;padding:0; }
+.regions button { display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:8px;min-width:0;border:0;padding:0;background:transparent;color:var(--muted);text-align:left; }
+.regions button:hover [data-region-copy] > span { color:var(--ink); }
+.regions button:focus-visible { outline:2px solid var(--focus);outline-offset:2px; }
 .regions button:active { transform:translateY(1px); }
-.regions button img { display:block;width:100%;aspect-ratio:1/.88;object-fit:cover;transition:filter var(--dur-short) var(--ease-out); }
-.regions button span { display:block;overflow:hidden;padding:4px 2px;background:var(--paper);white-space:nowrap;text-overflow:ellipsis;transition:color var(--dur-short) var(--ease-out); }
-.regions button[aria-pressed="true"] { background:var(--paper-raised); }
-.regions button[aria-pressed="true"] span { color:var(--accent);font-weight:700; }
+.regions [data-region-thumb] { position:relative;display:block;width:52px;height:38px; }
+.regions [data-region-thumb]::after { position:absolute;right:0;bottom:-3px;left:0;height:1px;background:var(--accent);content:"";opacity:0; }
+.regions button img { display:block;width:100%;height:100%;object-fit:cover; }
+.regions [data-region-copy] { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:5px;min-width:0; }
+.regions [data-region-copy] > span { position:relative;display:block;overflow:hidden;color:var(--muted);font-size:var(--text-xs);white-space:nowrap;text-overflow:ellipsis;transition:color var(--dur-short) var(--ease-out); }
+.regions [data-region-copy] small { color:var(--line);font-family:var(--font-utility);font-size:8px;font-variant-numeric:tabular-nums; }
+.regions button[aria-current="true"] [data-region-thumb]::after { opacity:1; }
+.regions button[aria-current="true"] [data-region-copy] > span { padding-left:9px;color:var(--accent);font-weight:650; }
+.regions button[aria-current="true"] [data-region-copy] > span::before { position:absolute;top:50%;left:0;width:4px;height:4px;background:var(--accent);content:"";transform:translateY(-50%); }
 .state { padding:48px 20px;color:var(--muted);font-size:var(--text-sm);text-align:center; }
