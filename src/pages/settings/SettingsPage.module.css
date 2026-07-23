@@ -1,7 +1,7 @@
 /* Hallmark · genre: editorial · macrostructure: Daily Folio Preferences · design-system: locked prototype · designed-as-app */
 .page { padding:15px 18px 36px; }
 .page > header { display:flex;align-items:flex-end;gap:12px;margin-bottom:4px;padding-bottom:17px;border-bottom:1px solid var(--line); }
-.page > header button { display:grid;width:28px;height:28px;padding:0;place-items:center;border:0;background:transparent;color:var(--accent);font-size:18px; }
+.page > header [data-tooltip-root] > button { display:grid;width:28px;height:28px;padding:0;place-items:center;border:0;background:transparent;color:var(--accent);font-size:18px; }
 .page > header p { margin:0 0 4px;color:var(--muted);font-family:var(--font-utility);font-size:8px;letter-spacing:.16em; }
 .page h1 { margin:0;font-family:var(--font-display);font-size:27px;font-weight:500;line-height:1;letter-spacing:-.045em; }
 .group { padding:14px 0 5px;border-bottom:1px solid var(--line); }

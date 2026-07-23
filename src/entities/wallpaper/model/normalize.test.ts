@@ -37,4 +37,45 @@ describe("wallpaper selectors", () => {
     const ancient = { ...olderChina, filename: "ancient.jpg", titles: ["过期内容"], startdates: ["20260701"] };
     expect(selectRecentWallpapers([ancient, olderChina, mixed], "20260723", 7).map((item) => item.title)).toEqual(["中国", "日本", "US", "旧中国"]);
   });
+
+  test("today keeps only one wallpaper for each region", () => {
+    const duplicateChina = {
+      ...mixed,
+      filename: "OHR.Duplicate_ZH-CN.jpg",
+      regions: ["zh-CN"],
+      urls: ["https://example.test/cn-duplicate.jpg"],
+      titles: ["重复中国"],
+      startdates: ["20260723"],
+      copyrights: [""],
+      copyrightlinks: [""],
+    };
+
+    expect(selectTodayWallpapers([mixed, duplicateChina], "20260723").map((item) => item.regionCode)).toEqual(["zh-CN", "ja-JP"]);
+  });
+
+  test("recent removes exact duplicate records without collapsing different dates or regions", () => {
+    const exactDuplicate = {
+      ...mixed,
+      filename: "OHR.Duplicate_ZH-CN.jpg",
+      regions: ["zh-CN"],
+      urls: ["https://example.test/cn.jpg"],
+      titles: ["中国"],
+      startdates: ["20260723"],
+      copyrights: ["CN copy"],
+      copyrightlinks: ["cn-source"],
+    };
+    const reusedLater = {
+      ...exactDuplicate,
+      filename: "OHR.Reused_ZH-CN.jpg",
+      startdates: ["20260722"],
+    };
+    const reusedElsewhere = {
+      ...exactDuplicate,
+      filename: "OHR.Reused_EN-US.jpg",
+      regions: ["en-US"],
+    };
+
+    const selected = selectRecentWallpapers([mixed, exactDuplicate, reusedLater, reusedElsewhere], "20260723", 7);
+    expect(selected.filter((item) => item.imageUrl === "https://example.test/cn.jpg")).toHaveLength(3);
+  });
 });

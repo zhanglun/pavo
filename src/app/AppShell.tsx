@@ -8,6 +8,7 @@ import { TodayPage } from "../pages/today/TodayPage";
 import { hideWindow } from "../shared/platform/window";
 import { checkForUpdates } from "../shared/platform/updater";
 import { tauri } from "../shared/tauri/client";
+import { Tooltip } from "../shared/ui/tooltip/Tooltip";
 import { useTauriEvents } from "./useTauriEvents";
 import styles from "./AppShell.module.css";
 
@@ -38,9 +39,9 @@ export function AppShell() {
     <main className={styles.shell} data-settings={view === "settings"} aria-label="Pavo" role="application">
       <header className={styles.topbar}>
         <span className={styles.brand} data-tauri-drag-region>Pavo</span>
-        <button className={styles.windowAction} aria-label="刷新" onClick={() => void forceRefresh()}>↻</button>
-        <button className={styles.windowAction} aria-label="设置" onClick={openSettings}>⚙</button>
-        <button className={styles.windowAction} aria-label="隐藏到托盘" onClick={() => { void hideWindow(); }}>−</button>
+        <Tooltip label="刷新" side="bottom"><button className={styles.windowAction} aria-label="刷新" onClick={() => void forceRefresh()}>↻</button></Tooltip>
+        <Tooltip label="设置" side="bottom"><button className={styles.windowAction} aria-label="设置" onClick={openSettings}>⚙</button></Tooltip>
+        <Tooltip label="隐藏到托盘" side="bottom"><button className={styles.windowAction} aria-label="隐藏到托盘" onClick={() => { void hideWindow(); }}>−</button></Tooltip>
       </header>
       {view !== "settings" && (
         <nav className={styles.tabs} aria-label="主要页面" role="tablist">

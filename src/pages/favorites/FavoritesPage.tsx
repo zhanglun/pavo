@@ -7,6 +7,7 @@ import { useSetWallpaper } from "../../features/set-wallpaper/model/useSetWallpa
 import { openExternal } from "../../shared/platform/shell";
 import { tauri } from "../../shared/tauri/client";
 import { Menu } from "../../shared/ui/menu/Menu";
+import { Tooltip } from "../../shared/ui/tooltip/Tooltip";
 import { formatFolioDate } from "../../shared/utils/date";
 import styles from "./FavoritesPage.module.css";
 
@@ -32,7 +33,7 @@ export function FavoritesPage({ onToggleFavorite, refreshSignal }: { onToggleFav
       return <article className={styles.card} key={item.id}>
         <div className={styles.image}><WallpaperImage wallpaper={item} /></div>
         <div className={styles.meta}><time>{date.year} · {date.monthDay}</time><h2>{item.title}</h2></div>
-        <div className={styles.actions}><button aria-label={`取消收藏：${item.title}`} onClick={() => { setItems((current) => current.filter((candidate) => candidate.id !== item.id)); void onToggleFavorite(item); }}>♥</button><Menu label={`更多操作：${item.title}`} items={[
+        <div className={styles.actions}><Tooltip label="取消收藏"><button aria-label={`取消收藏：${item.title}`} onClick={() => { setItems((current) => current.filter((candidate) => candidate.id !== item.id)); void onToggleFavorite(item); }}>♥</button></Tooltip><Menu label={`更多操作：${item.title}`} items={[
           { id: "set", label: "设为桌面", disabled: setWallpaper.pending, onSelect: () => void setWallpaper.setWallpaper(item.imageUrl) },
           { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(item.imageUrl) },
           { id: "source", label: "介绍与来源 ↗", disabled: !item.sourceUrl, onSelect: () => void openExternal(item.sourceUrl) },

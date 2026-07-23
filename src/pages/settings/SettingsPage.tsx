@@ -7,6 +7,7 @@ import { openExternal } from "../../shared/platform/shell";
 import { checkForUpdates } from "../../shared/platform/updater";
 import { tauri } from "../../shared/tauri/client";
 import { useToast } from "../../shared/ui/toast/ToastProvider";
+import { Tooltip } from "../../shared/ui/tooltip/Tooltip";
 import styles from "./SettingsPage.module.css";
 
 const REPOSITORY = "https://github.com/zhanglun/pavo";
@@ -47,7 +48,7 @@ export function SettingsPage({ onBack, onHistoryRangeChanged }: { onBack: () => 
   if (error) return <section className={styles.state}>设置暂时无法读取，请稍后重试。</section>;
   if (!config) return <section className={styles.state}>正在读取设置…</section>;
   return <section className={styles.page} aria-labelledby="settings-title">
-    <header><button aria-label="返回今日" onClick={onBack}>←</button><div><p>PREFERENCES</p><h1 id="settings-title">设置</h1></div></header>
+    <header><Tooltip label="返回今日"><button aria-label="返回今日" onClick={onBack}>←</button></Tooltip><div><p>PREFERENCES</p><h1 id="settings-title">设置</h1></div></header>
     <section className={styles.group}><h2>外观</h2><fieldset className={styles.segment}><legend>主题</legend>{([['system','跟随系统'],['light','浅色'],['dark','深色']] as const).map(([value,label]) => <label key={value}><input type="radio" name="theme" checked={config.theme_preference === value} onChange={() => void saveTheme(value)} />{label}</label>)}</fieldset></section>
     <section className={styles.group}><h2>启动与更新</h2><ToggleRow label="开机自动启动" value={config.auto_start} onChange={(value) => void persist(tauri.settings.setAutoStart(value))} /><ToggleRow label="每日自动更新" value={config.auto_daily_update} onChange={(value) => void persist(tauri.settings.setAutoDailyUpdate(value))} /><button className={styles.linkRow} onClick={() => void runAction(checkForUpdates(), "已完成更新检查")}><span>检查更新</span><em>当前 {packageJson.version}</em></button></section>
     <section className={styles.group}><h2>壁纸轮播</h2><ToggleRow label="自动轮播壁纸" value={config.auto_rotate} onChange={(value) => void persist(tauri.settings.setAutoRotate(value))} />{config.auto_rotate && <><label className={styles.selectRow}>切换间隔<select aria-label="切换间隔" value={config.rotate_interval_minutes} onChange={(event) => void persist(tauri.settings.setRotateInterval(Number(event.target.value)))}>{ROTATE_INTERVALS.map((value) => <option key={value} value={value}>{value} 分钟</option>)}</select></label><fieldset className={styles.segment}><legend>轮播顺序</legend>{([['Sequential','顺序'],['Random','随机']] as const).map(([value,label]) => <label key={value}><input type="radio" name="rotate-mode" checked={config.rotate_mode === value} onChange={() => void persist(tauri.settings.setRotateMode(value))} />{label}</label>)}</fieldset></>}</section>

@@ -8,6 +8,7 @@ import { useSetWallpaper } from "../../features/set-wallpaper/model/useSetWallpa
 import { openExternal } from "../../shared/platform/shell";
 import { tauri } from "../../shared/tauri/client";
 import { Menu } from "../../shared/ui/menu/Menu";
+import { Tooltip } from "../../shared/ui/tooltip/Tooltip";
 import { formatFolioDate, localDateKey } from "../../shared/utils/date";
 import styles from "./TodayPage.module.css";
 
@@ -71,7 +72,7 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
     </div>
     <div className={styles.actions}>
       <button className={styles.primary} disabled={setWallpaper.pending} onClick={() => void setWallpaper.setWallpaper(selected.imageUrl)}>设为桌面</button>
-      <button className={styles.iconButton} aria-label={favorite ? `取消收藏：${selected.title}` : `收藏：${selected.title}`} onClick={() => void onToggleFavorite(selected)}>{favorite ? "♥" : "♡"}</button>
+      <Tooltip label={favorite ? "取消收藏" : "收藏"}><button className={styles.iconButton} aria-label={favorite ? `取消收藏：${selected.title}` : `收藏：${selected.title}`} onClick={() => void onToggleFavorite(selected)}>{favorite ? "♥" : "♡"}</button></Tooltip>
       <Menu label={`更多操作：${selected.title}`} items={[
         { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(selected.imageUrl) },
         { id: "source", label: "介绍与来源 ↗", disabled: !selected.sourceUrl, onSelect: () => void openExternal(selected.sourceUrl) },

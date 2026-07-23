@@ -7,6 +7,7 @@ import { useSetWallpaper } from "../../features/set-wallpaper/model/useSetWallpa
 import { openExternal } from "../../shared/platform/shell";
 import { tauri } from "../../shared/tauri/client";
 import { Menu } from "../../shared/ui/menu/Menu";
+import { Tooltip } from "../../shared/ui/tooltip/Tooltip";
 import { formatFolioDate, localDateKey } from "../../shared/utils/date";
 import styles from "./HistoryPage.module.css";
 
@@ -41,7 +42,7 @@ export function HistoryPage({ favoriteIds, onToggleFavorite, refreshSignal }: Pr
         <div className={styles.image}><WallpaperImage wallpaper={item} /></div>
         <div className={styles.copy}><time>{date.year} · {date.monthDay}</time><h2>{item.title}</h2><p>{item.copyright}</p></div>
         <div className={styles.actions}>
-          <button aria-label={favorite ? `取消收藏：${item.title}` : `收藏：${item.title}`} onClick={() => void onToggleFavorite(item)}>{favorite ? "♥" : "♡"}</button>
+          <Tooltip label={favorite ? "取消收藏" : "收藏"}><button aria-label={favorite ? `取消收藏：${item.title}` : `收藏：${item.title}`} onClick={() => void onToggleFavorite(item)}>{favorite ? "♥" : "♡"}</button></Tooltip>
           <Menu label={`更多操作：${item.title}`} items={[
             { id: "set", label: "设为桌面", disabled: setWallpaper.pending, onSelect: () => void setWallpaper.setWallpaper(item.imageUrl) },
             { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(item.imageUrl) },

@@ -35,8 +35,19 @@ function sortWallpapers(items: Wallpaper[]) {
   return [...items].sort((left, right) => right.date.localeCompare(left.date) || regionRank(left.regionCode) - regionRank(right.regionCode));
 }
 
+function uniqueBy(items: Wallpaper[], keyOf: (item: Wallpaper) => string) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = keyOf(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function selectTodayWallpapers(collection: SchedulerPhoto[], today: string) {
-  return sortWallpapers(collection.flatMap(normalizeCollection).filter((item) => item.date === today));
+  const matches = sortWallpapers(collection.flatMap(normalizeCollection).filter((item) => item.date === today));
+  return uniqueBy(matches, (item) => item.regionCode);
 }
 
 export function selectRecentWallpapers(collection: SchedulerPhoto[], today: string, days: number) {
@@ -46,5 +57,6 @@ export function selectRecentWallpapers(collection: SchedulerPhoto[], today: stri
     const difference = (reference - value) / 86_400_000;
     return Number.isFinite(difference) && difference >= 0 && difference <= days;
   };
-  return sortWallpapers(collection.flatMap(normalizeCollection).filter((item) => withinRange(item.date)));
+  const matches = sortWallpapers(collection.flatMap(normalizeCollection).filter((item) => withinRange(item.date)));
+  return uniqueBy(matches, (item) => `${item.date}\0${item.regionCode}\0${item.imageUrl}`);
 }

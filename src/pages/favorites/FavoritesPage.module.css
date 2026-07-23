@@ -11,8 +11,8 @@
 .meta time { display:block;color:var(--muted);font-family:var(--font-utility);font-size:8px;letter-spacing:.04em; }
 .meta h2 { overflow:hidden;margin:4px 48px 0 0;font-family:var(--font-display);font-size:14px;font-weight:500;line-height:1.2;white-space:nowrap;text-overflow:ellipsis; }
 .actions { position:absolute;right:0;bottom:-5px;display:flex;align-items:center;gap:1px; }
-.actions > button { display:grid;width:28px;height:28px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--accent);font-size:15px; }
-.actions > button:hover { background:var(--card); }
+.actions > [data-tooltip-root] > button { display:grid;width:28px;height:28px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--accent);font-size:15px; }
+.actions > [data-tooltip-root] > button:hover { background:var(--card); }
 .state,.empty { padding:52px 20px;color:var(--muted);text-align:center; }
 .empty span { display:block;font-family:var(--font-display);font-size:34px;font-weight:300; }
 .empty p { margin:12px 0 5px;color:var(--ink);font-family:var(--font-display);font-size:16px; }

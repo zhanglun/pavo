@@ -12,6 +12,6 @@
 .copy h2 { overflow:hidden;margin:5px 0 5px;font-family:var(--font-display);font-size:16px;font-weight:500;line-height:1;white-space:nowrap;text-overflow:ellipsis; }
 .copy p { overflow:hidden;margin:0;color:var(--muted);font-size:9px;white-space:nowrap;text-overflow:ellipsis; }
 .actions { display:flex;gap:1px;align-items:center; }
-.actions > button { display:grid;width:28px;height:28px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:15px; }
-.actions > button:hover { background:var(--card);color:var(--accent); }
+.actions > [data-tooltip-root] > button { display:grid;width:28px;height:28px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:15px; }
+.actions > [data-tooltip-root] > button:hover { background:var(--card);color:var(--accent); }
 .state { padding:48px 20px;color:var(--muted);font-size:var(--text-sm);text-align:center; }
