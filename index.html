@@ -4,18 +4,17 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="public/icon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script>
+			(function () {
+				var value = localStorage.getItem("pavo.theme-preference");
+				var preference = value === "light" || value === "dark" ? value : "system";
+				var dark = preference === "dark" || (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+				document.documentElement.dataset.theme = dark ? "dark" : "light";
+			})();
+		</script>
 	</head>
 	<body>
-		<div id="app">
-			<script>
-				// 主题跟随系统偏好，在渲染前执行避免闪烁
-				(function() {
-					var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-					var el = document.getElementById('app');
-					if (el) el.classList.add(dark ? 'theme-dark' : 'theme-light');
-				})();
-			</script>
-    </div>
+		<div id="app"></div>
     <script type="module" src="./src/main.tsx"></script>
 	</body>
 </html>

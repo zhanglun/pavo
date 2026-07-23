@@ -17,4 +17,9 @@
 .segment label + label { border-left:1px solid var(--line); }
 .segment label:has(input:checked) { background:var(--card);color:var(--accent);font-weight:600; }
 .segment input { position:absolute;opacity:0; }
+.appIdentity { display:flex;align-items:center;gap:10px;padding:8px 0 6px; }
+.appIdentity img { width:32px;height:32px; }
+.appIdentity div { display:grid;gap:2px; }
+.appIdentity strong { font-family:var(--font-display);font-size:15px;font-weight:600; }
+.appIdentity span { color:var(--muted);font-size:9px; }
 .state { padding:52px 20px;color:var(--muted);font-size:var(--text-sm);text-align:center; }

@@ -60,3 +60,11 @@ test("offers only the approved archive and retention values", async () => {
   expect(await screen.findByLabelText("历史范围")).toHaveTextContent("7 天14 天");
   expect(screen.getByLabelText("缓存保留")).toHaveTextContent("3 天7 天14 天30 天");
 });
+
+test("keeps the application identity and cache location discoverable", async () => {
+  renderPage();
+
+  expect(await screen.findByRole("img", { name: "Pavo" })).toBeVisible();
+  expect(screen.getByText("~/.pavo/")).toBeVisible();
+  expect(screen.getByText("Pavo", { selector: "strong" })).toBeVisible();
+});

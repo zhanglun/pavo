@@ -1,13 +1,16 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
-type Toast = { tone: "success" | "error"; message: string } | null;
+type Toast = { tone: "info" | "success" | "error"; message: string; persistent?: boolean } | null;
 const ToastContext = createContext<{ toast: Toast; show: (toast: NonNullable<Toast>) => void } | null>(null);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<Toast>(null);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
   const show = (value: NonNullable<Toast>) => {
+    window.clearTimeout(timer.current);
     setToast(value);
-    window.setTimeout(() => setToast(null), 2400);
+    timer.current = value.persistent ? undefined : window.setTimeout(() => setToast(null), 2400);
   };
   return <ToastContext.Provider value={{ toast, show }}>{children}</ToastContext.Provider>;
 }
