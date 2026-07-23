@@ -47,8 +47,15 @@ function uniqueBy(items: Wallpaper[], keyOf: (item: Wallpaper) => string) {
 }
 
 export function selectTodayWallpapers(collection: SchedulerPhoto[], today: string) {
-  const matches = sortWallpapers(collection.flatMap(normalizeCollection).filter((item) => item.date === today));
-  return uniqueBy(matches, (item) => item.regionCode);
+  const all = collection.flatMap(normalizeCollection);
+  const latestByRegion = new Map<string, Wallpaper>();
+  for (const item of all) {
+    const current = latestByRegion.get(item.regionCode);
+    if (!current || item.date > current.date) {
+      latestByRegion.set(item.regionCode, item);
+    }
+  }
+  return Array.from(latestByRegion.values()).sort((left, right) => regionRank(left.regionCode) - regionRank(right.regionCode));
 }
 
 export function selectRecentWallpapers(collection: SchedulerPhoto[], today: string, days: number) {

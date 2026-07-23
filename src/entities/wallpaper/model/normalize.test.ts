@@ -28,8 +28,10 @@ describe("wallpaper selectors", () => {
     copyrightlinks: ["us-source", "cn-source", "jp-source"],
   };
 
-  test("today includes only entries whose own date matches and follows region order", () => {
-    expect(selectTodayWallpapers([mixed], "20260723").map((item) => item.title)).toEqual(["中国", "日本"]);
+  test("today shows the latest available wallpaper for each region regardless of date mismatch", () => {
+    // 时区错配下，en-US 的最新图可能还是 20260722，但它是该地区当前最新可得的，
+    // 应当展示而非过滤掉。每地区取 date 最大的一张，按地区顺序排列。
+    expect(selectTodayWallpapers([mixed], "20260723").map((item) => item.title)).toEqual(["中国", "US", "日本"]);
   });
 
   test("recent entries are sorted by date descending then stable region order", () => {
@@ -50,7 +52,9 @@ describe("wallpaper selectors", () => {
       copyrightlinks: [""],
     };
 
-    expect(selectTodayWallpapers([mixed, duplicateChina], "20260723").map((item) => item.regionCode)).toEqual(["zh-CN", "ja-JP"]);
+    // 新逻辑：每地区取最新一张。en-US(22)、zh-CN(23)、ja-JP(23) 都保留，
+    // zh-CN 在 mixed 和 duplicate 中都有 23 号，保留后遍历到的 duplicate。
+    expect(selectTodayWallpapers([mixed, duplicateChina], "20260723").map((item) => item.regionCode)).toEqual(["zh-CN", "en-US", "ja-JP"]);
   });
 
   test("recent removes exact duplicate records without collapsing different dates or regions", () => {
