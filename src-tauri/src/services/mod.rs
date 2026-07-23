@@ -139,14 +139,29 @@ pub fn view_photo(handle: tauri::AppHandle, href: String) {
 #[cfg(test)]
 mod tests {
   use crate::services::bing;
-  use std::path::Path;
 
-  #[tokio::test]
+  // 原 it_works 测试依赖 Bing 实时接口（法语地区偶发返回不含 OHR 的数据），
+  // 测试结果由外部网络决定，不稳定。改为对纯函数 get_filename 的固定 fixture
+  // 测试，覆盖成功解析与错误分支，不再触网。
 
-  async fn it_works() {
+  #[test]
+  fn get_filename_extracts_ohr_name_from_image_url() {
+    let url = "https://www.bing.com/th?id=OHR.DolomitesDawn_FR-FR1234567890_UHD.jpg&rf=LaDigue_UHD.jpg&pid=hp";
+    let filename = bing::Images::get_filename(url).expect("OHR 图片直链应解析成功");
+    assert_eq!(filename, "OHR.DolomitesDawn_FR-FR1234567890_UHD.jpg");
+  }
+
+  #[test]
+  fn get_filename_rejects_url_without_ohr_segment() {
+    // 列表接口 URL（HPImageArchive.aspx）不含 OHR 片段，
+    // 正是旧 it_works 测试在法语地区失败的根因；此处断言它会返回错误。
     let url = "https://www.bing.com/HPImageArchive.aspx?&format=js&uhd=1&uhdwidth=3840&uhdheight=2160&idx=0&n=8&mkt=fr-FR";
-    let result = bing::Wallpaper::save_wallpaper(&url, None).await.unwrap();
-    assert!(Path::new(&result).exists());
+    let result = bing::Images::get_filename(url);
+    assert!(
+      result.is_err(),
+      "不含 OHR 片段的 URL 应返回错误，实际得到: {:?}",
+      result
+    );
   }
 
   #[test]
