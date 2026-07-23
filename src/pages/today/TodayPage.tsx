@@ -95,7 +95,7 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
         <Tooltip label={favorite ? "取消收藏" : "收藏"}><button className={styles.iconButton} aria-label={favorite ? `取消收藏：${selected.title}` : `收藏：${selected.title}`} onClick={() => void onToggleFavorite(selected)}>{favorite ? "♥" : "♡"}</button></Tooltip>
         <Menu label={`更多操作：${selected.title}`} items={[
           { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(selected.imageUrl) },
-          { id: "source", label: "查看来源 ↗", disabled: !selected.sourceUrl, onSelect: () => void openExternal(selected.sourceUrl) },
+          { id: "source", label: "在 Bing 中查看 ↗", disabled: !selected.sourceUrl, onSelect: () => void openExternal(selected.sourceUrl) },
         ]} />
       </div>
     </div>

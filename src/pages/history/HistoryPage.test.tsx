@@ -27,7 +27,7 @@ test("loads the configured archive range and keeps actions behind the quiet menu
   fireEvent.click(screen.getByRole("button", { name: "更多操作：山谷" }));
   expect(screen.getByRole("menuitem", { name: "设为桌面" })).toBeInTheDocument();
   expect(screen.getByRole("menuitem", { name: "下载原图" })).toBeInTheDocument();
-  expect(screen.getByRole("menuitem", { name: "查看来源 ↗" })).toBeInTheDocument();
+  expect(screen.getByRole("menuitem", { name: "在 Bing 中查看 ↗" })).toBeInTheDocument();
 });
 
 test("shows a restrained retry state when history cannot load", async () => {
