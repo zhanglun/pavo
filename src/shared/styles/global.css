@@ -4,3 +4,6 @@ body,
   margin: 0;
   min-height: 100%;
 }
+@import "./tokens.css";
+body { background: var(--paper); color: var(--ink); }
+button:focus-visible { outline: 2px solid var(--accent); }
