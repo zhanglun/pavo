@@ -46,7 +46,7 @@ export function HistoryPage({ favoriteIds, onToggleFavorite, refreshSignal }: Pr
           <Menu label={`更多操作：${item.title}`} items={[
             { id: "set", label: "设为桌面", disabled: setWallpaper.pending, onSelect: () => void setWallpaper.setWallpaper(item.imageUrl) },
             { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(item.imageUrl) },
-            { id: "source", label: "介绍与来源 ↗", disabled: !item.sourceUrl, onSelect: () => void openExternal(item.sourceUrl) },
+            { id: "source", label: "查看来源 ↗", disabled: !item.sourceUrl, onSelect: () => void openExternal(item.sourceUrl) },
           ]} />
         </div>
       </article>;

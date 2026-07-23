@@ -38,7 +38,7 @@ export function FavoritesPage({ onToggleFavorite, refreshSignal }: { onToggleFav
         <div className={styles.actions}><Tooltip label="取消收藏"><button aria-label={`取消收藏：${item.title}`} onClick={async () => { try { await onToggleFavorite(item); setItems((current) => current.filter((candidate) => candidate.id !== item.id)); } catch { show({ tone: "error", message: "取消收藏失败，请重试" }); } }}>♥</button></Tooltip><Menu label={`更多操作：${item.title}`} items={[
           { id: "set", label: "设为桌面", disabled: setWallpaper.pending, onSelect: () => void setWallpaper.setWallpaper(item.imageUrl) },
           { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(item.imageUrl) },
-          { id: "source", label: "介绍与来源 ↗", disabled: !item.sourceUrl, onSelect: () => void openExternal(item.sourceUrl) },
+          { id: "source", label: "查看来源 ↗", disabled: !item.sourceUrl, onSelect: () => void openExternal(item.sourceUrl) },
         ]} /></div>
       </article>;
     })}</div>}

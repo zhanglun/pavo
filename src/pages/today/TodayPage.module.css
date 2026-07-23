@@ -15,6 +15,10 @@
 .region { margin:0 0 6px; color:var(--muted); font-size:9px; letter-spacing:.1em; text-transform:uppercase; }
 .story h1 { min-width:0;margin:0;font-family:var(--font-display);font-size:28px;font-weight:500;line-height:1;letter-spacing:-.055em;overflow-wrap:anywhere; }
 .description { display:-webkit-box; margin:9px 0 0; overflow:hidden; color:var(--muted); font-size:var(--text-xs); line-height:1.55; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.descriptionExpanded { -webkit-line-clamp:unset; overflow:visible; }
+.descToggle { display:inline-block; margin:6px 0 0; padding:0; border:0; background:transparent; color:var(--accent); font-size:9px; line-height:1; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.descToggle:hover { filter:brightness(1.1); }
+.descToggle:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
 .actions { display:grid; grid-template-columns:minmax(0,1fr) 36px 36px; gap:6px; padding:0 0 18px; }
 .actions button { min-height:36px; border:0; background:transparent; color:inherit; }
 .primary { min-height:46px!important;background:var(--accent)!important;color:var(--accent-ink)!important;border-radius:var(--radius-control);font-weight:650;transition:filter var(--dur-short) var(--ease-out),transform var(--dur-short) var(--ease-out); }

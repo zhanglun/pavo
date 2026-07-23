@@ -24,6 +24,7 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isFallback, setIsFallback] = useState(false);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const setWallpaper = useSetWallpaper();
   const download = useDownloadWallpaper();
 
@@ -69,14 +70,15 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
       <div className={styles.story}>
         <p className={styles.region}>{selected.region}</p>
         <h1 id="today-title">{selected.title}</h1>
-        <p className={styles.description}>{selected.copyright}</p>
+        <p className={`${styles.description} ${descriptionExpanded ? styles.descriptionExpanded : ""}`}>{selected.copyright}</p>
+        {selected.copyright && <button className={styles.descToggle} aria-expanded={descriptionExpanded} onClick={() => setDescriptionExpanded((value) => !value)}>{descriptionExpanded ? "收起" : "查看完整介绍"}</button>}
       </div>
       <div className={styles.actions}>
         <button className={styles.primary} disabled={setWallpaper.pending} onClick={() => void setWallpaper.setWallpaper(selected.imageUrl)}>设为桌面</button>
         <Tooltip label={favorite ? "取消收藏" : "收藏"}><button className={styles.iconButton} aria-label={favorite ? `取消收藏：${selected.title}` : `收藏：${selected.title}`} onClick={() => void onToggleFavorite(selected)}>{favorite ? "♥" : "♡"}</button></Tooltip>
         <Menu label={`更多操作：${selected.title}`} items={[
           { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(selected.imageUrl) },
-          { id: "source", label: "介绍与来源 ↗", disabled: !selected.sourceUrl, onSelect: () => void openExternal(selected.sourceUrl) },
+          { id: "source", label: "查看来源 ↗", disabled: !selected.sourceUrl, onSelect: () => void openExternal(selected.sourceUrl) },
         ]} />
       </div>
     </div>
