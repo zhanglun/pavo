@@ -67,6 +67,12 @@ test("renders a numbered folio index with count and current-region semantics", a
   const china = await screen.findByRole("button", { name: "中国大陆" });
   const unitedStates = screen.getByRole("button", { name: "美国" });
 
+  expect(screen.getByText("JULY")).toBeVisible();
+  expect(screen.getByText("2026")).toBeVisible();
+  expect(screen.getByText("23")).toBeVisible();
+  expect(screen.getByText("星期四")).toBeVisible();
+  expect(screen.getByText("各地")).toBeVisible();
+  expect(screen.queryByText("今日各地")).not.toBeInTheDocument();
   expect(screen.getByText("2")).toBeVisible();
   expect(china).toHaveAttribute("aria-current", "true");
   expect(unitedStates).not.toHaveAttribute("aria-current");

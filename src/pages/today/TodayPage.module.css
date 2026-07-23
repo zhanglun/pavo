@@ -1,8 +1,11 @@
 /* Hallmark · genre: editorial · macrostructure: Daily Folio · design-system: locked prototype · designed-as-app */
 .page { padding: 18px 18px 30px; color: var(--ink); }
-.dateSeal { display:flex; align-items:flex-end; gap:7px; margin-bottom:13px; font-variant-numeric:tabular-nums; }
-.dateSeal > span:first-child { font-family:var(--font-display); font-size:31px; font-weight:500; line-height:.85; letter-spacing:-.065em; }
-.dateSeal > span:nth-child(2) { padding-bottom:2px; color:var(--muted); font-family:var(--font-utility); font-size:var(--text-xs); letter-spacing:.03em; }
+.dateSeal { position:relative;display:grid;height:112px;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:1fr auto;align-items:start;margin-bottom:16px;font-variant-numeric:tabular-nums; }
+.calendarMonth { align-self:start;padding-top:3px; }
+.calendarMonth strong { display:block;font-family:var(--font-display);font-size:15px;font-weight:500;line-height:1;letter-spacing:.03em; }
+.calendarMonth small { display:block;margin-top:7px;color:var(--muted);font-family:var(--font-utility);font-size:9px;letter-spacing:.08em; }
+.calendarDay { grid-column:2;grid-row:1 / 3;align-self:start;font-family:var(--font-display);font-size:92px;font-weight:400;line-height:.75;letter-spacing:-.095em; }
+.calendarWeekday { position:absolute;right:1px;bottom:0;font-family:var(--font-utility);font-size:11px;font-weight:500;line-height:1;letter-spacing:.04em; }
 .hero { position:relative; height:192px; overflow:hidden; background:var(--line); }
 .hero::after { position:absolute;inset:0;background:linear-gradient(145deg,var(--selection),transparent 42%);content:"";pointer-events:none;opacity:.35; }
 .hero img, .hero [role="img"] { width:100%; height:100%; object-fit:cover; display:grid; place-items:center; }

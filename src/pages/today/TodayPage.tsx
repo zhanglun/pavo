@@ -73,7 +73,9 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
   const favorite = favoriteIds.has(selected.imageUrl);
   return <section className={styles.page} aria-labelledby="today-title">
     <header className={styles.dateSeal}>
-      <span>{date.monthDay}</span><span>{date.year} · {date.weekday}</span>
+      <span className={styles.calendarMonth}><strong>{date.monthLabel}</strong><small>{date.year}</small></span>
+      <strong className={styles.calendarDay}>{date.dayOfMonth}</strong>
+      <span className={styles.calendarWeekday}>{date.weekdayLong}</span>
     </header>
     <div className={styles.hero}><WallpaperImage wallpaper={selected} /></div>
     <div className={styles.metaBlock}>
@@ -98,7 +100,7 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
       </div>
     </div>
     <div className={styles.regions}>
-      <div className={styles.regionsHeading}><p>{isFallback ? "各地" : "今日各地"}</p><span>{items.length}</span></div>
+      <div className={styles.regionsHeading}><p>各地</p><span>{items.length}</span></div>
       <RegionRail items={items} selectedId={selected.id} showDate={isFallback} onSelect={(item) => { closeDescription(); setSelectedId(item.id); }} />
     </div>
   </section>;
