@@ -27,9 +27,9 @@ Pavo 是一个跨平台桌面壁纸应用，基于 Tauri v2 构建。支持多�
 ## 技术栈
 
 - **[Tauri v2](https://v2.tauri.app/)** — Rust + WebView 跨平台桌面框架
-- **[Svelte 5](https://svelte.dev/)** — 前端框架（Runes 响应式）
+- **[React 19](https://react.dev/)** — 前端框架
 - **[Rust](https://www.rust-lang.org/)** — 后端逻辑
-- **[Tailwind CSS](https://tailwindcss.com/)** — 样式
+- **CSS Modules + 设计 Token** — 样式（OKLCH 色彩系统）
 - **TypeScript** — 类型安全
 
 ## 快速开始

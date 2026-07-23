@@ -27,9 +27,9 @@ Pavo is a cross-platform desktop wallpaper app built with Tauri v2. It features 
 ## Tech Stack
 
 - **[Tauri v2](https://v2.tauri.app/)** — Rust + WebView cross-platform desktop framework
-- **[Svelte 5](https://svelte.dev/)** — Frontend framework (Runes reactivity)
+- **[React 19](https://react.dev/)** — Frontend framework
 - **[Rust](https://www.rust-lang.org/)** — Backend logic
-- **[Tailwind CSS](https://tailwindcss.com/)** — Styling
+- **CSS Modules + Design Tokens** — Styling (OKLCH color system)
 - **TypeScript** — Type safety
 
 ## Getting Started
