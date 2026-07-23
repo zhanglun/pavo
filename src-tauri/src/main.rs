@@ -116,6 +116,7 @@ async fn main() {
       cmd::set_rotate_mode,
       cmd::set_auto_start,
       cmd::set_cache_retention_days,
+      cmd::set_theme_preference,
     ])
     .on_window_event(handle_window_event)
     .run(tauri::generate_context!())

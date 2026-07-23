@@ -12,6 +12,10 @@ pub struct AsyncProcInputTx {
   pub sender: Mutex<mpsc::Sender<AsyncProcessMessage>>,
 }
 
+fn config_value(config: config::PavoConfig) -> Result<serde_json::Value, String> {
+  serde_json::to_value(config).map_err(|error| error.to_string())
+}
+
 #[tauri::command]
 pub async fn set_as_desktop<R: Runtime>(
   app: AppHandle<R>,
@@ -85,9 +89,10 @@ pub async fn get_config() -> serde_json::Value {
 pub async fn set_auto_daily_update(
   enabled: bool,
   state: tauri::State<'_, AsyncProcInputTx>,
-) -> Result<(), ()> {
-  let pavo_config = config::PavoConfig::get_config();
-  pavo_config.set_auto_daily_update(enabled);
+) -> Result<serde_json::Value, String> {
+  let pavo_config = config::PavoConfig::get_config()
+    .set_auto_daily_update(enabled)
+    .map_err(|error| error.to_string())?;
 
   let sender = state.sender.lock().await;
   sender
@@ -97,13 +102,14 @@ pub async fn set_auto_daily_update(
       AsyncProcessMessage::StopDailyUpdate
     })
     .await
-    .map_err(|_| ())
+    .map_err(|error| error.to_string())?;
+
+  config_value(pavo_config)
 }
 
 #[tauri::command]
-pub async fn set_history_range_days(days: u8) {
-  let pavo_config = config::PavoConfig::get_config();
-  pavo_config.set_history_range_days(days);
+pub async fn set_history_range_days(days: u8) -> Result<serde_json::Value, String> {
+  config_value(config::PavoConfig::get_config().set_history_range_days(days)?)
 }
 
 #[tauri::command]
@@ -170,22 +176,23 @@ pub async fn list_favorites() -> Vec<config::FavoriteItem> {
 }
 
 #[tauri::command]
-pub async fn add_favorite(item: config::FavoriteItem) -> serde_json::Value {
-  serde_json::to_value(config::PavoConfig::get_config().add_favorite(item)).unwrap_or_default()
+pub async fn add_favorite(item: config::FavoriteItem) -> Result<serde_json::Value, String> {
+  config_value(config::PavoConfig::get_config().add_favorite(item)?)
 }
 
 #[tauri::command]
-pub async fn remove_favorite(filename: String) -> serde_json::Value {
-  serde_json::to_value(config::PavoConfig::get_config().remove_favorite_by_filename(&filename))
-    .unwrap_or_default()
+pub async fn remove_favorite(filename: String) -> Result<serde_json::Value, String> {
+  config_value(config::PavoConfig::get_config().remove_favorite_by_filename(&filename)?)
 }
 
 #[tauri::command]
 pub async fn set_auto_rotate(
   enabled: bool,
   state: tauri::State<'_, AsyncProcInputTx>,
-) -> Result<(), ()> {
-  config::PavoConfig::get_config().set_auto_rotate(enabled);
+) -> Result<serde_json::Value, String> {
+  let config = config::PavoConfig::get_config()
+    .set_auto_rotate(enabled)
+    .map_err(|error| error.to_string())?;
 
   let sender = state.sender.lock().await;
   sender
@@ -195,45 +202,51 @@ pub async fn set_auto_rotate(
       AsyncProcessMessage::StopRotation
     })
     .await
-    .map_err(|_| ())
+    .map_err(|error| error.to_string())?;
+
+  config_value(config)
 }
 
 #[tauri::command]
 pub async fn set_rotate_interval(
   minutes: u16,
   state: tauri::State<'_, AsyncProcInputTx>,
-) -> Result<(), ()> {
-  let cfg = config::PavoConfig::get_config().set_rotate_interval(minutes);
+) -> Result<serde_json::Value, String> {
+  let cfg = config::PavoConfig::get_config().set_rotate_interval(minutes)?;
 
   let sender = state.sender.lock().await;
   sender
     .send(AsyncProcessMessage::UpdateRotationConfig {
       interval_minutes: cfg.rotate_interval_minutes,
-      mode: cfg.rotate_mode,
+      mode: cfg.rotate_mode.clone(),
     })
     .await
-    .map_err(|_| ())
+    .map_err(|error| error.to_string())?;
+
+  config_value(cfg)
 }
 
 #[tauri::command]
 pub async fn set_rotate_mode(
   mode: RotateMode,
   state: tauri::State<'_, AsyncProcInputTx>,
-) -> Result<(), ()> {
-  let cfg = config::PavoConfig::get_config().set_rotate_mode(mode);
+) -> Result<serde_json::Value, String> {
+  let cfg = config::PavoConfig::get_config().set_rotate_mode(mode)?;
 
   let sender = state.sender.lock().await;
   sender
     .send(AsyncProcessMessage::UpdateRotationConfig {
       interval_minutes: cfg.rotate_interval_minutes,
-      mode: cfg.rotate_mode,
+      mode: cfg.rotate_mode.clone(),
     })
     .await
-    .map_err(|_| ())
+    .map_err(|error| error.to_string())?;
+
+  config_value(cfg)
 }
 
 #[tauri::command]
-pub async fn set_auto_start(enabled: bool, app: tauri::AppHandle) -> Result<(), String> {
+pub async fn set_auto_start(enabled: bool, app: tauri::AppHandle) -> Result<serde_json::Value, String> {
   use tauri_plugin_autostart::ManagerExt;
   let manager = app.autolaunch();
   if enabled {
@@ -241,11 +254,17 @@ pub async fn set_auto_start(enabled: bool, app: tauri::AppHandle) -> Result<(), 
   } else {
     manager.disable().map_err(|e| e.to_string())?;
   }
-  config::PavoConfig::get_config().set_auto_start(enabled);
-  Ok(())
+  config_value(config::PavoConfig::get_config().set_auto_start(enabled)?)
 }
 
 #[tauri::command]
-pub async fn set_cache_retention_days(days: u32) {
-  config::PavoConfig::get_config().set_cache_retention_days(days);
+pub async fn set_cache_retention_days(days: u32) -> Result<serde_json::Value, String> {
+  config_value(config::PavoConfig::get_config().set_cache_retention_days(days)?)
+}
+
+#[tauri::command]
+pub async fn set_theme_preference(
+  preference: config::ThemePreference,
+) -> Result<serde_json::Value, String> {
+  config_value(config::PavoConfig::get_config().set_theme_preference(preference)?)
 }
