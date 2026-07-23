@@ -9,6 +9,14 @@ import { hideWindow } from "../shared/platform/window";
 import { checkForUpdates } from "../shared/platform/updater";
 import { tauri } from "../shared/tauri/client";
 import { useTauriEvents } from "./useTauriEvents";
+import styles from "./AppShell.module.css";
+
+const tabs = [
+  ["today", "今日"],
+  ["history", "历史"],
+  ["favorites", "收藏"],
+] as const;
+
 export function AppShell() {
   const [view, setView] = useState<"today" | "history" | "favorites" | "settings">("today");
   const [refreshSignal, setRefreshSignal] = useState(0);
@@ -26,5 +34,24 @@ export function AppShell() {
       : view === "favorites"
         ? <FavoritesPage onToggleFavorite={favorites.toggle} refreshSignal={refreshSignal} />
         : <SettingsPage onBack={() => setView("today")} onHistoryRangeChanged={reload} />;
-  return <main aria-label="Pavo" role="application"><header><span data-tauri-drag-region>Pavo</span><button aria-label="刷新" onClick={() => void forceRefresh()}>↻</button><button aria-label="设置" onClick={openSettings}>⚙</button><button aria-label="隐藏到托盘" onClick={() => { void hideWindow(); }}>−</button></header>{view !== "settings" && <nav role="tablist">{(["today", "history", "favorites"] as const).map((item) => <button key={item} role="tab" aria-selected={view === item} onClick={() => setView(item)}>{item === "today" ? "今日" : item === "history" ? "历史" : "收藏"}</button>)}</nav>}<section>{content}</section></main>;
+  return (
+    <main className={styles.shell} data-settings={view === "settings"} aria-label="Pavo" role="application">
+      <header className={styles.topbar}>
+        <span className={styles.brand} data-tauri-drag-region>Pavo</span>
+        <button className={styles.windowAction} aria-label="刷新" onClick={() => void forceRefresh()}>↻</button>
+        <button className={styles.windowAction} aria-label="设置" onClick={openSettings}>⚙</button>
+        <button className={styles.windowAction} aria-label="隐藏到托盘" onClick={() => { void hideWindow(); }}>−</button>
+      </header>
+      {view !== "settings" && (
+        <nav className={styles.tabs} aria-label="主要页面" role="tablist">
+          {tabs.map(([item, label]) => (
+            <button className={styles.tab} key={item} role="tab" aria-selected={view === item} onClick={() => setView(item)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+      )}
+      <section className={styles.content}>{content}</section>
+    </main>
+  );
 }

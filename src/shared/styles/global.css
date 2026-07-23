@@ -1,9 +1,64 @@
+@import "./tokens.css";
+
+/* Hallmark · genre: editorial · macrostructure: Daily Folio · designed-as-app
+ * pre-emit critique: P5 H5 E4 S5 R5 V4
+ */
+* {
+  box-sizing: border-box;
+}
+
 html,
 body,
 #app {
-  margin: 0;
+  width: 100%;
   min-height: 100%;
+  margin: 0;
+  overflow-x: clip;
 }
-@import "./tokens.css";
-body { background: var(--paper); color: var(--ink); }
-button:focus-visible { outline: 2px solid var(--accent); }
+
+html,
+body {
+  background: var(--paper);
+}
+
+body {
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible + span {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+::selection {
+  background: var(--selection);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

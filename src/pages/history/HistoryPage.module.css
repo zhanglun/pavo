@@ -1,1 +1,17 @@
-.page{padding:14px 18px 32px}.page>header{display:flex;align-items:end;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:12px}.page>header p{font-size:10px;letter-spacing:.2em;color:var(--muted)}.page h1{font:500 24px/1.1 Georgia,serif}.list{display:grid;gap:0}.card{display:grid;grid-template-columns:96px 1fr auto;gap:13px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}.image{height:72px;overflow:hidden;background:var(--line)}.image img{width:100%;height:100%;object-fit:cover}.copy{min-width:0}.copy time{font-size:10px;letter-spacing:.08em;color:var(--muted)}.copy h2{margin:5px 0 4px;font:500 16px/1.2 Georgia,serif}.copy p{overflow:hidden;margin:0;color:var(--muted);font-size:11px;white-space:nowrap;text-overflow:ellipsis}.actions{display:flex;gap:2px}.actions button{border:0;background:transparent;color:var(--ink);font-size:18px}.state{padding:48px 20px;text-align:center;color:var(--muted)}
+/* Hallmark · genre: editorial · macrostructure: Daily Folio Archive · design-system: locked prototype · designed-as-app */
+.page { padding: 18px 18px 32px; }
+.page > header { display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:13px;border-bottom:1px solid var(--line); }
+.page > header p { margin:0;color:var(--muted);font-family:var(--font-utility);font-size:9px;letter-spacing:.16em; }
+.page h1 { margin:0;font-family:var(--font-display);font-size:26px;font-weight:500;line-height:1;letter-spacing:-.045em; }
+.list { display:grid; }
+.card { display:grid;grid-template-columns:75px minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line); }
+.image { width:75px;height:57px;overflow:hidden;background:var(--line); }
+.image img,.image [role="img"] { width:100%;height:100%;object-fit:cover; }
+.copy { min-width:0; }
+.copy time { color:var(--muted);font-family:var(--font-utility);font-size:8px;letter-spacing:.06em; }
+.copy h2 { overflow:hidden;margin:5px 0 5px;font-family:var(--font-display);font-size:16px;font-weight:500;line-height:1;white-space:nowrap;text-overflow:ellipsis; }
+.copy p { overflow:hidden;margin:0;color:var(--muted);font-size:9px;white-space:nowrap;text-overflow:ellipsis; }
+.actions { display:flex;gap:1px;align-items:center; }
+.actions > button { display:grid;width:28px;height:28px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:15px; }
+.actions > button:hover { background:var(--card);color:var(--accent); }
+.state { padding:48px 20px;color:var(--muted);font-size:var(--text-sm);text-align:center; }
