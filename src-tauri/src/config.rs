@@ -16,6 +16,15 @@ pub enum RotateMode {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum ThemePreference {
+  #[default]
+  System,
+  Light,
+  Dark,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct FavoriteItem {
   pub filename: String,
   pub url: String,
@@ -55,6 +64,20 @@ fn default_cache_retention_days() -> u32 {
   7
 }
 
+fn add_favorite_item(config: &mut PavoConfig, item: FavoriteItem) {
+  if !config
+    .favorites
+    .iter()
+    .any(|favorite| favorite.url == item.url)
+  {
+    config.favorites.push(item);
+  }
+}
+
+fn remove_favorite_item(config: &mut PavoConfig, url: &str) {
+  config.favorites.retain(|favorite| favorite.url != url);
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
   #[serde(default = "default_auto_daily_update")]
@@ -73,6 +96,8 @@ pub struct PavoConfig {
   pub auto_start: bool,
   #[serde(default = "default_cache_retention_days")]
   pub cache_retention_days: u32,
+  #[serde(default)]
+  pub theme_preference: ThemePreference,
 }
 
 impl PavoConfig {
@@ -86,6 +111,7 @@ impl PavoConfig {
       rotate_mode: RotateMode::Sequential,
       auto_start: false,
       cache_retention_days: 7,
+      theme_preference: ThemePreference::System,
     }
   }
 
@@ -214,6 +240,16 @@ impl PavoConfig {
         .and_then(|v| v.as_integer())
         .map(|v| v as u32)
         .unwrap_or(7),
+      theme_preference: table
+        .get("theme_preference")
+        .and_then(|v| v.as_str())
+        .and_then(|value| match value {
+          "light" => Some(ThemePreference::Light),
+          "dark" => Some(ThemePreference::Dark),
+          "system" => Some(ThemePreference::System),
+          _ => None,
+        })
+        .unwrap_or_default(),
     }
   }
 
@@ -238,62 +274,58 @@ impl PavoConfig {
     Self::parse_tolerant(&content)
   }
 
-  fn update_config(modifier: impl FnOnce(&mut PavoConfig)) -> Self {
+  fn update_config(modifier: impl FnOnce(&mut PavoConfig)) -> Result<Self, String> {
     let _guard = match CONFIG_LOCK.lock() {
       Ok(g) => g,
       Err(e) => {
         log::error!("Config lock poisoned: {}", e);
-        return Self::get_config();
+        return Err("配置锁不可用".to_string());
       }
     };
     let mut data = Self::get_config();
     modifier(&mut data);
-    if let Err(e) = Self::write_config(data.clone()) {
-      log::error!("Failed to write config: {}", e);
-    }
-    data
+    Self::write_config(data.clone())?;
+    Ok(data)
   }
 
-  pub fn set_auto_daily_update(&self, enabled: bool) -> Self {
+  pub fn set_auto_daily_update(&self, enabled: bool) -> Result<Self, String> {
     Self::update_config(|cfg| cfg.auto_daily_update = enabled)
   }
 
-  pub fn set_history_range_days(&self, days: u8) -> Self {
+  pub fn set_history_range_days(&self, days: u8) -> Result<Self, String> {
     Self::update_config(|cfg| cfg.history_range_days = days)
   }
 
-  pub fn add_favorite(&self, item: FavoriteItem) -> Self {
-    Self::update_config(|cfg| {
-      if !cfg.favorites.iter().any(|f| f.filename == item.filename) {
-        cfg.favorites.push(item);
-      }
-    })
+  pub fn add_favorite(&self, item: FavoriteItem) -> Result<Self, String> {
+    Self::update_config(|cfg| add_favorite_item(cfg, item))
   }
 
-  pub fn remove_favorite_by_filename(&self, filename: &str) -> Self {
-    Self::update_config(|cfg| {
-      cfg.favorites.retain(|f| f.filename != filename);
-    })
+  pub fn remove_favorite_by_url(&self, url: &str) -> Result<Self, String> {
+    Self::update_config(|cfg| remove_favorite_item(cfg, url))
   }
 
-  pub fn set_auto_rotate(&self, enabled: bool) -> Self {
+  pub fn set_auto_rotate(&self, enabled: bool) -> Result<Self, String> {
     Self::update_config(|cfg| cfg.auto_rotate = enabled)
   }
 
-  pub fn set_rotate_interval(&self, minutes: u16) -> Self {
+  pub fn set_rotate_interval(&self, minutes: u16) -> Result<Self, String> {
     Self::update_config(|cfg| cfg.rotate_interval_minutes = minutes)
   }
 
-  pub fn set_rotate_mode(&self, mode: RotateMode) -> Self {
+  pub fn set_rotate_mode(&self, mode: RotateMode) -> Result<Self, String> {
     Self::update_config(|cfg| cfg.rotate_mode = mode)
   }
 
-  pub fn set_auto_start(&self, enabled: bool) -> Self {
+  pub fn set_auto_start(&self, enabled: bool) -> Result<Self, String> {
     Self::update_config(|cfg| cfg.auto_start = enabled)
   }
 
-  pub fn set_cache_retention_days(&self, days: u32) -> Self {
+  pub fn set_cache_retention_days(&self, days: u32) -> Result<Self, String> {
     Self::update_config(|cfg| cfg.cache_retention_days = days)
+  }
+
+  pub fn set_theme_preference(&self, preference: ThemePreference) -> Result<Self, String> {
+    Self::update_config(|cfg| cfg.theme_preference = preference)
   }
 }
 
@@ -340,11 +372,41 @@ show_layer = false
       rotate_mode: RotateMode::Sequential,
       auto_start: false,
       cache_retention_days: 7,
+      theme_preference: ThemePreference::System,
     };
 
     let text = toml::to_string(&cfg).unwrap();
     assert!(text.contains("history_range_days = 14"));
     assert!(text.contains("filename = \"OHR.Sample.jpg\""));
+  }
+
+  #[test]
+  fn favorites_with_same_filename_are_distinguished_by_url() {
+    let mut cfg = PavoConfig::new();
+    cfg.favorites = vec![FavoriteItem {
+      filename: "OHR.Shared.jpg".into(),
+      url: "https://example.test/cn.jpg".into(),
+      title: "中国".into(),
+      startdate: "20260723".into(),
+      copyright: String::new(),
+      copyrightlink: String::new(),
+      local_path: None,
+    }];
+    let second = FavoriteItem {
+      filename: "OHR.Shared.jpg".into(),
+      url: "https://example.test/us.jpg".into(),
+      title: "US".into(),
+      startdate: "20260723".into(),
+      copyright: String::new(),
+      copyrightlink: String::new(),
+      local_path: None,
+    };
+
+    add_favorite_item(&mut cfg, second);
+    assert_eq!(cfg.favorites.len(), 2);
+    remove_favorite_item(&mut cfg, "https://example.test/cn.jpg");
+    assert_eq!(cfg.favorites.len(), 1);
+    assert_eq!(cfg.favorites[0].url, "https://example.test/us.jpg");
   }
 
   #[test]
@@ -358,6 +420,7 @@ show_layer = false
       rotate_mode: RotateMode::Sequential,
       auto_start: false,
       cache_retention_days: 7,
+      theme_preference: ThemePreference::System,
     };
     let text = toml::to_string(&cfg).unwrap();
     assert!(text.contains("auto_daily_update = true"));
@@ -374,6 +437,7 @@ show_layer = false
       rotate_mode: RotateMode::Sequential,
       auto_start: false,
       cache_retention_days: 7,
+      theme_preference: ThemePreference::System,
     };
     let text = toml::to_string(&cfg).unwrap();
     // The serialized form should NOT contain legacy shuffle/interval fields
@@ -458,5 +522,17 @@ favorites = "not_an_array"
     assert_eq!(parsed.auto_daily_update, true);
     assert_eq!(parsed.history_range_days, 7);
     assert!(parsed.favorites.is_empty());
+  }
+
+  #[test]
+  fn legacy_config_defaults_theme_to_system() {
+    let parsed = PavoConfig::parse_tolerant("auto_rotate = true");
+    assert_eq!(parsed.theme_preference, ThemePreference::System);
+  }
+
+  #[test]
+  fn invalid_theme_value_defaults_to_system() {
+    let parsed = PavoConfig::parse_tolerant("theme_preference = \"violet\"");
+    assert_eq!(parsed.theme_preference, ThemePreference::System);
   }
 }

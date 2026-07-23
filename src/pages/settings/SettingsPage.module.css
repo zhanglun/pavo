@@ -1,0 +1,25 @@
+/* Hallmark · genre: editorial · macrostructure: Daily Folio Preferences · design-system: locked prototype · designed-as-app */
+.page { padding:15px 18px 36px; }
+.page > header { display:flex;align-items:flex-end;gap:12px;margin-bottom:4px;padding-bottom:17px;border-bottom:1px solid var(--line); }
+.page > header [data-tooltip-root] > button { display:grid;width:28px;height:28px;padding:0;place-items:center;border:0;background:transparent;color:var(--accent);font-size:18px; }
+.page > header p { margin:0 0 4px;color:var(--muted);font-family:var(--font-utility);font-size:8px;letter-spacing:.16em; }
+.page h1 { margin:0;font-family:var(--font-display);font-size:27px;font-weight:500;line-height:1;letter-spacing:-.045em; }
+.group { padding:14px 0 5px;border-bottom:1px solid var(--line); }
+.group h2 { margin:0 0 6px;color:var(--muted);font-size:9px;font-weight:500;letter-spacing:.1em; }
+.toggle,.linkRow,.infoRow,.selectRow { display:flex;width:100%;min-height:39px;align-items:center;justify-content:space-between;gap:8px;padding:0;border:0;background:transparent;color:var(--ink);font-size:11px;text-align:left; }
+.toggle em,.linkRow em,.infoRow em { color:var(--muted);font-size:10px;font-style:normal;white-space:nowrap; }
+.toggle[aria-pressed="true"] em { color:var(--accent);font-weight:600; }
+.toggle:hover em,.linkRow:hover em { color:var(--accent); }
+.selectRow select { max-width:142px;padding:5px 22px 5px 7px;border:1px solid var(--line);border-radius:0;background:var(--paper-raised);color:var(--muted);font-size:10px;text-align:right; }
+.segment { display:flex;gap:0;margin:6px 0 8px;padding:0;border:1px solid var(--line); }
+.segment legend { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%); }
+.segment label { position:relative;flex:1;padding:7px 4px;color:var(--muted);font-size:10px;text-align:center;cursor:pointer; }
+.segment label + label { border-left:1px solid var(--line); }
+.segment label:has(input:checked) { background:var(--card);color:var(--accent);font-weight:600; }
+.segment input { position:absolute;opacity:0; }
+.appIdentity { display:flex;align-items:center;gap:10px;padding:8px 0 6px; }
+.appIdentity img { width:32px;height:32px; }
+.appIdentity div { display:grid;gap:2px; }
+.appIdentity strong { font-family:var(--font-display);font-size:15px;font-weight:600; }
+.appIdentity span { color:var(--muted);font-size:9px; }
+.state { padding:52px 20px;color:var(--muted);font-size:var(--text-sm);text-align:center; }

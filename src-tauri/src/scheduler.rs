@@ -1,6 +1,6 @@
 use chrono::offset::Utc;
-use std::sync::LazyLock;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
 use crate::events::WallpaperEvent;
@@ -83,31 +83,7 @@ impl Scheduler {
       }
     }
 
-    let mut formatted_list = vec![];
-
-    for mut i in res {
-      let unique_name = i.filename.split('_').next().unwrap_or(&i.filename).to_string();
-
-      let idx = formatted_list.iter().position(|x: &SchedulerPhoto| {
-        x.filename.split('_').next().unwrap_or(&x.filename) == unique_name
-      });
-
-      match idx {
-        Some(idx) => {
-          let item = &mut formatted_list[idx];
-
-          item.regions.append(&mut i.regions);
-          item.urls.append(&mut i.urls);
-          item.titles.append(&mut i.titles);
-          item.startdates.append(&mut i.startdates);
-          item.copyrights.append(&mut i.copyrights);
-          item.copyrightlinks.append(&mut i.copyrightlinks);
-        }
-        None => {
-          formatted_list.push(i);
-        }
-      }
-    }
+    let formatted_list = merge_scheduler_photos(res);
 
     self.cache_list = formatted_list.clone();
     self.last_load_time = Utc::now().timestamp();
@@ -219,12 +195,10 @@ impl Scheduler {
     list
       .iter()
       .filter(|photo| {
-        let sd = photo
+        photo
           .startdates
-          .first()
-          .map(String::as_str)
-          .unwrap_or_default();
-        within_recent_days(sd, today, days)
+          .iter()
+          .any(|startdate| within_recent_days(startdate, today, days))
       })
       .cloned()
       .collect()
@@ -255,6 +229,61 @@ impl Scheduler {
       .cloned()
       .collect()
   }
+}
+
+fn merge_scheduler_photos(photos: Vec<SchedulerPhoto>) -> Vec<SchedulerPhoto> {
+  let mut merged: Vec<SchedulerPhoto> = vec![];
+
+  for photo in photos {
+    let unique_name = photo.filename.split('_').next().unwrap_or(&photo.filename);
+    let Some(existing) = merged
+      .iter_mut()
+      .find(|item| item.filename.split('_').next().unwrap_or(&item.filename) == unique_name)
+    else {
+      merged.push(photo);
+      continue;
+    };
+
+    for index in 0..photo.regions.len() {
+      let Some(region) = photo.regions.get(index) else {
+        continue;
+      };
+      let Some(url) = photo.urls.get(index) else {
+        continue;
+      };
+      let Some(startdate) = photo.startdates.get(index) else {
+        continue;
+      };
+      let duplicate =
+        existing
+          .regions
+          .iter()
+          .enumerate()
+          .any(|(existing_index, existing_region)| {
+            existing_region == region
+              && existing.urls.get(existing_index) == Some(url)
+              && existing.startdates.get(existing_index) == Some(startdate)
+          });
+      if duplicate {
+        continue;
+      }
+
+      existing.regions.push(region.clone());
+      existing.urls.push(url.clone());
+      existing
+        .titles
+        .push(photo.titles.get(index).cloned().unwrap_or_default());
+      existing.startdates.push(startdate.clone());
+      existing
+        .copyrights
+        .push(photo.copyrights.get(index).cloned().unwrap_or_default());
+      existing
+        .copyrightlinks
+        .push(photo.copyrightlinks.get(index).cloned().unwrap_or_default());
+    }
+  }
+
+  merged
 }
 
 async fn fetch_list_with_region(
@@ -350,6 +379,35 @@ mod scheduler_tests {
     // 20260427 (day 0), 20260420 (day 7), 20260414 (day 13) → within 14 days
     // 20260410 (day 17) → excluded
     assert_eq!(recent.len(), 3);
+  }
+
+  #[test]
+  fn filter_recent_days_keeps_group_when_any_region_is_recent() {
+    let mut mixed = photo("mixed", "20260410");
+    mixed.regions.push("en-US".into());
+    mixed.urls.push("https://example.com/mixed-us".into());
+    mixed.titles.push("Mixed US".into());
+    mixed.startdates.push("20260427".into());
+    mixed.copyrights.push("Copyright US".into());
+    mixed.copyrightlinks.push("https://www.bing.com/us".into());
+
+    let recent = Scheduler::filter_recent_days(&[mixed], 7, "20260427");
+    assert_eq!(recent.len(), 1);
+  }
+
+  #[test]
+  fn merge_scheduler_photos_ignores_exact_region_duplicates() {
+    let first = photo("OHR.Sample_ZH-CN.jpg", "20260427");
+    let duplicate = first.clone();
+    let mut other_region = photo("OHR.Sample_EN-US.jpg", "20260427");
+    other_region.regions[0] = "en-US".into();
+    other_region.urls[0] = "https://example.com/sample-us".into();
+
+    let merged = merge_scheduler_photos(vec![first, duplicate, other_region]);
+
+    assert_eq!(merged.len(), 1);
+    assert_eq!(merged[0].regions, vec!["zh-CN", "en-US"]);
+    assert_eq!(merged[0].urls.len(), 2);
   }
 
   #[test]
