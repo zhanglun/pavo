@@ -1,0 +1,3 @@
+import { useEffect } from "react";
+import { tauri } from "../shared/tauri/client";
+export function useTauriEvents({ onRefresh, onSettings, onUpdate }: { onRefresh: () => void; onSettings: () => void; onUpdate: () => void }) { useEffect(() => { if (!(window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__) return; const cleanups: (() => void)[] = []; for (const [name, action] of [["wallpapers:cache-refreshed", onRefresh], ["window:shown", onRefresh], ["go-to-settings", onSettings], ["check-for-updates", onUpdate]] as const) tauri.events.listen(name, action).then(cleanup => cleanups.push(cleanup)); return () => cleanups.forEach(cleanup => cleanup()); }, [onRefresh, onSettings, onUpdate]); }
