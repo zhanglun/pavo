@@ -12,3 +12,8 @@ test("closes on Escape and restores focus", async () => {
   expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   expect(trigger).toHaveFocus();
 });
+
+test("uses an accessible label while keeping the trigger visually quiet", () => {
+  render(<Menu label="更多操作：山谷" items={[]} />);
+  expect(screen.getByRole("button", { name: "更多操作：山谷" })).toHaveTextContent("⋯");
+});

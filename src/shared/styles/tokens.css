@@ -1,2 +1,2 @@
-:root { --paper:#f6f4ef; --ink:#1f2a24; --accent:#315b48; }
-html[data-theme="dark"] { --paper:#151a17; --ink:#f0f0e9; --accent:#a8c6ad; }
+:root { --paper:#f6f4ef; --ink:#1f2a24; --muted:#727a74; --line:#dcdcd4; --accent:#315b48; --card:#fffefa; }
+html[data-theme="dark"] { --paper:#151a17; --ink:#f0f0e9; --muted:#a0a79f; --line:#343b36; --accent:#a8c6ad; --card:#202722; }

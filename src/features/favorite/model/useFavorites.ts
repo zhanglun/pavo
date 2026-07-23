@@ -1,4 +1,39 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { tauri } from "../../../shared/tauri/client";
 import type { FavoriteItem } from "../../../entities/settings/model/types";
-export function useFavorites() { const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set()); const toggle = async (item: FavoriteItem) => { const exists = favoriteIds.has(item.filename); await (exists ? tauri.favorites.remove(item.filename) : tauri.favorites.add(item)); setFavoriteIds(current => { const next = new Set(current); exists ? next.delete(item.filename) : next.add(item.filename); return next; }); }; return { favoriteIds, toggle }; }
+import type { Wallpaper } from "../../../entities/wallpaper/model/types";
+
+const toFavorite = (wallpaper: Wallpaper): FavoriteItem => ({
+  filename: wallpaper.filename,
+  url: wallpaper.imageUrl,
+  title: wallpaper.title,
+  startdate: wallpaper.date,
+  copyright: wallpaper.copyright,
+  copyrightlink: wallpaper.sourceUrl,
+});
+
+export function useFavorites() {
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const reload = useCallback(async () => {
+    try {
+      const items = await tauri.favorites.list();
+      setFavoriteIds(new Set(items.map((item) => item.filename)));
+    } catch {
+      setFavoriteIds(new Set());
+    }
+  }, []);
+
+  useEffect(() => { void reload(); }, [reload]);
+
+  const toggle = async (wallpaper: Wallpaper) => {
+    const exists = favoriteIds.has(wallpaper.filename);
+    await (exists ? tauri.favorites.remove(wallpaper.filename) : tauri.favorites.add(toFavorite(wallpaper)));
+    setFavoriteIds((current) => {
+      const next = new Set(current);
+      exists ? next.delete(wallpaper.filename) : next.add(wallpaper.filename);
+      return next;
+    });
+  };
+
+  return { favoriteIds, reload, toggle };
+}

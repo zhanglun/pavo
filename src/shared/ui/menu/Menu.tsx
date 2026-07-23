@@ -18,5 +18,5 @@ export function Menu({ label, items }: { label: string; items: Item[] }) {
     buttons[(index + direction + buttons.length) % buttons.length]?.focus();
     event.preventDefault();
   };
-  return <span ref={wrapper}><button ref={trigger} onClick={() => setOpen(!open)}>{label}</button>{open && <span role="menu" onKeyDown={moveFocus}>{items.map((item) => <button key={item.id} role="menuitem" disabled={item.disabled} onClick={() => { setOpen(false); item.onSelect(); }}>{item.label}</button>)}</span>}</span>;
+  return <span ref={wrapper}><button ref={trigger} aria-label={label} onClick={() => setOpen(!open)}>⋯</button>{open && <span role="menu" onKeyDown={moveFocus}>{items.map((item) => <button key={item.id} role="menuitem" disabled={item.disabled} onClick={() => { setOpen(false); item.onSelect(); }}>{item.label}</button>)}</span>}</span>;
 }
