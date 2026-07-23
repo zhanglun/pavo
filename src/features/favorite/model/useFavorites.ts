@@ -17,7 +17,7 @@ export function useFavorites() {
   const reload = useCallback(async () => {
     try {
       const items = await tauri.favorites.list();
-      setFavoriteIds(new Set(items.map((item) => item.filename)));
+      setFavoriteIds(new Set(items.map((item) => item.url)));
     } catch {
       setFavoriteIds(new Set());
     }
@@ -26,11 +26,11 @@ export function useFavorites() {
   useEffect(() => { void reload(); }, [reload]);
 
   const toggle = async (wallpaper: Wallpaper) => {
-    const exists = favoriteIds.has(wallpaper.filename);
-    await (exists ? tauri.favorites.remove(wallpaper.filename) : tauri.favorites.add(toFavorite(wallpaper)));
+    const exists = favoriteIds.has(wallpaper.imageUrl);
+    await (exists ? tauri.favorites.remove(wallpaper.imageUrl) : tauri.favorites.add(toFavorite(wallpaper)));
     setFavoriteIds((current) => {
       const next = new Set(current);
-      exists ? next.delete(wallpaper.filename) : next.add(wallpaper.filename);
+      exists ? next.delete(wallpaper.imageUrl) : next.add(wallpaper.imageUrl);
       return next;
     });
   };

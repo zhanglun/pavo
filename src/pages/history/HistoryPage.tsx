@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { normalizeCollection } from "../../entities/wallpaper/model/normalize";
+import { selectRecentWallpapers } from "../../entities/wallpaper/model/normalize";
 import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
 import { useDownloadWallpaper } from "../../features/download/model/useDownloadWallpaper";
@@ -7,7 +7,7 @@ import { useSetWallpaper } from "../../features/set-wallpaper/model/useSetWallpa
 import { openExternal } from "../../shared/platform/shell";
 import { tauri } from "../../shared/tauri/client";
 import { Menu } from "../../shared/ui/menu/Menu";
-import { formatFolioDate } from "../../shared/utils/date";
+import { formatFolioDate, localDateKey } from "../../shared/utils/date";
 import styles from "./HistoryPage.module.css";
 
 type Props = { favoriteIds: Set<string>; onToggleFavorite: (wallpaper: Wallpaper) => void | Promise<void>; refreshSignal: number };
@@ -24,7 +24,7 @@ export function HistoryPage({ favoriteIds, onToggleFavorite, refreshSignal }: Pr
       try {
         const config = await tauri.settings.get();
         const recent = await tauri.wallpapers.getRecent(config.history_range_days);
-        if (active) { setItems(recent.flatMap(normalizeCollection)); setState("ready"); }
+        if (active) { setItems(selectRecentWallpapers(recent, localDateKey(), config.history_range_days)); setState("ready"); }
       } catch { if (active) setState("error"); }
     })();
     return () => { active = false; };
@@ -36,7 +36,7 @@ export function HistoryPage({ favoriteIds, onToggleFavorite, refreshSignal }: Pr
     <header><p>ARCHIVE</p><h1 id="history-title">历史档案</h1></header>
     {items.length === 0 ? <p className={styles.state}>这段时间还没有壁纸记录。</p> : <div className={styles.list}>{items.map((item) => {
       const date = formatFolioDate(item.date);
-      const favorite = favoriteIds.has(item.filename);
+      const favorite = favoriteIds.has(item.imageUrl);
       return <article className={styles.card} key={item.id}>
         <div className={styles.image}><WallpaperImage wallpaper={item} /></div>
         <div className={styles.copy}><time>{date.year} · {date.monthDay}</time><h2>{item.title}</h2><p>{item.copyright}</p></div>

@@ -40,3 +40,18 @@ test("falls back to recent wallpapers when todays collection is insufficient", a
   await waitFor(() => expect(tauri.wallpapers.getRecent).toHaveBeenCalledWith(7));
   expect(await screen.findByText("近期内容")).toBeVisible();
 });
+
+test("does not fall back when one merged collection contains multiple valid regions", async () => {
+  vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([{
+    filename: "shared.jpg",
+    regions: ["zh-CN", "en-US"],
+    urls: ["https://example.test/cn.jpg", "https://example.test/us.jpg"],
+    titles: ["山谷", "Valley"],
+    startdates: ["20260723", "20260723"],
+    copyrights: ["介绍", "Copyright"],
+    copyrightlinks: ["source-cn", "source-us"],
+  }]);
+  render(<ToastProvider><TodayPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
+  expect(await screen.findByRole("heading", { name: "山谷" })).toBeVisible();
+  expect(tauri.wallpapers.getRecent).not.toHaveBeenCalled();
+});

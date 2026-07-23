@@ -219,12 +219,10 @@ impl Scheduler {
     list
       .iter()
       .filter(|photo| {
-        let sd = photo
+        photo
           .startdates
-          .first()
-          .map(String::as_str)
-          .unwrap_or_default();
-        within_recent_days(sd, today, days)
+          .iter()
+          .any(|startdate| within_recent_days(startdate, today, days))
       })
       .cloned()
       .collect()
@@ -350,6 +348,20 @@ mod scheduler_tests {
     // 20260427 (day 0), 20260420 (day 7), 20260414 (day 13) → within 14 days
     // 20260410 (day 17) → excluded
     assert_eq!(recent.len(), 3);
+  }
+
+  #[test]
+  fn filter_recent_days_keeps_group_when_any_region_is_recent() {
+    let mut mixed = photo("mixed", "20260410");
+    mixed.regions.push("en-US".into());
+    mixed.urls.push("https://example.com/mixed-us".into());
+    mixed.titles.push("Mixed US".into());
+    mixed.startdates.push("20260427".into());
+    mixed.copyrights.push("Copyright US".into());
+    mixed.copyrightlinks.push("https://www.bing.com/us".into());
+
+    let recent = Scheduler::filter_recent_days(&[mixed], 7, "20260427");
+    assert_eq!(recent.len(), 1);
   }
 
   #[test]

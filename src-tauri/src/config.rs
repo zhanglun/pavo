@@ -64,6 +64,20 @@ fn default_cache_retention_days() -> u32 {
   7
 }
 
+fn add_favorite_item(config: &mut PavoConfig, item: FavoriteItem) {
+  if !config
+    .favorites
+    .iter()
+    .any(|favorite| favorite.url == item.url)
+  {
+    config.favorites.push(item);
+  }
+}
+
+fn remove_favorite_item(config: &mut PavoConfig, url: &str) {
+  config.favorites.retain(|favorite| favorite.url != url);
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PavoConfig {
   #[serde(default = "default_auto_daily_update")]
@@ -283,17 +297,11 @@ impl PavoConfig {
   }
 
   pub fn add_favorite(&self, item: FavoriteItem) -> Result<Self, String> {
-    Self::update_config(|cfg| {
-      if !cfg.favorites.iter().any(|f| f.filename == item.filename) {
-        cfg.favorites.push(item);
-      }
-    })
+    Self::update_config(|cfg| add_favorite_item(cfg, item))
   }
 
-  pub fn remove_favorite_by_filename(&self, filename: &str) -> Result<Self, String> {
-    Self::update_config(|cfg| {
-      cfg.favorites.retain(|f| f.filename != filename);
-    })
+  pub fn remove_favorite_by_url(&self, url: &str) -> Result<Self, String> {
+    Self::update_config(|cfg| remove_favorite_item(cfg, url))
   }
 
   pub fn set_auto_rotate(&self, enabled: bool) -> Result<Self, String> {
@@ -370,6 +378,35 @@ show_layer = false
     let text = toml::to_string(&cfg).unwrap();
     assert!(text.contains("history_range_days = 14"));
     assert!(text.contains("filename = \"OHR.Sample.jpg\""));
+  }
+
+  #[test]
+  fn favorites_with_same_filename_are_distinguished_by_url() {
+    let mut cfg = PavoConfig::new();
+    cfg.favorites = vec![FavoriteItem {
+      filename: "OHR.Shared.jpg".into(),
+      url: "https://example.test/cn.jpg".into(),
+      title: "中国".into(),
+      startdate: "20260723".into(),
+      copyright: String::new(),
+      copyrightlink: String::new(),
+      local_path: None,
+    }];
+    let second = FavoriteItem {
+      filename: "OHR.Shared.jpg".into(),
+      url: "https://example.test/us.jpg".into(),
+      title: "US".into(),
+      startdate: "20260723".into(),
+      copyright: String::new(),
+      copyrightlink: String::new(),
+      local_path: None,
+    };
+
+    add_favorite_item(&mut cfg, second);
+    assert_eq!(cfg.favorites.len(), 2);
+    remove_favorite_item(&mut cfg, "https://example.test/cn.jpg");
+    assert_eq!(cfg.favorites.len(), 1);
+    assert_eq!(cfg.favorites[0].url, "https://example.test/us.jpg");
   }
 
   #[test]

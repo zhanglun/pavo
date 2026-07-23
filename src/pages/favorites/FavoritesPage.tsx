@@ -10,7 +10,7 @@ import { Menu } from "../../shared/ui/menu/Menu";
 import { formatFolioDate } from "../../shared/utils/date";
 import styles from "./FavoritesPage.module.css";
 
-const toWallpaper = (item: FavoriteItem): Wallpaper => ({ id: item.filename, filename: item.filename, regionCode: "", region: "", imageUrl: item.url, title: item.title, date: item.startdate, copyright: item.copyright, sourceUrl: item.copyrightlink });
+const toWallpaper = (item: FavoriteItem): Wallpaper => ({ id: item.url, filename: item.filename, regionCode: "", region: "", imageUrl: item.url, title: item.title, date: item.startdate, copyright: item.copyright, sourceUrl: item.copyrightlink });
 
 export function FavoritesPage({ onToggleFavorite, refreshSignal }: { onToggleFavorite: (wallpaper: Wallpaper) => void | Promise<void>; refreshSignal: number }) {
   const [items, setItems] = useState<Wallpaper[]>([]);

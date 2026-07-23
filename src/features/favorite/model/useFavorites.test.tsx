@@ -31,21 +31,21 @@ const savedFavorite = {
   copyrightlink: wallpaper.sourceUrl,
 };
 
-test("loads persisted favorites and adds a wallpaper using the Rust model", async () => {
+test("loads persisted favorites by URL and adds a wallpaper using the Rust model", async () => {
   vi.mocked(tauri.favorites.list).mockResolvedValue([savedFavorite]);
   vi.mocked(tauri.favorites.add).mockResolvedValue({} as never);
   const { result } = renderHook(() => useFavorites());
-  await waitFor(() => expect(result.current.favoriteIds.has("mountain.jpg")).toBe(true));
-  await act(() => result.current.toggle({ ...wallpaper, filename: "lake.jpg", id: "lake-cn" }));
-  expect(tauri.favorites.add).toHaveBeenCalledWith(expect.objectContaining({ filename: "lake.jpg", url: wallpaper.imageUrl }));
+  await waitFor(() => expect(result.current.favoriteIds.has(wallpaper.imageUrl)).toBe(true));
+  await act(() => result.current.toggle({ ...wallpaper, filename: "lake.jpg", id: "lake-cn", imageUrl: "https://example.com/lake.jpg" }));
+  expect(tauri.favorites.add).toHaveBeenCalledWith(expect.objectContaining({ filename: "lake.jpg", url: "https://example.com/lake.jpg" }));
 });
 
 test("removes an existing favorite", async () => {
   vi.mocked(tauri.favorites.list).mockResolvedValue([savedFavorite]);
   vi.mocked(tauri.favorites.remove).mockResolvedValue({} as never);
   const { result } = renderHook(() => useFavorites());
-  await waitFor(() => expect(result.current.favoriteIds.has(wallpaper.filename)).toBe(true));
+  await waitFor(() => expect(result.current.favoriteIds.has(wallpaper.imageUrl)).toBe(true));
   await act(() => result.current.toggle(wallpaper));
-  expect(tauri.favorites.remove).toHaveBeenCalledWith(wallpaper.filename);
-  expect(result.current.favoriteIds.has(wallpaper.filename)).toBe(false);
+  expect(tauri.favorites.remove).toHaveBeenCalledWith(wallpaper.imageUrl);
+  expect(result.current.favoriteIds.has(wallpaper.imageUrl)).toBe(false);
 });

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { normalizeCollection } from "../../entities/wallpaper/model/normalize";
+import { selectRecentWallpapers, selectTodayWallpapers } from "../../entities/wallpaper/model/normalize";
 import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
 import { RegionRail } from "../../entities/wallpaper/ui/RegionRail";
@@ -8,7 +8,7 @@ import { useSetWallpaper } from "../../features/set-wallpaper/model/useSetWallpa
 import { openExternal } from "../../shared/platform/shell";
 import { tauri } from "../../shared/tauri/client";
 import { Menu } from "../../shared/ui/menu/Menu";
-import { formatFolioDate } from "../../shared/utils/date";
+import { formatFolioDate, localDateKey } from "../../shared/utils/date";
 import styles from "./TodayPage.module.css";
 
 type Props = {
@@ -16,10 +16,6 @@ type Props = {
   onToggleFavorite: (wallpaper: Wallpaper) => void | Promise<void>;
   refreshSignal: number;
 };
-
-function normalizeToday(collection: Awaited<ReturnType<typeof tauri.wallpapers.getTodayCollection>>) {
-  return collection.flatMap(normalizeCollection);
-}
 
 export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Props) {
   const [items, setItems] = useState<Wallpaper[]>([]);
@@ -37,10 +33,11 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
     (async () => {
       try {
         const today = await tauri.wallpapers.getTodayCollection();
-        const fallback = today.length <= 1;
+        const todayItems = selectTodayWallpapers(today, localDateKey());
+        const fallback = todayItems.length <= 1;
         const next = fallback
-          ? (await tauri.wallpapers.getRecent(7)).slice(0, 10).flatMap((photo) => normalizeCollection(photo).slice(0, 1))
-          : normalizeToday(today);
+          ? selectRecentWallpapers(await tauri.wallpapers.getRecent(7), localDateKey(), 7).slice(0, 10)
+          : todayItems;
         if (!active) return;
         setItems(next);
         setSelectedId((current) => next.some((item) => item.id === current) ? current : (next[0]?.id ?? ""));
@@ -60,7 +57,7 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
   if (!selected) return <section className={styles.state}>今天还没有可用的壁纸。</section>;
 
   const date = formatFolioDate(selected.date);
-  const favorite = favoriteIds.has(selected.filename);
+  const favorite = favoriteIds.has(selected.imageUrl);
   return <section className={styles.page} aria-labelledby="today-title">
     <header className={styles.dateSeal}>
       <span>{date.monthDay}</span><span>{date.year} · {date.weekday}</span>

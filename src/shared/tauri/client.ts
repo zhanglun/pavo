@@ -14,7 +14,7 @@ export const tauri = {
   favorites: {
     list: () => invoke<FavoriteItem[]>("list_favorites"),
     add: (item: FavoriteItem) => invoke<UserConfig>("add_favorite", { item }),
-    remove: (filename: string) => invoke<UserConfig>("remove_favorite", { filename }),
+    remove: (url: string) => invoke<UserConfig>("remove_favorite", { url }),
   },
   settings: {
     get: () => invoke<UserConfig>("get_config"),

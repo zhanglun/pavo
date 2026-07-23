@@ -181,8 +181,8 @@ pub async fn add_favorite(item: config::FavoriteItem) -> Result<serde_json::Valu
 }
 
 #[tauri::command]
-pub async fn remove_favorite(filename: String) -> Result<serde_json::Value, String> {
-  config_value(config::PavoConfig::get_config().remove_favorite_by_filename(&filename)?)
+pub async fn remove_favorite(url: String) -> Result<serde_json::Value, String> {
+  config_value(config::PavoConfig::get_config().remove_favorite_by_url(&url)?)
 }
 
 #[tauri::command]
