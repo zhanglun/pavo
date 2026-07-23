@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { normalizeCollection, selectRecentWallpapers, selectRegionalFallbackWallpapers, selectTodayWallpapers } from "./normalize";
+import { normalizeCollection, selectHistoryWallpapers, selectRecentWallpapers, selectRegionalFallbackWallpapers, selectTodayWallpapers } from "./normalize";
 
 describe("normalizeCollection", () => {
   test("skips only malformed region entries", () => {
@@ -112,5 +112,22 @@ describe("wallpaper selectors", () => {
 
     const ids = normalizeCollection(reused).map((item) => item.id);
     expect(new Set(ids).size).toBe(2);
+  });
+
+  test("history collapses regional variants of one visual but preserves another date", () => {
+    const shared = {
+      ...mixed,
+      filename: "OHR.Shared_ZH-CN.jpg",
+      regions: ["zh-CN", "en-US", "zh-CN"],
+      urls: ["shared-cn", "shared-us", "shared-yesterday"],
+      titles: ["中国共享", "美国共享", "昨日共享"],
+      startdates: ["20260723", "20260723", "20260722"],
+      copyrights: ["", "", ""],
+      copyrightlinks: ["", "", ""],
+    };
+
+    const selected = selectHistoryWallpapers([shared], "20260723", 7);
+
+    expect(selected.map((item) => item.title)).toEqual(["中国共享", "昨日共享"]);
   });
 });

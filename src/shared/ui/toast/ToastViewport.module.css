@@ -1,0 +1,19 @@
+.toast {
+  position: fixed;
+  z-index: 50;
+  bottom: 18px;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100vw - 36px);
+  padding: 9px 13px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: var(--ink);
+  box-shadow: var(--shadow-menu);
+  color: var(--paper);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  pointer-events: none;
+  transform: translateX(-50%);
+}

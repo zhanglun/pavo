@@ -10,6 +10,7 @@ const regionRank = (regionCode: string) => {
   const index = regionOrder.indexOf(regionCode);
   return index === -1 ? regionOrder.length : index;
 };
+const imageIdentity = (item: Wallpaper) => item.filename.split("_")[0] || item.filename;
 
 export function normalizeCollection(photo: SchedulerPhoto): Wallpaper[] {
   return photo.regions.flatMap((regionCode, index) => {
@@ -61,13 +62,16 @@ export function selectRecentWallpapers(collection: SchedulerPhoto[], today: stri
   return uniqueBy(matches, (item) => `${item.date}\0${item.regionCode}\0${item.imageUrl}`);
 }
 
+export function selectHistoryWallpapers(collection: SchedulerPhoto[], today: string, days: number) {
+  return uniqueBy(selectRecentWallpapers(collection, today, days), (item) => `${item.date}\0${imageIdentity(item)}`);
+}
+
 export function selectRegionalFallbackWallpapers(collection: SchedulerPhoto[], today: string, days: number) {
   const recent = selectRecentWallpapers(collection, today, days);
   const regions = uniqueBy(recent, (item) => item.regionCode)
     .sort((left, right) => regionRank(left.regionCode) - regionRank(right.regionCode))
     .map((item) => item.regionCode);
   const usedImages = new Set<string>();
-  const imageIdentity = (item: Wallpaper) => item.filename.split("_")[0] || item.filename;
 
   return regions.flatMap((regionCode) => {
     const candidate = recent.find((item) => item.regionCode === regionCode && !usedImages.has(imageIdentity(item)));

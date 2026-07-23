@@ -2,7 +2,8 @@
 .shell {
   display: grid;
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
   grid-template-rows: 52px auto minmax(0, 1fr);
   background: var(--paper);
 }
@@ -79,6 +80,7 @@
 
 .content {
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -86,7 +88,7 @@
 }
 
 .content::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 .content::-webkit-scrollbar-track {

@@ -1,2 +1,3 @@
 import { useToast } from "./ToastProvider";
-export function ToastViewport() { const { toast } = useToast(); return toast ? <div role="status">{toast.message}</div> : null; }
+import styles from "./ToastViewport.module.css";
+export function ToastViewport() { const { toast } = useToast(); return toast ? <div className={styles.toast} data-tone={toast.tone} role="status">{toast.message}</div> : null; }

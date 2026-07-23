@@ -35,3 +35,20 @@ test("shows a restrained retry state when history cannot load", async () => {
   render(<ToastProvider><HistoryPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
   await waitFor(() => expect(screen.getByText(/暂时无法读取/)).toBeInTheDocument());
 });
+
+test("renders one archive card for regional variants of the same visual", async () => {
+  vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([{
+    filename: "OHR.Shared_ZH-CN.jpg",
+    regions: ["zh-CN", "en-US"],
+    urls: ["https://example.com/shared-cn.jpg", "https://example.com/shared-us.jpg"],
+    titles: ["中国共享", "美国共享"],
+    startdates: ["20260723", "20260723"],
+    copyrights: ["摄影者", "Photographer"],
+    copyrightlinks: ["source-cn", "source-us"],
+  }]);
+
+  render(<ToastProvider><HistoryPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
+
+  expect(await screen.findByText("中国共享")).toBeVisible();
+  expect(screen.queryByText("美国共享")).not.toBeInTheDocument();
+});

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { selectRecentWallpapers } from "../../entities/wallpaper/model/normalize";
+import { selectHistoryWallpapers } from "../../entities/wallpaper/model/normalize";
 import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
 import { useDownloadWallpaper } from "../../features/download/model/useDownloadWallpaper";
@@ -25,7 +25,7 @@ export function HistoryPage({ favoriteIds, onToggleFavorite, refreshSignal }: Pr
       try {
         const config = await tauri.settings.get();
         const recent = await tauri.wallpapers.getRecent(config.history_range_days);
-        if (active) { setItems(selectRecentWallpapers(recent, localDateKey(), config.history_range_days)); setState("ready"); }
+        if (active) { setItems(selectHistoryWallpapers(recent, localDateKey(), config.history_range_days)); setState("ready"); }
       } catch { if (active) setState("error"); }
     })();
     return () => { active = false; };
