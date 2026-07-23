@@ -3,6 +3,7 @@ import { useFavorites } from "../features/favorite/model/useFavorites";
 import { useThemePreference } from "../features/theme/model/useThemePreference";
 import { FavoritesPage } from "../pages/favorites/FavoritesPage";
 import { HistoryPage } from "../pages/history/HistoryPage";
+import { SettingsPage } from "../pages/settings/SettingsPage";
 import { TodayPage } from "../pages/today/TodayPage";
 import { hideWindow } from "../shared/platform/window";
 import { checkForUpdates } from "../shared/platform/updater";
@@ -24,6 +25,6 @@ export function AppShell() {
       ? <HistoryPage favoriteIds={favorites.favoriteIds} onToggleFavorite={favorites.toggle} refreshSignal={refreshSignal} />
       : view === "favorites"
         ? <FavoritesPage onToggleFavorite={favorites.toggle} refreshSignal={refreshSignal} />
-        : <h1>设置</h1>;
-  return <main aria-label="Pavo" role="application"><header><span data-tauri-drag-region>Pavo</span><button aria-label="刷新" onClick={() => void forceRefresh()}>↻</button><button aria-label="设置" onClick={openSettings}>⚙</button><button aria-label="隐藏到托盘" onClick={() => { void hideWindow(); }}>−</button></header><nav>{(["today", "history", "favorites"] as const).map((item) => <button key={item} role="tab" aria-selected={view === item} onClick={() => setView(item)}>{item === "today" ? "今日" : item === "history" ? "历史" : "收藏"}</button>)}</nav><section>{content}</section></main>;
+        : <SettingsPage onBack={() => setView("today")} onHistoryRangeChanged={reload} />;
+  return <main aria-label="Pavo" role="application"><header><span data-tauri-drag-region>Pavo</span><button aria-label="刷新" onClick={() => void forceRefresh()}>↻</button><button aria-label="设置" onClick={openSettings}>⚙</button><button aria-label="隐藏到托盘" onClick={() => { void hideWindow(); }}>−</button></header>{view !== "settings" && <nav role="tablist">{(["today", "history", "favorites"] as const).map((item) => <button key={item} role="tab" aria-selected={view === item} onClick={() => setView(item)}>{item === "today" ? "今日" : item === "history" ? "历史" : "收藏"}</button>)}</nav>}<section>{content}</section></main>;
 }
