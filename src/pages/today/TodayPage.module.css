@@ -7,6 +7,10 @@
 .hero { position:relative; height:192px; overflow:hidden; background:var(--line); }
 .hero::after { position:absolute;inset:0;background:linear-gradient(145deg,var(--selection),transparent 42%);content:"";pointer-events:none;opacity:.35; }
 .hero img, .hero [role="img"] { width:100%; height:100%; object-fit:cover; display:grid; place-items:center; }
+/* 切换地区稳定容器：固定最小高度，吸收标题/版权长度变化，消除主体抖动。
+ * key={selected.id} 触发淡入，仅 opacity 过渡，不触发布局。 */
+.metaBlock { min-height:168px; animation:metaIn var(--dur-short) var(--ease-out); }
+@keyframes metaIn { from { opacity:0; } to { opacity:1; } }
 .story { padding:15px 0 12px; }
 .region { margin:0 0 6px; color:var(--muted); font-size:9px; letter-spacing:.1em; text-transform:uppercase; }
 .story h1 { min-width:0;margin:0;font-family:var(--font-display);font-size:28px;font-weight:500;line-height:1;letter-spacing:-.055em;overflow-wrap:anywhere; }
@@ -17,12 +21,18 @@
 .primary:hover { filter:brightness(1.06); }
 .primary:active { transform:translateY(1px); }
 .iconButton { width:36px;align-self:center;font-size:18px; }
+/* Hallmark · component: region rail · genre: editorial · theme: locked token
+ * redesign: 选中态回归文字变色，移除图片描边与饱和度压制；克制。
+ * states: default · hover · focus-visible · active · aria-pressed · disabled(无) */
 .regions { padding-top:15px; border-top:1px solid var(--line); }
 .regions > p { margin:0 0 9px; color:var(--muted); font-size:9px; letter-spacing:.08em; }
 .regions > div { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; overflow:visible; padding:0; }
-.regions button { min-width:0;overflow:hidden;border:0;padding:0;background:var(--line);color:var(--muted);font-size:8px; }
-.regions button img { display:block;width:100%;aspect-ratio:1/.88;object-fit:cover;filter:saturate(.78); }
-.regions button span { display:block;overflow:hidden;padding:4px 2px;background:var(--paper);white-space:nowrap;text-overflow:ellipsis; }
+.regions button { min-width:0;overflow:hidden;border:0;padding:0;background:var(--line);color:var(--muted);font-size:8px;transition:background var(--dur-short) var(--ease-out); }
+.regions button:hover { background:color-mix(in srgb,var(--muted) 22%,var(--line)); }
+.regions button:focus-visible { outline:2px solid var(--focus);outline-offset:1px; }
+.regions button:active { transform:translateY(1px); }
+.regions button img { display:block;width:100%;aspect-ratio:1/.88;object-fit:cover;transition:filter var(--dur-short) var(--ease-out); }
+.regions button span { display:block;overflow:hidden;padding:4px 2px;background:var(--paper);white-space:nowrap;text-overflow:ellipsis;transition:color var(--dur-short) var(--ease-out); }
+.regions button[aria-pressed="true"] { background:var(--paper-raised); }
 .regions button[aria-pressed="true"] span { color:var(--accent);font-weight:700; }
-.regions button[aria-pressed="true"] img { outline:1px solid var(--accent);outline-offset:-1px; }
 .state { padding:48px 20px;color:var(--muted);font-size:var(--text-sm);text-align:center; }
