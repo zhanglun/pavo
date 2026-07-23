@@ -2,13 +2,14 @@ import { cloneElement, useEffect, useId, useRef, useState, type ReactElement } f
 import styles from "./Tooltip.module.css";
 
 type Props = {
+  align?: "start" | "center" | "end";
   children: ReactElement;
   disabled?: boolean;
   label: string;
   side?: "top" | "bottom";
 };
 
-export function Tooltip({ children, disabled = false, label, side = "top" }: Props) {
+export function Tooltip({ align = "center", children, disabled = false, label, side = "top" }: Props) {
   const id = useId();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [open, setOpen] = useState(false);
@@ -33,6 +34,15 @@ export function Tooltip({ children, disabled = false, label, side = "top" }: Pro
     cancelTimer();
     if (!disabled) timer.current = setTimeout(() => setOpen(true), 800);
   };
+  useEffect(() => {
+    if (!disabled) return;
+    cancelTimer();
+    setOpen(false);
+  }, [disabled]);
+
+  const visible = open && !disabled;
+  const originalDescription = (children.props as { "aria-describedby"?: string })["aria-describedby"];
+  const describedBy = [originalDescription, visible ? id : undefined].filter(Boolean).join(" ") || undefined;
 
   return (
     <span
@@ -44,8 +54,8 @@ export function Tooltip({ children, disabled = false, label, side = "top" }: Pro
       onMouseEnter={showLater}
       onMouseLeave={hide}
     >
-      {cloneElement(children, { "aria-describedby": open ? id : undefined } as object)}
-      {open && !disabled && <span className={styles.tooltip} data-side={side} id={id} role="tooltip">{label}</span>}
+      {cloneElement(children, { "aria-describedby": describedBy } as object)}
+      {visible && <span className={styles.tooltip} data-align={align} data-side={side} id={id} role="tooltip">{label}</span>}
     </span>
   );
 }

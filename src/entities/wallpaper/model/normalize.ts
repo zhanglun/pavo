@@ -18,7 +18,7 @@ export function normalizeCollection(photo: SchedulerPhoto): Wallpaper[] {
     const date = photo.startdates[index];
     if (!imageUrl || !title || !date) return [];
     return [{
-      id: `${photo.filename}:${regionCode}`,
+      id: `${photo.filename}:${regionCode}:${date}:${imageUrl}`,
       filename: photo.filename,
       regionCode,
       region: regionNames[regionCode] ?? regionCode,
@@ -59,4 +59,20 @@ export function selectRecentWallpapers(collection: SchedulerPhoto[], today: stri
   };
   const matches = sortWallpapers(collection.flatMap(normalizeCollection).filter((item) => withinRange(item.date)));
   return uniqueBy(matches, (item) => `${item.date}\0${item.regionCode}\0${item.imageUrl}`);
+}
+
+export function selectRegionalFallbackWallpapers(collection: SchedulerPhoto[], today: string, days: number) {
+  const recent = selectRecentWallpapers(collection, today, days);
+  const regions = uniqueBy(recent, (item) => item.regionCode)
+    .sort((left, right) => regionRank(left.regionCode) - regionRank(right.regionCode))
+    .map((item) => item.regionCode);
+  const usedImages = new Set<string>();
+  const imageIdentity = (item: Wallpaper) => item.filename.split("_")[0] || item.filename;
+
+  return regions.flatMap((regionCode) => {
+    const candidate = recent.find((item) => item.regionCode === regionCode && !usedImages.has(imageIdentity(item)));
+    if (!candidate) return [];
+    usedImages.add(imageIdentity(candidate));
+    return [candidate];
+  });
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { selectRecentWallpapers, selectTodayWallpapers } from "../../entities/wallpaper/model/normalize";
+import { selectRegionalFallbackWallpapers, selectTodayWallpapers } from "../../entities/wallpaper/model/normalize";
 import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
 import { RegionRail } from "../../entities/wallpaper/ui/RegionRail";
@@ -37,7 +37,7 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
         const todayItems = selectTodayWallpapers(today, localDateKey());
         const fallback = todayItems.length <= 1;
         const next = fallback
-          ? selectRecentWallpapers(await tauri.wallpapers.getRecent(7), localDateKey(), 7).slice(0, 10)
+          ? selectRegionalFallbackWallpapers(await tauri.wallpapers.getRecent(7), localDateKey(), 7)
           : todayItems;
         if (!active) return;
         setItems(next);

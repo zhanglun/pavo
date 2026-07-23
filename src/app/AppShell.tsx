@@ -41,7 +41,7 @@ export function AppShell() {
         <span className={styles.brand} data-tauri-drag-region>Pavo</span>
         <Tooltip label="刷新" side="bottom"><button className={styles.windowAction} aria-label="刷新" onClick={() => void forceRefresh()}>↻</button></Tooltip>
         <Tooltip label="设置" side="bottom"><button className={styles.windowAction} aria-label="设置" onClick={openSettings}>⚙</button></Tooltip>
-        <Tooltip label="隐藏到托盘" side="bottom"><button className={styles.windowAction} aria-label="隐藏到托盘" onClick={() => { void hideWindow(); }}>−</button></Tooltip>
+        <Tooltip align="end" label="隐藏到托盘" side="bottom"><button className={styles.windowAction} aria-label="隐藏到托盘" onClick={() => { void hideWindow(); }}>−</button></Tooltip>
       </header>
       {view !== "settings" && (
         <nav className={styles.tabs} aria-label="主要页面" role="tablist">

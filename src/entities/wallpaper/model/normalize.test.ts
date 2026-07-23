@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { normalizeCollection, selectRecentWallpapers, selectTodayWallpapers } from "./normalize";
+import { normalizeCollection, selectRecentWallpapers, selectRegionalFallbackWallpapers, selectTodayWallpapers } from "./normalize";
 
 describe("normalizeCollection", () => {
   test("skips only malformed region entries", () => {
@@ -77,5 +77,40 @@ describe("wallpaper selectors", () => {
 
     const selected = selectRecentWallpapers([mixed, exactDuplicate, reusedLater, reusedElsewhere], "20260723", 7);
     expect(selected.filter((item) => item.imageUrl === "https://example.test/cn.jpg")).toHaveLength(3);
+  });
+
+  test("fallback chooses one recent and visually distinct wallpaper for each region", () => {
+    const shared = {
+      filename: "shared.jpg",
+      regions: ["zh-CN", "en-US", "fr-FR"],
+      urls: ["shared-cn-url", "shared-us-url", "shared-fr-url"],
+      titles: ["中国共享", "美国共享", "法国共享"],
+      startdates: ["20260723", "20260723", "20260723"],
+      copyrights: ["", "", ""],
+      copyrightlinks: ["", "", ""],
+    };
+    const usAlternative = { ...shared, filename: "us-old.jpg", regions: ["en-US"], urls: ["us-old"], titles: ["美国旧图"], startdates: ["20260722"], copyrights: [""], copyrightlinks: [""] };
+    const franceAlternative = { ...shared, filename: "france-old.jpg", regions: ["fr-FR"], urls: ["france-old"], titles: ["法国旧图"], startdates: ["20260721"], copyrights: [""], copyrightlinks: [""] };
+
+    const selected = selectRegionalFallbackWallpapers([shared, usAlternative, franceAlternative], "20260723", 7);
+
+    expect(selected.map((item) => item.regionCode)).toEqual(["zh-CN", "en-US", "fr-FR"]);
+    expect(new Set(selected.map((item) => item.imageUrl)).size).toBe(3);
+    expect(selected.map((item) => item.imageUrl)).toEqual(["shared-cn-url", "us-old", "france-old"]);
+  });
+
+  test("normalized ids distinguish the same regional file reused on another date", () => {
+    const reused = {
+      ...mixed,
+      regions: ["zh-CN", "zh-CN"],
+      urls: ["same-url", "same-url"],
+      titles: ["第一天", "第二天"],
+      startdates: ["20260723", "20260722"],
+      copyrights: ["", ""],
+      copyrightlinks: ["", ""],
+    };
+
+    const ids = normalizeCollection(reused).map((item) => item.id);
+    expect(new Set(ids).size).toBe(2);
   });
 });

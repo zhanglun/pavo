@@ -41,6 +41,29 @@ test("falls back to recent wallpapers when todays collection is insufficient", a
   expect(await screen.findByText("近期内容")).toBeVisible();
 });
 
+test("fallback renders each region once with distinct recent images", async () => {
+  vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([photo("only.jpg", "唯一")]);
+  vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([
+    {
+      filename: "shared.jpg",
+      regions: ["zh-CN", "en-US"],
+      urls: ["shared-cn-url", "shared-us-url"],
+      titles: ["中国共享", "美国共享"],
+      startdates: ["20260723", "20260723"],
+      copyrights: ["", ""],
+      copyrightlinks: ["", ""],
+    },
+    photo("us-old.jpg", "美国旧图", "en-US"),
+  ]);
+
+  render(<ToastProvider><TodayPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
+
+  expect(await screen.findByRole("button", { name: "中国大陆" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "美国" }).querySelector("img")).toHaveAttribute("src", "https://example.test/us-old.jpg");
+  const thumbnails = screen.getAllByRole("button", { name: /中国大陆|美国/ }).map((button) => button.querySelector("img")?.src);
+  expect(new Set(thumbnails).size).toBe(2);
+});
+
 test("does not fall back when one merged collection contains multiple valid regions", async () => {
   vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([{
     filename: "shared.jpg",

@@ -30,6 +30,17 @@
   top: calc(100% + 8px);
 }
 
+.tooltip[data-align="start"] {
+  left: 0;
+  transform: none;
+}
+
+.tooltip[data-align="end"] {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
 .tooltip::after {
   position: absolute;
   left: 50%;
@@ -46,4 +57,13 @@
 .tooltip[data-side="bottom"]::after {
   bottom: 100%;
   border-bottom-color: var(--ink);
+}
+
+.tooltip[data-align="start"]::after {
+  left: 14px;
+}
+
+.tooltip[data-align="end"]::after {
+  right: 14px;
+  left: auto;
 }
