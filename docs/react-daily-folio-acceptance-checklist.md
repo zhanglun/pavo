@@ -119,8 +119,8 @@
 - [x] Windows 人工验收无 P0/P1 问题。
 - [x] 所有失败项均有处理结论或明确延期说明。
 - [x] README、README.en、架构文档与实际实现一致。
-- [ ] 更新最终产品截图。
-- [ ] 决定是否跟踪 `pavo-redesign-comparison.html`。
+- [x] 更新最终产品截图。
+- [x] 将 `pavo-redesign-comparison.html` 纳入版本管理。
 - [x] 全量前端、Rust 验证通过。
 - [x] 工作区干净。
 - [ ] 用户确认合并或创建 PR。

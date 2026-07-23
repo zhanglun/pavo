@@ -151,17 +151,20 @@ cd .. && pnpm tauri dev
 
 ### 合并与发布准备
 
-- 更新最终产品截图。
-- 决定是否将根目录未跟踪的 `pavo-redesign-comparison.html` 纳入版本管理。
-- 完成最终全量验证。
 - 决定合并、PR 或发布方式。
+
+已完成：
+
+- `screenshot-1.png`：浅色今日册页最终截图。
+- `screenshot-2.png`：暗色今日册页最终截图。
+- `pavo-redesign-comparison.html`：已纳入功能分支版本管理。
+- 前端与 Rust 最终全量验证已通过。
 
 ## 8. 推荐后续顺序
 
-1. 执行前端构建、Rust 全量测试与最终静态检查。
-2. 更新截图和发布文档。
-3. 决定设计 HTML 的版本管理方式。
-4. 合并 `feature/react-daily-folio` 或创建 PR。
+1. 创建并审查 `feature/react-daily-folio` PR。
+2. PR 通过后合并到 `main`。
+3. 按发布流程准备后续版本。
 
 ## 9. 交接约束
 
