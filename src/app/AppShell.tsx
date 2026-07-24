@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFavorites } from "../features/favorite/model/useFavorites";
 import { useThemePreference } from "../features/theme/model/useThemePreference";
 import { FavoritesPage } from "../pages/favorites/FavoritesPage";
@@ -28,6 +28,16 @@ export function AppShell() {
   const update = useCallback(() => { void checkForUpdates(); }, []);
   const forceRefresh = useCallback(async () => { await tauri.wallpapers.forceRefresh(); reload(); }, [reload]);
   useTauriEvents({ onRefresh: reload, onSettings: openSettings, onUpdate: update });
+
+  // 跨午夜自动刷新：app 开着不动过了一天时，今日页要自动更新日期和壁纸。
+  // 计算到下一个 00:00 的毫秒数，到点触发 reload。
+  useEffect(() => {
+    const now = new Date();
+    const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+    const ms = nextMidnight.getTime() - now.getTime();
+    const timer = setTimeout(() => reload(), ms + 1000);
+    return () => clearTimeout(timer);
+  }, [reload]);
   const content = view === "today"
     ? <TodayPage favoriteIds={favorites.favoriteIds} onToggleFavorite={favorites.toggle} refreshSignal={refreshSignal} />
     : view === "history"
