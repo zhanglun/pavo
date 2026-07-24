@@ -40,13 +40,5 @@
     "typescript": "^5.9.3",
     "vite": "^5.4.21",
     "vitest": "^2.1.9"
-  },
-  "pnpm": {
-    "ignoredBuiltDependencies": [
-      "esbuild"
-    ],
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }
