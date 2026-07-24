@@ -69,7 +69,9 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
   if (error) return <section className={styles.state}>今日壁纸暂时无法读取，请刷新重试。</section>;
   if (!selected) return <section className={styles.state}>今天还没有可用的壁纸。</section>;
 
-  const date = formatFolioDate(selected.date);
+  // 日期标签固定显示系统当前日期（今日册页 = 今天），不跟随壁纸 startdate。
+  // Bing 数据可能滞后（UTC 未到新一天时 startdate 还是昨天），但日期戳必须是今天。
+  const date = formatFolioDate(localDateKey());
   const favorite = favoriteIds.has(selected.imageUrl);
   return <section className={styles.page} aria-labelledby="today-title">
     <header className={styles.dateSeal}>

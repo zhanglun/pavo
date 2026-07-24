@@ -67,10 +67,15 @@ test("renders a numbered folio index with count and current-region semantics", a
   const china = await screen.findByRole("button", { name: "中国大陆" });
   const unitedStates = screen.getByRole("button", { name: "美国" });
 
-  expect(screen.getByText("JULY")).toBeVisible();
-  expect(screen.getByText("2026")).toBeVisible();
-  expect(screen.getByText("23")).toBeVisible();
-  expect(screen.getByText("星期四")).toBeVisible();
+  // 日期标签显示系统当前日期（今日册页 = 今天），不跟随壁纸 startdate
+  const now = new Date();
+  const monthLabel = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"][now.getMonth()];
+  const day = String(now.getDate());
+  const weekday = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"][now.getDay()];
+  expect(screen.getByText(monthLabel)).toBeVisible();
+  expect(screen.getByText(String(now.getFullYear()))).toBeVisible();
+  expect(screen.getByText(day)).toBeVisible();
+  expect(screen.getByText(weekday)).toBeVisible();
   expect(screen.getByText("各地")).toBeVisible();
   expect(screen.queryByText("今日各地")).not.toBeInTheDocument();
   expect(screen.getByText("2")).toBeVisible();
