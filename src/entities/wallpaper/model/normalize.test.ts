@@ -118,7 +118,7 @@ describe("wallpaper selectors", () => {
     expect(new Set(ids).size).toBe(2);
   });
 
-  test("history collapses regional variants of one visual but preserves another date", () => {
+  test("history collapses regional variants of one visual but aggregates region codes", () => {
     const shared = {
       ...mixed,
       filename: "OHR.Shared_ZH-CN.jpg",
@@ -132,6 +132,51 @@ describe("wallpaper selectors", () => {
 
     const selected = selectHistoryWallpapers([shared], "20260723", 7);
 
+    // 同一天多地共享同一张图：聚合成一条，regionCodes 收集全部地区
     expect(selected.map((item) => item.title)).toEqual(["中国共享", "昨日共享"]);
+    const todayEntry = selected.find((item) => item.title === "中国共享");
+    expect(todayEntry?.regionCodes).toEqual(["zh-CN", "en-US"]);
+    // 独特日期的单地区条目，regionCodes 只含自身
+    const yesterdayEntry = selected.find((item) => item.title === "昨日共享");
+    expect(yesterdayEntry?.regionCodes).toEqual(["zh-CN"]);
+  });
+
+  test("history aggregates same-day regions sharing one image into a single entry", () => {
+    // 模拟真实 Bing：0720 四地共享 SantaCatalina，美日各有独特图
+    const global = {
+      filename: "OHR.SantaCatalina.jpg",
+      regions: ["zh-CN", "de-DE", "fr-FR", "en-GB"],
+      urls: ["cn-url", "de-url", "fr-url", "gb-url"],
+      titles: ["SantaCatalina 中", "SantaCatalina 德", "SantaCatalina 法", "SantaCatalina 英"],
+      startdates: ["20260720", "20260720", "20260720", "20260720"],
+      copyrights: ["", "", "", ""],
+      copyrightlinks: ["", "", "", ""],
+    };
+    const usUnique = {
+      filename: "OHR.Artemis.jpg",
+      regions: ["en-US"],
+      urls: ["us-url"],
+      titles: ["Artemis"],
+      startdates: ["20260720"],
+      copyrights: [""],
+      copyrightlinks: [""],
+    };
+    const jpUnique = {
+      filename: "OHR.Kawagoe2026.jpg",
+      regions: ["ja-JP"],
+      urls: ["jp-url"],
+      titles: ["Kawagoe2026"],
+      startdates: ["20260720"],
+      copyrights: [""],
+      copyrightlinks: [""],
+    };
+
+    const selected = selectHistoryWallpapers([global, usUnique, jpUnique], "20260720", 7);
+
+    // 三张不同的图各一条；全球图聚合 4 个地区
+    expect(selected.map((item) => item.title)).toEqual(["SantaCatalina 中", "Artemis", "Kawagoe2026"]);
+    // regionCodes 按 regionRank 排序（selectRecentWallpapers 已排序）
+    expect(selected[0].regionCodes).toEqual(["zh-CN", "fr-FR", "de-DE", "en-GB"]);
+    expect(selected[1].regionCodes).toEqual(["en-US"]);
   });
 });

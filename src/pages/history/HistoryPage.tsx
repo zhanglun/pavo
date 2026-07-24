@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { selectHistoryWallpapers } from "../../entities/wallpaper/model/normalize";
+import { formatRegionList, selectHistoryWallpapers } from "../../entities/wallpaper/model/normalize";
 import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
 import { useDownloadWallpaper } from "../../features/download/model/useDownloadWallpaper";
@@ -40,7 +40,11 @@ export function HistoryPage({ favoriteIds, onToggleFavorite, refreshSignal }: Pr
       const favorite = favoriteIds.has(item.imageUrl);
       return <article className={styles.card} key={item.id}>
         <div className={styles.image}><WallpaperImage wallpaper={item} /></div>
-        <div className={styles.copy}><time>{date.year} · {date.monthDay}</time><h2>{item.title}</h2><p>{item.copyright}</p></div>
+        <div className={styles.copy}>
+          <time>{date.year} · {date.monthDay}{item.regionCodes && item.regionCodes.length > 1 ? ` · ${formatRegionList(item.regionCodes)}` : ""}</time>
+          <h2>{item.title}</h2>
+          <p>{item.copyright}</p>
+        </div>
         <div className={styles.actions}>
           <Tooltip label={favorite ? "取消收藏" : "收藏"}><button aria-label={favorite ? `取消收藏：${item.title}` : `收藏：${item.title}`} onClick={() => void onToggleFavorite(item)}>{favorite ? "♥" : "♡"}</button></Tooltip>
           <Menu label={`更多操作：${item.title}`} items={[
