@@ -1,17 +1,31 @@
-/* Hallmark · genre: editorial · macrostructure: Daily Folio Archive · design-system: locked prototype · designed-as-app */
+/* Hallmark · genre: editorial · macrostructure: Daily Folio Archive · design-system: locked prototype · designed-as-app
+ * redesign: 按日期分组时间线，每天一个区块展示当天所有图，有几张显几张 */
 .page { padding: 18px 18px 32px; }
-.page > header { display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:13px;border-bottom:1px solid var(--line); }
-.page > header p { margin:0;color:var(--muted);font-family:var(--font-utility);font-size:9px;letter-spacing:.16em; }
-.page h1 { margin:0;font-family:var(--font-display);font-size:26px;font-weight:500;line-height:1;letter-spacing:-.045em; }
-.list { display:grid; }
-.card { display:grid;grid-template-columns:75px minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line); }
-.image { width:75px;height:57px;overflow:hidden;background:var(--line); }
-.image img,.image [role="img"] { width:100%;height:100%;object-fit:cover; }
+.page > header { display:flex; align-items:flex-end; justify-content:space-between; padding-bottom:13px; border-bottom:1px solid var(--line); }
+.page > header p { margin:0; color:var(--muted); font-family:var(--font-utility); font-size:9px; letter-spacing:.16em; }
+.page h1 { margin:0; font-family:var(--font-display); font-size:26px; font-weight:500; line-height:1; letter-spacing:-.045em; }
+
+.timeline { display:grid; gap:22px; padding-top:18px; }
+
+/* 日期区块 */
+.day { display:grid; gap:10px; }
+.dayHead { display:flex; align-items:baseline; gap:8px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+.dayDate { font-family:var(--font-display); font-size:22px; font-weight:500; line-height:.9; letter-spacing:-.05em; font-variant-numeric:tabular-nums; }
+.dayMeta { color:var(--muted); font-family:var(--font-utility); font-size:9px; letter-spacing:.04em; }
+.dayCount { margin-left:auto; color:var(--muted); font-family:var(--font-utility); font-size:9px; letter-spacing:.04em; }
+
+/* 当日图片网格：有几张显几张，auto-fill 自适应 */
+.dayGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:12px; }
+
+/* 单张图卡片 */
+.card { min-width:0; display:flex; flex-direction:column; gap:6px; }
+.image { width:100%; aspect-ratio:1/.7; overflow:hidden; background:var(--line); }
+.image img, .image [role="img"] { width:100%; height:100%; object-fit:cover; }
 .copy { min-width:0; }
-.copy time { color:var(--muted);font-family:var(--font-utility);font-size:8px;letter-spacing:.06em; }
-.copy h2 { overflow:hidden;margin:5px 0 5px;font-family:var(--font-display);font-size:16px;font-weight:500;line-height:1;white-space:nowrap;text-overflow:ellipsis; }
-.copy p { overflow:hidden;margin:0;color:var(--muted);font-size:9px;white-space:nowrap;text-overflow:ellipsis; }
-.actions { display:flex;gap:1px;align-items:center; }
-.actions > [data-tooltip-root] > button { display:grid;width:28px;height:28px;padding:0;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:15px; }
-.actions > [data-tooltip-root] > button:hover { background:var(--card);color:var(--accent); }
-.state { padding:48px 20px;color:var(--muted);font-size:var(--text-sm);text-align:center; }
+.copy h2 { overflow:hidden; margin:0; font-family:var(--font-display); font-size:12px; font-weight:500; line-height:1.2; white-space:nowrap; text-overflow:ellipsis; }
+.copy p { overflow:hidden; margin:3px 0 0; color:var(--muted); font-size:9px; white-space:nowrap; text-overflow:ellipsis; }
+.actions { display:flex; gap:1px; align-items:center; margin-top:1px; }
+.actions > [data-tooltip-root] > button { display:grid; width:24px; height:24px; padding:0; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--muted); font-size:13px; }
+.actions > [data-tooltip-root] > button:hover { background:var(--card); color:var(--accent); }
+
+.state { padding:48px 20px; color:var(--muted); font-size:var(--text-sm); text-align:center; }

@@ -18,4 +18,6 @@ export type Wallpaper = {
   date: string;
   copyright: string;
   sourceUrl: string;
+  /** 这张图被哪些地区使用（历史档案合并同图多地区时填充） */
+  regionCodes?: string[];
 };

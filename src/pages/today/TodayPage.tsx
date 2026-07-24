@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Heart, X } from "lucide-react";
 import { selectRegionalFallbackWallpapers, selectTodayWallpapers } from "../../entities/wallpaper/model/normalize";
 import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
@@ -69,7 +70,9 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
   if (error) return <section className={styles.state}>今日壁纸暂时无法读取，请刷新重试。</section>;
   if (!selected) return <section className={styles.state}>今天还没有可用的壁纸。</section>;
 
-  const date = formatFolioDate(selected.date);
+  // 日期标签固定显示系统当前日期（今日册页 = 今天），不跟随壁纸 startdate。
+  // Bing 数据可能滞后（UTC 未到新一天时 startdate 还是昨天），但日期戳必须是今天。
+  const date = formatFolioDate(localDateKey());
   const favorite = favoriteIds.has(selected.imageUrl);
   return <section className={styles.page} aria-labelledby="today-title">
     <header className={styles.dateSeal}>
@@ -86,13 +89,13 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
         <button ref={descriptionTriggerRef} className={`${styles.descToggle} ${selected.copyright ? "" : styles.descTogglePlaceholder}`} aria-expanded={descriptionExpanded} aria-controls="today-description-card" tabIndex={selected.copyright ? 0 : -1} onClick={() => descriptionExpanded ? closeDescription(true) : setDescriptionExpanded(true)}>{descriptionExpanded ? "收起介绍" : "查看完整介绍"}</button>
       </div>
       {descriptionExpanded && selected.copyright && <aside ref={descriptionCardRef} id="today-description-card" className={styles.descriptionCard} role="dialog" aria-label={`${selected.title}完整介绍`} tabIndex={-1} onKeyDown={(event) => { if (event.key === "Escape") closeDescription(true); }}>
-        <div><span>{selected.region}</span><button aria-label="关闭介绍" onClick={() => closeDescription(true)}>×</button></div>
+        <div><span>{selected.region}</span><button aria-label="关闭介绍" onClick={() => closeDescription(true)}><X size={14} strokeWidth={1.75} /></button></div>
         <strong>{selected.title}</strong>
         <p>{selected.copyright}</p>
       </aside>}
       <div className={styles.actions}>
         <button className={styles.primary} disabled={setWallpaper.pending} onClick={() => void setWallpaper.setWallpaper(selected.imageUrl)}>设为桌面</button>
-        <Tooltip label={favorite ? "取消收藏" : "收藏"}><button className={styles.iconButton} aria-label={favorite ? `取消收藏：${selected.title}` : `收藏：${selected.title}`} onClick={() => void onToggleFavorite(selected)}>{favorite ? "♥" : "♡"}</button></Tooltip>
+        <Tooltip label={favorite ? "取消收藏" : "收藏"}><button className={styles.iconButton} aria-label={favorite ? `取消收藏：${selected.title}` : `收藏：${selected.title}`} onClick={() => void onToggleFavorite(selected)}><Heart size={18} strokeWidth={1.75} fill={favorite ? "currentColor" : "none"} /></button></Tooltip>
         <Menu label={`更多操作：${selected.title}`} items={[
           { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(selected.imageUrl) },
           { id: "source", label: "在 Bing 中查看 ↗", disabled: !selected.sourceUrl, onSelect: () => void openExternal(selected.sourceUrl) },

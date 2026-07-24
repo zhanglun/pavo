@@ -155,12 +155,21 @@ pub async fn get_recent_wallpapers(days: u8) -> Vec<scheduler::SchedulerPhoto> {
 #[tauri::command]
 pub async fn get_today_collection() -> Vec<scheduler::SchedulerPhoto> {
   let mut scheduler = scheduler::SCHEDULER.lock().await;
-  let list = if scheduler.is_cache_valid() {
+  let today = chrono::Local::now().format("%Y%m%d").to_string();
+
+  // 先用缓存试一次；如果缓存里完全没有今天的数据（跨午夜了），
+  // 强制重新抓取，避免显示昨天的壁纸。
+  let mut list = if scheduler.is_cache_valid() {
     scheduler.cache_list.clone()
   } else {
     scheduler.batch_fetch().await.unwrap_or_default()
   };
-  let today = chrono::Local::now().format("%Y%m%d").to_string();
+  if !list.is_empty()
+    && !list.iter().any(|photo| photo.startdates.iter().any(|sd| sd.as_str() == today))
+  {
+    list = scheduler.batch_fetch().await.unwrap_or_default();
+  }
+
   scheduler::Scheduler::filter_today(&list, &today)
 }
 

@@ -14,5 +14,9 @@ build
 # Agent / tool artifacts
 .playwright-mcp/
 .sisyphus/
+.codegraph/
 AGENTS.md
 docs/superpowers/
+
+# macOS
+.DS_Store

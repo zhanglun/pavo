@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Minus, RotateCw, Settings as SettingsIcon } from "lucide-react";
 import { useFavorites } from "../features/favorite/model/useFavorites";
 import { useThemePreference } from "../features/theme/model/useThemePreference";
 import { FavoritesPage } from "../pages/favorites/FavoritesPage";
@@ -28,6 +29,16 @@ export function AppShell() {
   const update = useCallback(() => { void checkForUpdates(); }, []);
   const forceRefresh = useCallback(async () => { await tauri.wallpapers.forceRefresh(); reload(); }, [reload]);
   useTauriEvents({ onRefresh: reload, onSettings: openSettings, onUpdate: update });
+
+  // 跨午夜自动刷新：app 开着不动过了一天时，今日页要自动更新日期和壁纸。
+  // 计算到下一个 00:00 的毫秒数，到点触发 reload。
+  useEffect(() => {
+    const now = new Date();
+    const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+    const ms = nextMidnight.getTime() - now.getTime();
+    const timer = setTimeout(() => reload(), ms + 1000);
+    return () => clearTimeout(timer);
+  }, [reload]);
   const content = view === "today"
     ? <TodayPage favoriteIds={favorites.favoriteIds} onToggleFavorite={favorites.toggle} refreshSignal={refreshSignal} />
     : view === "history"
@@ -39,9 +50,9 @@ export function AppShell() {
     <main className={styles.shell} data-settings={view === "settings"} aria-label="Pavo" role="application">
       <header className={styles.topbar}>
         <span className={styles.brand} data-tauri-drag-region>Pavo</span>
-        <Tooltip label="刷新" side="bottom"><button className={styles.windowAction} aria-label="刷新" onClick={() => void forceRefresh()}>↻</button></Tooltip>
-        <Tooltip label="设置" side="bottom"><button className={styles.windowAction} aria-label="设置" onClick={openSettings}>⚙</button></Tooltip>
-        <Tooltip align="end" label="隐藏到托盘" side="bottom"><button className={styles.windowAction} aria-label="隐藏到托盘" onClick={() => { void hideWindow(); }}>−</button></Tooltip>
+        <Tooltip label="刷新" side="bottom"><button className={styles.windowAction} aria-label="刷新" onClick={() => void forceRefresh()}><RotateCw size={15} strokeWidth={1.75} /></button></Tooltip>
+        <Tooltip label="设置" side="bottom"><button className={styles.windowAction} aria-label="设置" onClick={openSettings}><SettingsIcon size={15} strokeWidth={1.75} /></button></Tooltip>
+        <Tooltip align="end" label="隐藏到托盘" side="bottom"><button className={styles.windowAction} aria-label="隐藏到托盘" onClick={() => { void hideWindow(); }}><Minus size={15} strokeWidth={1.75} /></button></Tooltip>
       </header>
       {view !== "settings" && (
         <nav className={styles.tabs} aria-label="主要页面" role="tablist">

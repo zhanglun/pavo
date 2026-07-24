@@ -10,7 +10,24 @@ pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + S
 use std::sync::Arc;
 use std::sync::LazyLock;
 
-static GLOBAL_CLIENT: LazyLock<Arc<Client>> = LazyLock::new(|| Arc::new(Client::new()));
+static GLOBAL_CLIENT: LazyLock<Arc<Client>> = LazyLock::new(|| Arc::new(build_client()));
+
+/// 构造 reqwest 客户端。reqwest 默认代理优先级是 ALL_PROXY > HTTPS_PROXY，
+/// 当 ALL_PROXY 指向 socks5 而 HTTPS_PROXY 指向 http 时，会选 socks5。
+/// 某些 socks5 出口无法正确访问 Bing 多地区接口，这里优先用 http 代理。
+fn build_client() -> Client {
+  let mut builder = Client::builder();
+  // 优先 HTTPS_PROXY / HTTP_PROXY（http 代理），其次才用 ALL_PROXY
+  for var in ["HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "ALL_PROXY", "all_proxy"] {
+    if let Ok(proxy_url) = std::env::var(var) {
+      if let Ok(proxy) = reqwest::Proxy::all(&proxy_url) {
+        builder = builder.proxy(proxy);
+        break;
+      }
+    }
+  }
+  builder.build().unwrap_or_else(|_| Client::new())
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tooltips {
@@ -208,3 +225,4 @@ pub fn clean_cache(retention_days: u32) -> Result<()> {
 
   Ok(())
 }
+

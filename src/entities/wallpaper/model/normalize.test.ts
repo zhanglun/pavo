@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { normalizeCollection, selectHistoryWallpapers, selectRecentWallpapers, selectRegionalFallbackWallpapers, selectTodayWallpapers } from "./normalize";
+import { normalizeCollection, groupHistoryByDay, selectHistoryWallpapers, selectRecentWallpapers, selectRegionalFallbackWallpapers, selectTodayWallpapers } from "./normalize";
 
 describe("normalizeCollection", () => {
   test("skips only malformed region entries", () => {
@@ -28,8 +28,10 @@ describe("wallpaper selectors", () => {
     copyrightlinks: ["us-source", "cn-source", "jp-source"],
   };
 
-  test("today includes only entries whose own date matches and follows region order", () => {
-    expect(selectTodayWallpapers([mixed], "20260723").map((item) => item.title)).toEqual(["中国", "日本"]);
+  test("today shows the latest available wallpaper for each region regardless of date mismatch", () => {
+    // 时区错配下，en-US 的最新图可能还是 20260722，但它是该地区当前最新可得的，
+    // 应当展示而非过滤掉。每地区取 date 最大的一张，按地区顺序排列。
+    expect(selectTodayWallpapers([mixed], "20260723").map((item) => item.title)).toEqual(["中国", "US", "日本"]);
   });
 
   test("recent entries are sorted by date descending then stable region order", () => {
@@ -50,7 +52,9 @@ describe("wallpaper selectors", () => {
       copyrightlinks: [""],
     };
 
-    expect(selectTodayWallpapers([mixed, duplicateChina], "20260723").map((item) => item.regionCode)).toEqual(["zh-CN", "ja-JP"]);
+    // 新逻辑：每地区取最新一张。en-US(22)、zh-CN(23)、ja-JP(23) 都保留，
+    // zh-CN 在 mixed 和 duplicate 中都有 23 号，保留后遍历到的 duplicate。
+    expect(selectTodayWallpapers([mixed, duplicateChina], "20260723").map((item) => item.regionCode)).toEqual(["zh-CN", "en-US", "ja-JP"]);
   });
 
   test("recent removes exact duplicate records without collapsing different dates or regions", () => {
@@ -114,7 +118,7 @@ describe("wallpaper selectors", () => {
     expect(new Set(ids).size).toBe(2);
   });
 
-  test("history collapses regional variants of one visual but preserves another date", () => {
+  test("history collapses regional variants of one visual but aggregates region codes", () => {
     const shared = {
       ...mixed,
       filename: "OHR.Shared_ZH-CN.jpg",
@@ -128,6 +132,68 @@ describe("wallpaper selectors", () => {
 
     const selected = selectHistoryWallpapers([shared], "20260723", 7);
 
+    // 同一天多地共享同一张图：聚合成一条，regionCodes 收集全部地区
     expect(selected.map((item) => item.title)).toEqual(["中国共享", "昨日共享"]);
+    const todayEntry = selected.find((item) => item.title === "中国共享");
+    expect(todayEntry?.regionCodes).toEqual(["zh-CN", "en-US"]);
+    // 独特日期的单地区条目，regionCodes 只含自身
+    const yesterdayEntry = selected.find((item) => item.title === "昨日共享");
+    expect(yesterdayEntry?.regionCodes).toEqual(["zh-CN"]);
+  });
+
+  test("history aggregates same-day regions sharing one image into a single entry", () => {
+    // 模拟真实 Bing：0720 四地共享 SantaCatalina，美日各有独特图
+    const global = {
+      filename: "OHR.SantaCatalina.jpg",
+      regions: ["zh-CN", "de-DE", "fr-FR", "en-GB"],
+      urls: ["cn-url", "de-url", "fr-url", "gb-url"],
+      titles: ["SantaCatalina 中", "SantaCatalina 德", "SantaCatalina 法", "SantaCatalina 英"],
+      startdates: ["20260720", "20260720", "20260720", "20260720"],
+      copyrights: ["", "", "", ""],
+      copyrightlinks: ["", "", "", ""],
+    };
+    const usUnique = {
+      filename: "OHR.Artemis.jpg",
+      regions: ["en-US"],
+      urls: ["us-url"],
+      titles: ["Artemis"],
+      startdates: ["20260720"],
+      copyrights: [""],
+      copyrightlinks: [""],
+    };
+    const jpUnique = {
+      filename: "OHR.Kawagoe2026.jpg",
+      regions: ["ja-JP"],
+      urls: ["jp-url"],
+      titles: ["Kawagoe2026"],
+      startdates: ["20260720"],
+      copyrights: [""],
+      copyrightlinks: [""],
+    };
+
+    const selected = selectHistoryWallpapers([global, usUnique, jpUnique], "20260720", 7);
+
+    // 三张不同的图各一条；全球图聚合 4 个地区
+    expect(selected.map((item) => item.title)).toEqual(["SantaCatalina 中", "Artemis", "Kawagoe2026"]);
+    // regionCodes 按 regionRank 排序（selectRecentWallpapers 已排序）
+    expect(selected[0].regionCodes).toEqual(["zh-CN", "fr-FR", "de-DE", "en-GB"]);
+    expect(selected[1].regionCodes).toEqual(["en-US"]);
+  });
+});
+
+describe("groupHistoryByDay", () => {
+  const w = (id: string, date: string): import("./types").Wallpaper => ({ id, filename: `${id}.jpg`, regionCode: "zh-CN", region: "中", imageUrl: `url-${id}`, title: id, date, copyright: "", sourceUrl: "" });
+
+  test("groups flat wallpaper list into days sorted newest first", () => {
+    const days = groupHistoryByDay([w("a", "20260723"), w("b", "20260722"), w("c", "20260723")]);
+    expect(days.map((d) => d.date)).toEqual(["20260723", "20260722"]);
+    expect(days[0].items.map((i) => i.id)).toEqual(["a", "c"]);
+    expect(days[1].items.map((i) => i.id)).toEqual(["b"]);
+  });
+
+  test("keeps every distinct image of the same day in that day's group", () => {
+    const days = groupHistoryByDay([w("shared", "20260720"), w("us", "20260720"), w("jp", "20260720")]);
+    expect(days).toHaveLength(1);
+    expect(days[0].items.map((i) => i.id)).toEqual(["shared", "us", "jp"]);
   });
 });
