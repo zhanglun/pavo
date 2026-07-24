@@ -23,7 +23,13 @@ export function FavoritesPage({ onToggleFavorite, refreshSignal }: { onToggleFav
   useEffect(() => {
     let active = true;
     setState("loading");
-    tauri.favorites.list().then((favorites) => { if (active) { setItems(favorites.map(toWallpaper)); setState("ready"); } }).catch(() => { if (active) setState("error"); });
+    tauri.favorites.list().then((favorites) => {
+      if (active) {
+        // 后端按收藏时间升序存储（push 追加），这里反转为降序，最近收藏的排前面。
+        setItems(favorites.map(toWallpaper).reverse());
+        setState("ready");
+      }
+    }).catch(() => { if (active) setState("error"); });
     return () => { active = false; };
   }, [refreshSignal]);
   if (state === "loading") return <section className={styles.state}>正在整理收藏册页…</section>;
