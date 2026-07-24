@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { normalizeCollection, selectHistoryWallpapers, selectRecentWallpapers, selectRegionalFallbackWallpapers, selectTodayWallpapers } from "./normalize";
+import { normalizeCollection, groupHistoryByDay, selectHistoryWallpapers, selectRecentWallpapers, selectRegionalFallbackWallpapers, selectTodayWallpapers } from "./normalize";
 
 describe("normalizeCollection", () => {
   test("skips only malformed region entries", () => {
@@ -178,5 +178,22 @@ describe("wallpaper selectors", () => {
     // regionCodes 按 regionRank 排序（selectRecentWallpapers 已排序）
     expect(selected[0].regionCodes).toEqual(["zh-CN", "fr-FR", "de-DE", "en-GB"]);
     expect(selected[1].regionCodes).toEqual(["en-US"]);
+  });
+});
+
+describe("groupHistoryByDay", () => {
+  const w = (id: string, date: string): import("./types").Wallpaper => ({ id, filename: `${id}.jpg`, regionCode: "zh-CN", region: "中", imageUrl: `url-${id}`, title: id, date, copyright: "", sourceUrl: "" });
+
+  test("groups flat wallpaper list into days sorted newest first", () => {
+    const days = groupHistoryByDay([w("a", "20260723"), w("b", "20260722"), w("c", "20260723")]);
+    expect(days.map((d) => d.date)).toEqual(["20260723", "20260722"]);
+    expect(days[0].items.map((i) => i.id)).toEqual(["a", "c"]);
+    expect(days[1].items.map((i) => i.id)).toEqual(["b"]);
+  });
+
+  test("keeps every distinct image of the same day in that day's group", () => {
+    const days = groupHistoryByDay([w("shared", "20260720"), w("us", "20260720"), w("jp", "20260720")]);
+    expect(days).toHaveLength(1);
+    expect(days[0].items.map((i) => i.id)).toEqual(["shared", "us", "jp"]);
   });
 });

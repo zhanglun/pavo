@@ -101,6 +101,21 @@ export function selectHistoryWallpapers(collection: SchedulerPhoto[], today: str
   return Array.from(grouped.values()).sort((left, right) => right.date.localeCompare(left.date) || regionRank(left.regionCodes?.[0] ?? left.regionCode) - regionRank(right.regionCodes?.[0] ?? right.regionCode));
 }
 
+export type HistoryDay = { date: string; items: Wallpaper[] };
+
+/** 把扁平的历史列表按日期分组成天，每张不同的图各占一条。 */
+export function groupHistoryByDay(items: Wallpaper[]): HistoryDay[] {
+  const days = new Map<string, Wallpaper[]>();
+  for (const item of items) {
+    const list = days.get(item.date);
+    if (list) list.push(item);
+    else days.set(item.date, [item]);
+  }
+  return Array.from(days.entries())
+    .map(([date, dayItems]) => ({ date, items: dayItems }))
+    .sort((left, right) => right.date.localeCompare(left.date));
+}
+
 export function selectRegionalFallbackWallpapers(collection: SchedulerPhoto[], today: string, days: number) {
   const recent = selectRecentWallpapers(collection, today, days);
   const regions = uniqueBy(recent, (item) => item.regionCode)
