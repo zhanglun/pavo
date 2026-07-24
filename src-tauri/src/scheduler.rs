@@ -236,10 +236,14 @@ fn merge_scheduler_photos(photos: Vec<SchedulerPhoto>) -> Vec<SchedulerPhoto> {
 
   for photo in photos {
     let unique_name = photo.filename.split('_').next().unwrap_or(&photo.filename);
-    let Some(existing) = merged
-      .iter_mut()
-      .find(|item| item.filename.split('_').next().unwrap_or(&item.filename) == unique_name)
-    else {
+    // 合并键必须含日期：Bing 会在不同日期复用同一图名（OHR.XXX），
+    // 只按前缀合并会把跨日期的同名图混并，导致同一天的不同地区图丢失。
+    // 同一天同一张图的多地区才应合并。
+    let photo_date = photo.startdates.first().cloned().unwrap_or_default();
+    let Some(existing) = merged.iter_mut().find(|item| {
+      item.filename.split('_').next().unwrap_or(&item.filename) == unique_name
+        && item.startdates.first().map(String::as_str) == Some(photo_date.as_str())
+    }) else {
       merged.push(photo);
       continue;
     };
@@ -408,6 +412,21 @@ mod scheduler_tests {
     assert_eq!(merged.len(), 1);
     assert_eq!(merged[0].regions, vec!["zh-CN", "en-US"]);
     assert_eq!(merged[0].urls.len(), 2);
+  }
+
+  #[test]
+  fn merge_scheduler_photos_keeps_same_named_images_on_different_dates_separate() {
+    // Bing 会在不同日期复用同一图名（OHR.PinkDahlia），只按前缀合并
+    // 会把跨日期的同名图混并，导致同一天的不同地区图丢失。
+    let day_one_cn = photo("OHR.PinkDahlia_ZH-CN.jpg", "20260723");
+    let day_two_us = photo("OHR.PinkDahlia_EN-US.jpg", "20260722");
+
+    let merged = merge_scheduler_photos(vec![day_one_cn, day_two_us]);
+
+    // 不同日期的同名图应各自独立，不合并
+    assert_eq!(merged.len(), 2);
+    assert_eq!(merged[0].startdates, vec!["20260723".to_string()]);
+    assert_eq!(merged[1].startdates, vec!["20260722".to_string()]);
   }
 
   #[test]
