@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Heart } from "lucide-react";
 import type { FavoriteItem } from "../../entities/settings/model/types";
 import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
@@ -36,12 +37,12 @@ export function FavoritesPage({ onToggleFavorite, refreshSignal }: { onToggleFav
   if (state === "error") return <section className={styles.state}>收藏暂时无法读取，请稍后重试。</section>;
   return <section className={styles.page} aria-labelledby="favorites-title">
     <header><p>COLLECTION</p><h1 id="favorites-title">收藏册页</h1></header>
-    {items.length === 0 ? <div className={styles.empty}><span>♡</span><p>还没有收藏的壁纸</p><small>在今日或历史册页点按心形即可收录</small></div> : <div className={styles.grid}>{items.map((item) => {
+    {items.length === 0 ? <div className={styles.empty}><span><Heart size={34} strokeWidth={1} /></span><p>还没有收藏的壁纸</p><small>在今日或历史册页点按心形即可收录</small></div> : <div className={styles.grid}>{items.map((item) => {
       const date = formatFolioDate(item.date);
       return <article className={styles.card} key={item.id}>
         <div className={styles.image}><WallpaperImage wallpaper={item} /></div>
         <div className={styles.meta}><time>{date.year} · {date.monthDay}</time><h2>{item.title}</h2></div>
-        <div className={styles.actions}><Tooltip label="取消收藏"><button aria-label={`取消收藏：${item.title}`} onClick={async () => { try { await onToggleFavorite(item); setItems((current) => current.filter((candidate) => candidate.id !== item.id)); } catch { show({ tone: "error", message: "取消收藏失败，请重试" }); } }}>♥</button></Tooltip><Menu label={`更多操作：${item.title}`} items={[
+        <div className={styles.actions}><Tooltip label="取消收藏"><button aria-label={`取消收藏：${item.title}`} onClick={async () => { try { await onToggleFavorite(item); setItems((current) => current.filter((candidate) => candidate.id !== item.id)); } catch { show({ tone: "error", message: "取消收藏失败，请重试" }); } }}><Heart size={13} strokeWidth={1.75} fill="currentColor" /></button></Tooltip><Menu label={`更多操作：${item.title}`} items={[
           { id: "set", label: "设为桌面", disabled: setWallpaper.pending, onSelect: () => void setWallpaper.setWallpaper(item.imageUrl) },
           { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(item.imageUrl) },
           { id: "source", label: "在 Bing 中查看 ↗", disabled: !item.sourceUrl, onSelect: () => void openExternal(item.sourceUrl) },

@@ -15,5 +15,8 @@ test("closes on Escape and restores focus", async () => {
 
 test("uses an accessible label while keeping the trigger visually quiet", () => {
   render(<Menu label="更多操作：山谷" items={[]} />);
-  expect(screen.getByRole("button", { name: "更多操作：山谷" })).toHaveTextContent("⋯");
+  const trigger = screen.getByRole("button", { name: "更多操作：山谷" });
+  // 触发器是图标按钮（无可见文字），accessible name 由 aria-label 提供
+  expect(trigger).toHaveAttribute("aria-label", "更多操作：山谷");
+  expect(trigger.querySelector("svg")).toBeInTheDocument();
 });

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Heart } from "lucide-react";
 import { formatRegionList, groupHistoryByDay, selectHistoryWallpapers } from "../../entities/wallpaper/model/normalize";
 import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
@@ -57,7 +58,7 @@ export function HistoryPage({ favoriteIds, onToggleFavorite, refreshSignal }: Pr
               <p>{regions}</p>
             </div>
             <div className={styles.actions}>
-              <Tooltip label={favorite ? "取消收藏" : "收藏"}><button aria-label={favorite ? `取消收藏：${item.title}` : `收藏：${item.title}`} onClick={() => void onToggleFavorite(item)}>{favorite ? "♥" : "♡"}</button></Tooltip>
+              <Tooltip label={favorite ? "取消收藏" : "收藏"}><button aria-label={favorite ? `取消收藏：${item.title}` : `收藏：${item.title}`} onClick={() => void onToggleFavorite(item)}><Heart size={13} strokeWidth={1.75} fill={favorite ? "currentColor" : "none"} /></button></Tooltip>
               <Menu label={`更多操作：${item.title}`} items={[
                 { id: "set", label: "设为桌面", disabled: setWallpaper.pending, onSelect: () => void setWallpaper.setWallpaper(item.imageUrl) },
                 { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(item.imageUrl) },
