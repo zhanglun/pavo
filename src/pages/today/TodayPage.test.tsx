@@ -17,24 +17,24 @@ const photo = (filename: string, title: string, region = "zh-CN") => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(tauri.wallpapers.setAsDesktop).mockResolvedValue("ok");
+  vi.mocked(tauri.wallpapers.setAsDesktop).mockResolvedValue({ confirmed: true });
   vi.mocked(tauri.wallpapers.download).mockResolvedValue("ok");
 });
 
 test("renders the daily folio and sets the selected wallpaper", async () => {
-  vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([
+  vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([
     photo("cn.jpg", "山谷"), photo("us.jpg", "海岸", "en-US"),
   ]);
   const user = userEvent.setup();
   render(<ToastProvider><TodayPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
   await screen.findByRole("heading", { name: "山谷" });
   await user.click(screen.getByRole("button", { name: "设为桌面" }));
-  expect(tauri.wallpapers.setAsDesktop).toHaveBeenCalledWith("https://example.test/cn.jpg");
+  expect(tauri.wallpapers.setAsDesktop).toHaveBeenCalledWith("https://example.test/cn.jpg", expect.any(String));
   expect(screen.getByRole("button", { name: "美国" })).toBeVisible();
 });
 
 test("closes the introduction card when another region is selected", async () => {
-  vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([
+  vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([
     photo("cn.jpg", "山谷"), photo("us.jpg", "海岸", "en-US"),
   ]);
   const user = userEvent.setup();
@@ -58,8 +58,8 @@ test("closes the introduction card when another region is selected", async () =>
   expect(screen.getByRole("button", { name: "查看完整介绍" })).toHaveAttribute("aria-expanded", "false");
 });
 
-test("renders a numbered folio index with count and current-region semantics", async () => {
-  vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([
+test("renders a dated folio index with count and current-region semantics", async () => {
+  vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([
     photo("cn.jpg", "山谷"), photo("us.jpg", "海岸", "en-US"),
   ]);
   render(<ToastProvider><TodayPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
@@ -81,12 +81,11 @@ test("renders a numbered folio index with count and current-region semantics", a
   expect(screen.getByText("2")).toBeVisible();
   expect(china).toHaveAttribute("aria-current", "true");
   expect(unitedStates).not.toHaveAttribute("aria-current");
-  expect(within(china).getByText("01")).toBeVisible();
-  expect(within(unitedStates).getByText("02")).toBeVisible();
+  expect(within(china).getByText("07.23")).toBeVisible();
+  expect(within(unitedStates).getByText("07.23")).toBeVisible();
 });
 
-test("falls back to recent wallpapers when todays collection is insufficient", async () => {
-  vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([photo("only.jpg", "唯一")]);
+test("loads the recent seven-day collection directly", async () => {
   vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([photo("recent.jpg", "近期")]);
   render(<ToastProvider><TodayPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
   await waitFor(() => expect(tauri.wallpapers.getRecent).toHaveBeenCalledWith(7));
@@ -97,8 +96,7 @@ test("falls back to recent wallpapers when todays collection is insufficient", a
   expect(within(screen.getByRole("button", { name: "中国大陆" })).getByText("07.23")).toBeVisible();
 });
 
-test("fallback renders each region once with distinct recent images", async () => {
-  vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([photo("only.jpg", "唯一")]);
+test("renders visually distinct recent images", async () => {
   vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([
     {
       filename: "shared.jpg",
@@ -120,8 +118,8 @@ test("fallback renders each region once with distinct recent images", async () =
   expect(new Set(thumbnails).size).toBe(2);
 });
 
-test("does not fall back when one merged collection contains multiple valid regions", async () => {
-  vi.mocked(tauri.wallpapers.getTodayCollection).mockResolvedValue([{
+test("collapses regional variants of the same recent visual", async () => {
+  vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([{
     filename: "shared.jpg",
     regions: ["zh-CN", "en-US"],
     urls: ["https://example.test/cn.jpg", "https://example.test/us.jpg"],
@@ -132,5 +130,6 @@ test("does not fall back when one merged collection contains multiple valid regi
   }]);
   render(<ToastProvider><TodayPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
   expect(await screen.findByRole("heading", { name: "山谷" })).toBeVisible();
-  expect(tauri.wallpapers.getRecent).not.toHaveBeenCalled();
+  expect(screen.getByText("1")).toBeVisible();
+  expect(screen.queryByRole("button", { name: "美国" })).not.toBeInTheDocument();
 });

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
-type Toast = { tone: "info" | "success" | "error"; message: string; persistent?: boolean } | null;
+type Toast = { tone: "info" | "success" | "error"; message: string; persistent?: boolean; durationMs?: number } | null;
 const ToastContext = createContext<{ toast: Toast; show: (toast: NonNullable<Toast>) => void } | null>(null);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -10,7 +10,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const show = (value: NonNullable<Toast>) => {
     window.clearTimeout(timer.current);
     setToast(value);
-    timer.current = value.persistent ? undefined : window.setTimeout(() => setToast(null), 2400);
+    timer.current = value.persistent ? undefined : window.setTimeout(() => setToast(null), value.durationMs ?? 2400);
   };
   return <ToastContext.Provider value={{ toast, show }}>{children}</ToastContext.Provider>;
 }

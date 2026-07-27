@@ -3,12 +3,14 @@ import { listen } from "@tauri-apps/api/event";
 import type { SchedulerPhoto } from "../../entities/wallpaper/model/types";
 import type { FavoriteItem, RotateMode, ThemePreference, UserConfig } from "../../entities/settings/model/types";
 
+export type SetWallpaperResult = { confirmed: boolean };
+
 export const tauri = {
   wallpapers: {
     getTodayCollection: () => invoke<SchedulerPhoto[]>("get_today_collection"),
     getRecent: (days: number) => invoke<SchedulerPhoto[]>("get_recent_wallpapers", { days }),
     forceRefresh: () => invoke<SchedulerPhoto[]>("force_refresh"),
-    setAsDesktop: (url: string) => invoke<string>("set_as_desktop", { service: "Bing", url }),
+    setAsDesktop: (url: string, operationId: string) => invoke<SetWallpaperResult>("set_as_desktop", { service: "Bing", url, operationId }),
     download: (url: string) => invoke<string>("download", { service: "Bing", url }),
   },
   favorites: {

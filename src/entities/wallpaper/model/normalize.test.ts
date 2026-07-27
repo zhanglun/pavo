@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { normalizeCollection, groupHistoryByDay, selectHistoryWallpapers, selectRecentWallpapers, selectRegionalFallbackWallpapers, selectTodayWallpapers } from "./normalize";
+import { normalizeCollection, groupHistoryByDay, selectHistoryWallpapers, selectRecentDistinctWallpapers, selectRecentWallpapers, selectRegionalFallbackWallpapers, selectTodayWallpapers } from "./normalize";
 
 describe("normalizeCollection", () => {
   test("skips only malformed region entries", () => {
@@ -101,6 +101,48 @@ describe("wallpaper selectors", () => {
     expect(selected.map((item) => item.regionCode)).toEqual(["zh-CN", "en-US", "fr-FR"]);
     expect(new Set(selected.map((item) => item.imageUrl)).size).toBe(3);
     expect(selected.map((item) => item.imageUrl)).toEqual(["shared-cn-url", "us-old", "france-old"]);
+  });
+
+  test("recent distinct keeps one entry per visual across dates and regions", () => {
+    const shared = {
+      filename: "OHR.Shared_ZH-CN.jpg",
+      regions: ["zh-CN", "en-US"],
+      urls: ["shared-cn", "shared-us"],
+      titles: ["共享图中国", "共享图美国"],
+      startdates: ["20260727", "20260727"],
+      copyrights: ["", ""],
+      copyrightlinks: ["", ""],
+    };
+    const july25 = {
+      ...shared,
+      filename: "OHR.RedMangroveSunrise_EN-US.jpg",
+      regions: ["en-US"],
+      urls: ["mangrove"],
+      titles: ["红树林日出"],
+      startdates: ["20260725"],
+      copyrights: [""],
+      copyrightlinks: [""],
+    };
+    const olderRegionalVariant = {
+      ...shared,
+      filename: "OHR.Shared_FR-FR.jpg",
+      regions: ["fr-FR"],
+      urls: ["shared-fr"],
+      titles: ["共享图法国"],
+      startdates: ["20260724"],
+      copyrights: [""],
+      copyrightlinks: [""],
+    };
+
+    const selected = selectRecentDistinctWallpapers(
+      [olderRegionalVariant, july25, shared],
+      "20260727",
+      7,
+      10,
+    );
+
+    expect(selected.map((item) => item.title)).toEqual(["共享图中国", "红树林日出"]);
+    expect(selected.map((item) => item.date)).toEqual(["20260727", "20260725"]);
   });
 
   test("normalized ids distinguish the same regional file reused on another date", () => {

@@ -28,7 +28,11 @@
 .descriptionCard button:focus-visible { outline:2px solid var(--focus);outline-offset:1px; }
 .actions { position:absolute;right:0;bottom:0;left:0;display:grid;grid-template-columns:minmax(0,1fr) 36px 36px;gap:6px;padding:0 0 18px; }
 .actions button { min-height:36px; border:0; background:transparent; color:inherit; }
-.primary { min-height:46px!important;background:var(--accent)!important;color:var(--accent-ink)!important;border-radius:var(--radius-control);font-weight:650;transition:filter var(--dur-short) var(--ease-out),transform var(--dur-short) var(--ease-out); }
+.primary { position:relative;min-height:46px!important;overflow:hidden;background:var(--accent)!important;color:var(--accent-ink)!important;border-radius:var(--radius-control);font-weight:650;transition:filter var(--dur-short) var(--ease-out),transform var(--dur-short) var(--ease-out); }
+.primary::after { position:absolute;bottom:0;left:0;width:var(--wallpaper-progress,0);height:2px;background:currentColor;content:"";opacity:.7;transition:width 160ms linear; }
+.primary[data-phase="preparing"]::after,.primary[data-phase="applying"]::after { width:35%;animation:wallpaper-progress 1.1s ease-in-out infinite; }
+@keyframes wallpaper-progress { from { transform:translateX(-100%); } to { transform:translateX(300%); } }
+@media (prefers-reduced-motion:reduce) { .primary[data-phase="preparing"]::after,.primary[data-phase="applying"]::after { width:100%;animation:none;opacity:.35; } }
 .primary:hover { filter:brightness(1.06); }
 .primary:active { transform:translateY(1px); }
 .iconButton { width:36px;align-self:center;font-size:18px; }

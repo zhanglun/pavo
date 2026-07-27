@@ -2,13 +2,14 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use super::download_file;
+use super::download_file_with_progress;
 use crate::config;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 use std::sync::Arc;
 use std::sync::LazyLock;
+use std::time::{Duration, Instant};
 
 static GLOBAL_CLIENT: LazyLock<Arc<Client>> = LazyLock::new(|| Arc::new(build_client()));
 
@@ -109,6 +110,17 @@ impl Wallpaper {
   }
 
   pub async fn save_wallpaper(url: &str, filename: Option<&str>) -> Result<String> {
+    Self::save_wallpaper_with_progress(url, filename, |_| {}).await
+  }
+
+  pub async fn save_wallpaper_with_progress<F>(
+    url: &str,
+    filename: Option<&str>,
+    on_progress: F,
+  ) -> Result<String>
+  where
+    F: FnMut(u8) + Send,
+  {
     let filename_owned;
     let filename = match filename {
       Some(filename) => filename,
@@ -133,7 +145,7 @@ impl Wallpaper {
     }
     let client = GLOBAL_CLIENT.clone();
     let path_str = path.to_string_lossy().to_string();
-    let res = download_file(&client, url, &path_str).await;
+    let res = download_file_with_progress(&client, url, &path_str, on_progress).await;
 
     log::debug!("save_wallpaper result: {:?}", res);
 
@@ -155,6 +167,43 @@ impl Wallpaper {
     .map_err(|e| format!("Failed to join wallpaper task: {e}"))?
   }
 
+  pub async fn wait_until_applied(path: &str) -> bool {
+    let started = Instant::now();
+    let timeout = Duration::from_secs(10);
+    let interval = Duration::from_millis(200);
+
+    loop {
+      let current = tokio::task::spawn_blocking(|| wallpaper::get().map_err(|error| error.to_string()))
+        .await
+        .ok()
+        .and_then(std::result::Result::ok);
+
+      if current
+        .as_deref()
+        .is_some_and(|current| wallpaper_paths_match(path, current))
+      {
+        // 路径确认后留出一帧系统桌面刷新时间，避免反馈一闪而过。
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        log::info!(
+          "Wallpaper application confirmed after {} ms: {}",
+          started.elapsed().as_millis(),
+          path
+        );
+        return true;
+      }
+
+      if started.elapsed() >= timeout {
+        log::warn!(
+          "Wallpaper application was not confirmed within {} ms: {}",
+          timeout.as_millis(),
+          path
+        );
+        return false;
+      }
+      tokio::time::sleep(interval).await;
+    }
+  }
+
   pub async fn set_wallpaper(url: &str) -> Result<String> {
     let file_path = Wallpaper::save_wallpaper(url, None).await?;
 
@@ -163,6 +212,15 @@ impl Wallpaper {
       .map_err(|e| format!("Failed to set wallpaper from local file: {}", e))?;
 
     Ok(String::from("Ok"))
+  }
+}
+
+pub fn wallpaper_paths_match(expected: &str, actual: &str) -> bool {
+  let expected_path = Path::new(expected);
+  let actual_path = Path::new(actual);
+  match (expected_path.canonicalize(), actual_path.canonicalize()) {
+    (Ok(expected), Ok(actual)) => expected == actual,
+    _ => expected_path == actual_path,
   }
 }
 
@@ -225,4 +283,3 @@ pub fn clean_cache(retention_days: u32) -> Result<()> {
 
   Ok(())
 }
-

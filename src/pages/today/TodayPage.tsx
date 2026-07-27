@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Heart, X } from "lucide-react";
-import { selectRegionalFallbackWallpapers, selectTodayWallpapers } from "../../entities/wallpaper/model/normalize";
+import { selectRecentDistinctWallpapers } from "../../entities/wallpaper/model/normalize";
 import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
 import { RegionRail } from "../../entities/wallpaper/ui/RegionRail";
@@ -24,7 +24,6 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
   const [selectedId, setSelectedId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [isFallback, setIsFallback] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const descriptionTriggerRef = useRef<HTMLButtonElement>(null);
   const descriptionCardRef = useRef<HTMLElement>(null);
@@ -46,16 +45,15 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
     setError(false);
     (async () => {
       try {
-        const today = await tauri.wallpapers.getTodayCollection();
-        const todayItems = selectTodayWallpapers(today, localDateKey());
-        const fallback = todayItems.length <= 1;
-        const next = fallback
-          ? selectRegionalFallbackWallpapers(await tauri.wallpapers.getRecent(7), localDateKey(), 7)
-          : todayItems;
+        const next = selectRecentDistinctWallpapers(
+          await tauri.wallpapers.getRecent(7),
+          localDateKey(),
+          7,
+          10,
+        );
         if (!active) return;
         setItems(next);
         setSelectedId((current) => next.some((item) => item.id === current) ? current : (next[0]?.id ?? ""));
-        setIsFallback(fallback);
       } catch {
         if (active) setError(true);
       } finally {
@@ -94,7 +92,20 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
         <p>{selected.copyright}</p>
       </aside>}
       <div className={styles.actions}>
-        <button className={styles.primary} disabled={setWallpaper.pending} onClick={() => void setWallpaper.setWallpaper(selected.imageUrl)}>设为桌面</button>
+        <button
+          className={styles.primary}
+          disabled={setWallpaper.pending}
+          aria-busy={setWallpaper.pending}
+          data-phase={setWallpaper.phase}
+          style={setWallpaper.phase === "downloading" ? { "--wallpaper-progress": `${setWallpaper.percent}%` } as React.CSSProperties : undefined}
+          onClick={() => void setWallpaper.setWallpaper(selected.imageUrl)}
+        >
+          {setWallpaper.phase === "downloading"
+            ? `下载原图 ${setWallpaper.percent}%`
+            : setWallpaper.pending
+              ? "正在应用…"
+              : "设为桌面"}
+        </button>
         <Tooltip label={favorite ? "取消收藏" : "收藏"}><button className={styles.iconButton} aria-label={favorite ? `取消收藏：${selected.title}` : `收藏：${selected.title}`} onClick={() => void onToggleFavorite(selected)}><Heart size={18} strokeWidth={1.75} fill={favorite ? "currentColor" : "none"} /></button></Tooltip>
         <Menu label={`更多操作：${selected.title}`} items={[
           { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(selected.imageUrl) },
@@ -104,7 +115,7 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
     </div>
     <div className={styles.regions}>
       <div className={styles.regionsHeading}><p>各地</p><span>{items.length}</span></div>
-      <RegionRail items={items} selectedId={selected.id} showDate={isFallback} onSelect={(item) => { closeDescription(); setSelectedId(item.id); }} />
+      <RegionRail items={items} selectedId={selected.id} showDate onSelect={(item) => { closeDescription(); setSelectedId(item.id); }} />
     </div>
   </section>;
 }

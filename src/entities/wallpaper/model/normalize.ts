@@ -81,6 +81,19 @@ export function selectRecentWallpapers(collection: SchedulerPhoto[], today: stri
   return uniqueBy(matches, (item) => `${item.date}\0${item.regionCode}\0${item.imageUrl}`);
 }
 
+/** 最近几天的不同作品：同一视觉在不同日期或地区只保留最新的一条。 */
+export function selectRecentDistinctWallpapers(
+  collection: SchedulerPhoto[],
+  today: string,
+  days: number,
+  limit: number,
+) {
+  return uniqueBy(
+    selectRecentWallpapers(collection, today, days),
+    imageIdentity,
+  ).slice(0, limit);
+}
+
 export function selectHistoryWallpapers(collection: SchedulerPhoto[], today: string, days: number) {
   const recent = selectRecentWallpapers(collection, today, days);
   // 按日期+图片身份分组，同一天多地共享同一张图时聚合成一条，

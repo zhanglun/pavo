@@ -38,11 +38,22 @@ pub async fn create_or_truncate_file(
     .map_err(|e| format!("Failed to open file '{}': {}", path.display(), e).into())
 }
 
-pub async fn download_file(
+pub fn download_percent(downloaded: u64, total: u64) -> u8 {
+  if total == 0 {
+    return 0;
+  }
+  ((downloaded.saturating_mul(100) / total).min(100)) as u8
+}
+
+pub async fn download_file_with_progress<F>(
   client: &Client,
   url: &str,
   path: &str,
-) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+  mut on_progress: F,
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>>
+where
+  F: FnMut(u8) + Send,
+{
   let path = Path::new(path);
 
   let res = client
@@ -70,8 +81,10 @@ pub async fn download_file(
 
   let mut stream = res.bytes_stream();
   let mut downloaded: u64 = 0;
+  let mut reported_percent = 0;
 
   log::debug!("Starting download...");
+  on_progress(0);
 
   while let Some(chunk_result) = stream.next().await {
     let chunk = chunk_result.map_err(|e| format!("Error while downloading chunk: {}", e))?;
@@ -86,9 +99,13 @@ pub async fn download_file(
     downloaded += chunk_size;
 
     if total_size > 0 {
-      let percent = (downloaded as f64 / total_size as f64) * 100.0;
+      let percent = download_percent(downloaded, total_size);
+      if percent != reported_percent {
+        reported_percent = percent;
+        on_progress(percent);
+      }
       if downloaded % (1024 * 1024) < chunk_size {
-        log::debug!("Progress: {:.1}% ({}/{})", percent, downloaded, total_size);
+        log::debug!("Progress: {}% ({}/{})", percent, downloaded, total_size);
       }
     }
   }
@@ -176,6 +193,33 @@ mod tests {
       local_path: None,
     };
     assert!(item.local_path.is_none());
+  }
+
+  #[test]
+  fn download_progress_is_a_capped_integer_percentage() {
+    assert_eq!(super::download_percent(42, 100), 42);
+    assert_eq!(super::download_percent(101, 100), 100);
+    assert_eq!(super::download_percent(0, 0), 0);
+  }
+
+  #[test]
+  fn wallpaper_paths_match_after_canonicalization() {
+    let dir = std::env::temp_dir().join("pavo_test_wallpaper_path");
+    let _ = std::fs::create_dir_all(&dir);
+    let path = dir.join("wallpaper.jpg");
+    std::fs::write(&path, b"image").unwrap();
+    let equivalent = dir.join(".").join("wallpaper.jpg");
+
+    assert!(crate::services::bing::wallpaper_paths_match(
+      &path.to_string_lossy(),
+      &equivalent.to_string_lossy(),
+    ));
+    assert!(!crate::services::bing::wallpaper_paths_match(
+      &path.to_string_lossy(),
+      &dir.join("other.jpg").to_string_lossy(),
+    ));
+
+    let _ = std::fs::remove_dir_all(&dir);
   }
 
   #[tokio::test]

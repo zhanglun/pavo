@@ -5,7 +5,7 @@ use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
 use crate::{config, services};
 
-use tauri::{AppHandle, Runtime};
+use tauri::{AppHandle, Emitter, Runtime};
 use tokio::sync::{mpsc, Mutex};
 
 pub struct AsyncProcInputTx {
@@ -21,13 +21,33 @@ pub async fn set_as_desktop<R: Runtime>(
   app: AppHandle<R>,
   url: &str,
   service: PhotoService,
-) -> Result<String, String> {
+  operation_id: &str,
+) -> Result<crate::events::SetWallpaperResult, String> {
   println!("set as {:?}", url);
 
+  let progress_app = app.clone();
+  let progress_operation_id = operation_id.to_string();
   let result = match service {
-    PhotoService::Bing => bing::Wallpaper::set_wallpaper(url)
-      .await
-      .map_err(|e| e.to_string()),
+    PhotoService::Bing => match bing::Wallpaper::save_wallpaper_with_progress(url, None, move |percent| {
+      let _ = progress_app.emit("wallpaper:set-progress", crate::events::SetWallpaperProgress {
+        operation_id: progress_operation_id.clone(),
+        phase: "downloading",
+        percent: Some(percent),
+      });
+    }).await {
+      Ok(path) => {
+        let _ = app.emit("wallpaper:set-progress", crate::events::SetWallpaperProgress {
+          operation_id: operation_id.to_string(),
+          phase: "applying",
+          percent: None,
+        });
+        bing::Wallpaper::set_wallpaper_from_local(&path)
+          .await
+          .map_err(|e| e.to_string())?;
+        Ok((path.clone(), bing::Wallpaper::wait_until_applied(&path).await))
+      }
+      Err(error) => Err(error.to_string()),
+    },
   };
 
   if result.is_ok() {
@@ -35,7 +55,7 @@ pub async fn set_as_desktop<R: Runtime>(
     let _ = scheduler.emit_wallpaper_event_by_url(&app, url).await;
   }
 
-  result
+  result.map(|(_, confirmed)| crate::events::SetWallpaperResult { confirmed })
 }
 
 #[tauri::command]
