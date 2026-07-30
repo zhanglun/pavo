@@ -33,21 +33,20 @@
 }
 
 .menu {
-  position: absolute;
+  position: fixed;
   z-index: 20;
-  right: 0;
-  bottom: calc(100% + 8px);
   display: grid;
   width: 154px;
   padding: var(--space-3xs);
   border: 1px solid var(--line);
   background: var(--paper-raised);
   box-shadow: var(--shadow-menu);
+  visibility: hidden;
 }
 
 .menu::after {
   position: absolute;
-  right: 11px;
+  left: calc(var(--menu-arrow-left, 130px) - 5px);
   bottom: -5px;
   width: 9px;
   height: 9px;
@@ -56,6 +55,14 @@
   background: var(--paper-raised);
   content: "";
   transform: rotate(45deg);
+}
+
+.menu[data-side="bottom"]::after {
+  top: -5px;
+  bottom: auto;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
 }
 
 .item {
