@@ -79,6 +79,15 @@ importers:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@26.1.1)(jsdom@25.0.1)
 
+  website:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.21
+        version: 5.4.21(@types/node@26.1.1)
+
 packages:
 
   '@adobe/css-tools@4.5.0':
