@@ -20,3 +20,5 @@ docs/superpowers/
 
 # macOS
 .DS_Store
+# Local Pi runtime state
+.atl/
