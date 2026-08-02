@@ -1,5 +1,6 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
+import { generateChangelogEntry } from "./changelog.mjs";
 import { execSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -116,8 +117,24 @@ async function main() {
 
   const tag = `v${newVersion}`;
 
+  // 自动生成 CHANGELOG 条目（若该版本尚未手动维护）
+  const changelogPath = resolve(root, "CHANGELOG.md");
+  if (existsSync(changelogPath)) {
+    const prev = readFileSync(changelogPath, "utf-8");
+    if (prev.includes(`## [${newVersion}]`)) {
+      console.log(`  • CHANGELOG.md 已含 ${newVersion} 条目，跳过生成`);
+    } else {
+      const entry = generateChangelogEntry(newVersion);
+      writeFileSync(
+        changelogPath,
+        prev.replace(/^# Changelog\n+/, () => `# Changelog\n\n${entry}\n\n`)
+      );
+      console.log(`  ✓ CHANGELOG.md`);
+    }
+  }
+
   console.log(`\n  Committing and tagging...\n`);
-  run(`git add ${Object.values(FILES).map((f) => f.path).join(" ")}`);
+  run(`git add ${Object.values(FILES).map((f) => f.path).join(" ")} ${changelogPath}`);
   run(`git commit -m "chore: release ${tag}"`);
   run(`git tag ${tag}`);
 
