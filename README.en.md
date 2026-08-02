@@ -12,7 +12,7 @@ Pavo is a cross-platform desktop wallpaper app built with Tauri v2. It features 
 - **Multi-region Daily Wallpapers** — Browse Bing daily wallpapers from different regions worldwide
 - **Auto Rotation** — Automatically change wallpapers at intervals from 10 minutes to 24 hours, in sequential or random mode
 - **Favorites** — Save your favorite wallpapers with persistent storage across restarts
-- **Frameless Window** — Minimal UI that auto-positions near the system tray
+- **Frameless Window** — Minimal UI that auto-positions near the tray (top-right corner on Linux)
 - **Light/Dark Theme** — Follow the system preference or switch manually
 - **Auto Update** — Automatically checks for updates on launch
 - **Local Cache** — Wallpaper images are cached locally for offline viewing
@@ -58,7 +58,7 @@ For more details, see the [Tauri distribution guide](https://v2.tauri.app/distri
 
 ## Release Process
 
-Run `pnpm release`, choose a version number, and the script will automatically bump the version, create a tag, push to the `release` branch, and CI will build and publish a GitHub Release.
+Run `pnpm release`, choose a version number, and the script will automatically bump the version, update the CHANGELOG, create a tag, push to the `release` branch, and CI will build and publish a GitHub Release.
 
 ## Repo Activity
 
