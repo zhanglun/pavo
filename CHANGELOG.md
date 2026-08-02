@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.0.16](https://github.com/zhanglun/pavo/compare/v0.0.15...v0.0.16) (2026-08-02)
+
+
+### Bug Fixes
+
+* **linux:** 修复托盘图标黑框、窗口定位与拖动失效 ([29bdc79](https://github.com/zhanglun/pavo/commit/29bdc79e779d22fdf62fa7590f83cd7c051c81b8))
+* **menu:** 防止更多菜单被窗口边界裁切 ([85dbb04](https://github.com/zhanglun/pavo/commit/85dbb04d4b11ff50649be51f49e5106d16632327))
+
+## [0.0.15](https://github.com/zhanglun/pavo/compare/v0.0.14...v0.0.15) (2026-07-24)
+
+
+### Features
+
+* 前端整体从 Svelte 重构为 React，重建每日册页、历史档案与收藏册页
+* **today:** 落地非对称日历日期版式，地区入口重做为摄影联页，版权说明就地展开
+* **history:** 历史档案按日期分组，同一天有几张显几张
+* **ui:** 用 lucide-react 替换 Unicode 字符图标，更新应用与跨平台托盘图标
+* 主题偏好持久化
+* 强制刷新壁纸数据，窗口激活时自动刷新
+
+
+### Bug Fixes
+
+* **bing:** reqwest 客户端优先 http 代理，修复多地区数据被统一为中文区 ([75f7aee](https://github.com/zhanglun/pavo/commit/75f7aeeea6c0ca24746a3350334e31005ee1a085))
+* **scheduler:** merge 合并键加入日期，修复同一天多图丢失 ([705d429](https://github.com/zhanglun/pavo/commit/705d429b9ce42b8f33d45cac489aa138cb1f9b22))
+* **today:** 今日各地取每个地区最新一张，修复时区错配丢图 ([e3d4c4d](https://github.com/zhanglun/pavo/commit/e3d4c4d1086e37cc73be20deccd5e5a69335195a))
+* **today:** 跨午夜自动刷新今日页，避免显示昨天的日期与壁纸 ([cf90ec7](https://github.com/zhanglun/pavo/commit/cf90ec75a393ac0ca015e100f133bd41fedea20c))
+* **today:** 日期标签固定显示系统当前日期，不跟随壁纸 startdate ([5e81e8a](https://github.com/zhanglun/pavo/commit/5e81e8aa80bbad1ca6f5ae6814f8acd6edb6d292))
+* **favorites:** 收藏按时间降序排列，最近收藏的排前面 ([be1b3cd](https://github.com/zhanglun/pavo/commit/be1b3cd3ed2437275cd0ed57f8a9512b44c4d741))
+* **history:** 合并同图多地区为一条，聚合地区名显示 ([c17897c](https://github.com/zhanglun/pavo/commit/c17897cc9464f07fa5c71170eb16ee9ca9c8b205))
+* 补齐关键操作反馈与启动稳定性 ([da9c790](https://github.com/zhanglun/pavo/commit/da9c79007832b21f89b0118904ef897a788cdc77))
+* 消除切换地区的主体抖动，重做地区栏选中态 ([1fa4387](https://github.com/zhanglun/pavo/commit/1fa43870cef69aa0bfa93c4a6baa40d5986034bf))
+
 ## [0.0.14](https://github.com/zhanglun/pavo/compare/pavo-v0.0.13...pavo-v0.0.14) (2026-05-01)
 
 
