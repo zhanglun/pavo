@@ -1,0 +1,39 @@
+name: Update stats
+
+# 每天拉取一次 GitHub 下载量/星标数，写入 website/public/stats.json。
+# 数值有变化时 commit 到 main，会自动触发 deploy-website 重新部署官网。
+on:
+  schedule:
+    # UTC 02:17（北京时间 10:17），错峰避开整点高峰
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Fetch stats & write stats.json
+        run: node scripts/update-stats.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/public/stats.json
+          if git diff --staged --quiet; then
+            echo "no change, skip"
+          else
+            git commit -m "chore(stats): 更新下载量统计"
+            git push
+          fi

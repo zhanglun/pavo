@@ -247,7 +247,8 @@ h2 {
 }
 
 .platform-note,
-.source-note {
+.source-note,
+.stats-note {
 	color: var(--color-subtle);
 	font-size: 0.8rem;
 }
