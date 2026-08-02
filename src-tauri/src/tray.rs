@@ -19,6 +19,8 @@ static TRAY_RECT_CACHE: LazyLock<
 fn tray_icon_resource_name() -> &'static str {
   if cfg!(target_os = "windows") {
     "tray-windows.png"
+  } else if cfg!(target_os = "linux") {
+    "tray-linux.png"
   } else {
     "tray.png"
   }
@@ -45,10 +47,37 @@ fn cache_tray_rect(event: &TrayIconEvent) {
   }
 }
 
-/// Position the main window near the tray icon.
+/// On Linux, position the window at the top-right of the current monitor.
+///
+/// The StatusNotifierItem (D-Bus) protocol used by Linux tray implementations
+/// does not expose the tray icon's on-screen geometry, so we cannot anchor the
+/// window to the tray like on macOS/Windows. The top-right corner is the
+/// conventional fallback (the panel tray area is usually top-right on GNOME).
+#[cfg(target_os = "linux")]
+fn position_window_top_right<R: Runtime>(window: &WebviewWindow<R>) {
+  let Some(monitor) = window.current_monitor().ok().flatten() else {
+    let _ = window.center();
+    return;
+  };
+  let Ok(win_size) = window.outer_size() else {
+    return;
+  };
+  let screen = monitor.size();
+  let origin = monitor.position();
+  const PANEL: i32 = 32; // GNOME top-bar height
+  const MARGIN: i32 = 8;
+  let x = origin.x + screen.width as i32 - win_size.width as i32 - MARGIN;
+  let y = origin.y + PANEL + MARGIN;
+  let _ = window.set_position(tauri::Position::Physical(
+    tauri::PhysicalPosition::new(x, y),
+  ));
+}
+
+/// Position the main window near the tray icon (macOS / Windows).
 ///
 /// Strategy: `tray.rect()` → cached event rect → screen center.
 /// Constrains the window to stay within the current monitor bounds.
+#[cfg(not(target_os = "linux"))]
 fn position_window_near_tray<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
   let rect = app
     .tray_by_id("main-tray")
@@ -73,7 +102,7 @@ fn position_window_near_tray<R: Runtime>(app: &AppHandle<R>, window: &WebviewWin
 
   let x = tray_x + tray_w / 2.0 - win_w / 2.0;
 
-  // macOS/Linux: tray is at top → window below tray
+  // macOS: tray is at top → window below tray
   // Windows: tray is at bottom → window above tray
   #[cfg(target_os = "windows")]
   let y = tray_y - win_h - 4.0;
@@ -100,6 +129,15 @@ fn position_window_near_tray<R: Runtime>(app: &AppHandle<R>, window: &WebviewWin
   let _ = window.set_position(tauri::Position::Physical(
     tauri::PhysicalPosition::new(final_x as i32, final_y as i32),
   ));
+}
+
+/// Position the main window (Linux).
+///
+/// Linux cannot know the tray position (SNI protocol), so anchor the window
+/// at the top-right of the current monitor instead.
+#[cfg(target_os = "linux")]
+fn position_window_near_tray<R: Runtime>(_app: &AppHandle<R>, window: &WebviewWindow<R>) {
+  position_window_top_right(window);
 }
 
 pub fn create_tray(
@@ -242,7 +280,10 @@ mod tests {
     #[cfg(target_os = "windows")]
     assert_eq!(tray_icon_resource_name(), "tray-windows.png");
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "linux")]
+    assert_eq!(tray_icon_resource_name(), "tray-linux.png");
+
+    #[cfg(target_os = "macos")]
     assert_eq!(tray_icon_resource_name(), "tray.png");
   }
 

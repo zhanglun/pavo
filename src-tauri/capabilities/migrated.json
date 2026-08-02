@@ -8,6 +8,7 @@
   "permissions": [
     "core:default",
     "core:window:allow-hide",
+    "core:window:allow-start-dragging",
     "autostart:allow-enable",
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
