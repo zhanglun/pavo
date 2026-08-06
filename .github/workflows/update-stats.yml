@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  actions: write # 用于 dispatch deploy-website
 
 jobs:
   update:
