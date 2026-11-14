@@ -5,6 +5,8 @@ import type { Wallpaper } from "../../entities/wallpaper/model/types";
 import { WallpaperImage } from "../../entities/wallpaper/ui/WallpaperImage";
 import { RegionRail } from "../../entities/wallpaper/ui/RegionRail";
 import { useDownloadWallpaper } from "../../features/download/model/useDownloadWallpaper";
+import { useMonitors } from "../../features/monitor/model/useMonitors";
+import { buildScreenMenuItems } from "../../features/set-wallpaper/model/screenMenuItems";
 import { useSetWallpaper } from "../../features/set-wallpaper/model/useSetWallpaper";
 import { openExternal } from "../../shared/platform/shell";
 import { tauri } from "../../shared/tauri/client";
@@ -30,6 +32,7 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
   const descriptionCardRef = useRef<HTMLElement>(null);
   const setWallpaper = useSetWallpaper();
   const download = useDownloadWallpaper();
+  const monitors = useMonitors();
 
   useEffect(() => {
     if (descriptionExpanded) descriptionCardRef.current?.focus();
@@ -96,10 +99,15 @@ export function TodayPage({ favoriteIds, onToggleFavorite, refreshSignal }: Prop
       <div className={styles.actions}>
         <button className={styles.primary} disabled={setWallpaper.pending} onClick={() => void setWallpaper.setWallpaper(selected.imageUrl)}>设为桌面</button>
         <Tooltip label={favorite ? "取消收藏" : "收藏"}><button className={styles.iconButton} aria-label={favorite ? `取消收藏：${selected.title}` : `收藏：${selected.title}`} onClick={() => void onToggleFavorite(selected)}><Heart size={18} strokeWidth={1.75} fill={favorite ? "currentColor" : "none"} /></button></Tooltip>
-        <Menu label={`更多操作：${selected.title}`} items={[
-          { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(selected.imageUrl) },
-          { id: "source", label: "在 Bing 中查看 ↗", disabled: !selected.sourceUrl, onSelect: () => void openExternal(selected.sourceUrl) },
-        ]} />
+        <Menu
+          label={`更多操作：${selected.title}`}
+          onOpenChange={(open) => { if (open) void monitors.load(); }}
+          items={[
+            ...buildScreenMenuItems(monitors.snapshot, setWallpaper.pending, (target) => void setWallpaper.setWallpaper(selected.imageUrl, target)),
+            { id: "download", label: "下载原图", disabled: download.pending, onSelect: () => void download.download(selected.imageUrl) },
+            { id: "source", label: "在 Bing 中查看 ↗", disabled: !selected.sourceUrl, onSelect: () => void openExternal(selected.sourceUrl) },
+          ]}
+        />
       </div>
     </div>
     <div className={styles.regions}>

@@ -47,3 +47,33 @@ test("renders the open menu outside its positioned wrapper", async () => {
   expect(container.contains(menu)).toBe(false);
   expect(document.body.contains(menu)).toBe(true);
 });
+
+test("renders group headers once per group and keeps items selectable", async () => {
+  const user = userEvent.setup();
+  const onPick = vi.fn();
+  render(<Menu label="更多操作" items={[
+    { id: "set", label: "设为桌面", onSelect: vi.fn() },
+    { id: "s1", label: "屏幕 1 · 主", group: "设为指定屏幕", onSelect: onPick },
+    { id: "s2", label: "屏幕 2", group: "设为指定屏幕", onSelect: vi.fn() },
+    { id: "download", label: "下载原图", onSelect: vi.fn() },
+  ]} />);
+
+  await user.click(screen.getByRole("button", { name: "更多操作" }));
+
+  expect(screen.getAllByText("设为指定屏幕")).toHaveLength(1);
+  expect(screen.getByRole("menuitem", { name: "屏幕 1 · 主" })).toBeInTheDocument();
+  await user.click(screen.getByRole("menuitem", { name: "屏幕 1 · 主" }));
+  expect(onPick).toHaveBeenCalledOnce();
+});
+
+test("notifies open state changes for lazy content loading", async () => {
+  const user = userEvent.setup();
+  const onOpenChange = vi.fn();
+  render(<Menu label="更多操作" items={[{ id: "download", label: "下载原图", onSelect: vi.fn() }]} onOpenChange={onOpenChange} />);
+
+  await user.click(screen.getByRole("button", { name: "更多操作" }));
+  expect(onOpenChange).toHaveBeenLastCalledWith(true);
+
+  await user.keyboard("{Escape}");
+  expect(onOpenChange).toHaveBeenLastCalledWith(false);
+});

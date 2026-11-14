@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import packageJson from "../../../package.json";
+import type { MonitorSnapshot } from "../../entities/monitor/model/types";
 import type { ThemePreference, UserConfig } from "../../entities/settings/model/types";
 import { CACHE_RETENTION_DAYS, HISTORY_RANGE_DAYS, ROTATE_INTERVALS } from "../../entities/settings/model/values";
 import { getAutostartEnabled } from "../../shared/platform/autostart";
@@ -20,6 +21,8 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
 
 export function SettingsPage({ onBack, onHistoryRangeChanged }: { onBack: () => void; onHistoryRangeChanged: () => void }) {
   const [config, setConfig] = useState<UserConfig | null>(null);
+  const [monitors, setMonitors] = useState<MonitorSnapshot | null>(null);
+  const [wallpaperTitles, setWallpaperTitles] = useState<Record<string, string>>({});
   const [error, setError] = useState(false);
   const { show } = useToast();
 
@@ -31,6 +34,37 @@ export function SettingsPage({ onBack, onHistoryRangeChanged }: { onBack: () => 
     }).catch(() => { if (active) setError(true); });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const snapshot = await tauri.wallpapers.listMonitors();
+        if (active) setMonitors(snapshot);
+      } catch { if (active) setMonitors(null); }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  // 每屏当前壁纸的文件名 → 相册标题映射（超出历史范围的条目回落显示文件名）
+  useEffect(() => {
+    if (!config) return;
+    let active = true;
+    (async () => {
+      try {
+        const recent = await tauri.wallpapers.getRecent(config.history_range_days);
+        if (active) {
+          const titles: Record<string, string> = {};
+          for (const photo of recent) {
+            const title = photo.titles[0];
+            if (title && !titles[photo.filename]) titles[photo.filename] = title;
+          }
+          setWallpaperTitles(titles);
+        }
+      } catch { if (active) setWallpaperTitles({}); }
+    })();
+    return () => { active = false; };
+  }, [config]);
 
   const persist = async (request: Promise<UserConfig>, after?: () => void) => {
     try { const next = await request; setConfig(next); after?.(); }
@@ -51,6 +85,13 @@ export function SettingsPage({ onBack, onHistoryRangeChanged }: { onBack: () => 
   return <section className={styles.page} aria-labelledby="settings-title">
     <header><Tooltip align="start" label="返回今日"><button aria-label="返回今日" onClick={onBack}>←</button></Tooltip><div><p>PREFERENCES</p><h1 id="settings-title">设置</h1></div></header>
     <section className={styles.group}><h2>外观</h2><fieldset className={styles.segment}><legend>主题</legend>{([['system','跟随系统'],['light','浅色'],['dark','深色']] as const).map(([value,label]) => <label key={value}><input type="radio" name="theme" checked={config.theme_preference === value} onChange={() => void saveTheme(value)} />{label}</label>)}</fieldset></section>
+    {monitors?.per_monitor && monitors.monitors.length > 0 && <section className={styles.group}><h2>屏幕</h2>{monitors.monitors.map((monitor) => {
+      const label = monitor.is_primary ? `${monitor.name} · 主` : monitor.name;
+      const current = monitor.current_filename
+        ? (wallpaperTitles[monitor.current_filename] ?? monitor.current_filename)
+        : "未由 Pavo 设置";
+      return <div className={styles.infoRow} key={monitor.id}><span>{label}<em>{monitor.width}×{monitor.height}</em></span><em>{current}</em></div>;
+    })}</section>}
     <section className={styles.group}><h2>启动与更新</h2><ToggleRow label="开机自动启动" value={config.auto_start} onChange={(value) => void persist(tauri.settings.setAutoStart(value))} /><ToggleRow label="每日自动更新" value={config.auto_daily_update} onChange={(value) => void persist(tauri.settings.setAutoDailyUpdate(value))} /><button className={styles.linkRow} onClick={() => void checkForUpdates()}><span>检查更新</span><em>当前 {packageJson.version}</em></button></section>
     <section className={styles.group}><h2>壁纸轮播</h2><ToggleRow label="自动轮播壁纸" value={config.auto_rotate} onChange={(value) => void persist(tauri.settings.setAutoRotate(value))} />{config.auto_rotate && <><label className={styles.selectRow}>切换间隔<select aria-label="切换间隔" value={config.rotate_interval_minutes} onChange={(event) => void persist(tauri.settings.setRotateInterval(Number(event.target.value)))}>{ROTATE_INTERVALS.map((value) => <option key={value} value={value}>{value} 分钟</option>)}</select></label><fieldset className={styles.segment}><legend>轮播顺序</legend>{([['Sequential','顺序'],['Random','随机']] as const).map(([value,label]) => <label key={value}><input type="radio" name="rotate-mode" checked={config.rotate_mode === value} onChange={() => void persist(tauri.settings.setRotateMode(value))} />{label}</label>)}</fieldset></>}</section>
     <section className={styles.group}><h2>资料库与存储</h2><label className={styles.selectRow}>历史范围<select aria-label="历史范围" value={config.history_range_days} onChange={(event) => void persist(tauri.settings.setHistoryRangeDays(Number(event.target.value)), onHistoryRangeChanged)}>{HISTORY_RANGE_DAYS.map((value) => <option key={value} value={value}>{value} 天</option>)}</select></label><label className={styles.selectRow}>缓存保留<select aria-label="缓存保留" value={config.cache_retention_days} onChange={(event) => void persist(tauri.settings.setCacheRetentionDays(Number(event.target.value)))}>{CACHE_RETENTION_DAYS.map((value) => <option key={value} value={value}>{value} 天</option>)}</select></label><div className={styles.infoRow}><span>缓存位置</span><em>~/.pavo/</em></div><button className={styles.linkRow} onClick={() => void runAction(tauri.settings.revealLog())}><span>打开日志</span><em><ExternalLink size={11} strokeWidth={1.75} /></em></button></section>

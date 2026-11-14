@@ -36,7 +36,9 @@
   position: fixed;
   z-index: 20;
   display: grid;
-  width: 154px;
+  min-width: 154px;
+  width: max-content;
+  max-width: 280px;
   padding: var(--space-3xs);
   border: 1px solid var(--line);
   background: var(--paper-raised);
@@ -76,11 +78,21 @@
   font-size: var(--text-xs);
   text-align: left;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.item:first-child {
+/* 分组头插入后首个菜单项仍是第一个 button，用 of-type 保持强调语义 */
+.item:first-of-type {
   color: var(--accent);
   font-weight: 650;
+}
+
+.groupLabel {
+  padding: 6px 8px 4px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
 }
 
 .item:hover,

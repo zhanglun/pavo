@@ -1,12 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { tauri } from "../../shared/tauri/client";
 import { ToastProvider } from "../../shared/ui/toast/ToastProvider";
 import { HistoryPage } from "./HistoryPage";
 
 vi.mock("../../shared/tauri/client", () => ({ tauri: {
   settings: { get: vi.fn() },
-  wallpapers: { getRecent: vi.fn(), setAsDesktop: vi.fn(), download: vi.fn() },
+  wallpapers: { getRecent: vi.fn(), setAsDesktop: vi.fn(), download: vi.fn(), listMonitors: vi.fn() },
 } }));
 vi.mock("../../shared/platform/shell", () => ({ openExternal: vi.fn() }));
 
@@ -14,8 +14,15 @@ const photo = { filename: "mountain.jpg", regions: ["中国"], urls: ["https://e
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // fixture 的 startdate 固定为 20260723；冻结系统日期使历史窗口判定与 fixture 对齐
+  vi.useFakeTimers({ now: new Date("2026-07-23T00:00:00"), shouldAdvanceTime: true });
   vi.mocked(tauri.settings.get).mockResolvedValue({ history_range_days: 14 } as never);
   vi.mocked(tauri.wallpapers.getRecent).mockResolvedValue([photo]);
+  vi.mocked(tauri.wallpapers.listMonitors).mockResolvedValue({ per_monitor: false, monitors: [] });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 test("loads the configured archive range and keeps actions behind the quiet menu", async () => {
@@ -34,6 +41,24 @@ test("shows a restrained retry state when history cannot load", async () => {
   vi.mocked(tauri.wallpapers.getRecent).mockRejectedValue(new Error("offline"));
   render(<ToastProvider><HistoryPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
   await waitFor(() => expect(screen.getByText(/暂时无法读取/)).toBeInTheDocument());
+});
+
+test("offers per-monitor targets in the quiet menu when the system supports it", async () => {
+  vi.mocked(tauri.wallpapers.listMonitors).mockResolvedValue({
+    per_monitor: true,
+    monitors: [
+      { id: "m-1", name: "DELL", index: 0, width: 3840, height: 2160, is_primary: true, current_filename: null },
+      { id: "m-2", name: "BenQ", index: 1, width: 1920, height: 1080, is_primary: false, current_filename: null },
+    ],
+  });
+
+  render(<ToastProvider><HistoryPage favoriteIds={new Set()} onToggleFavorite={vi.fn()} refreshSignal={0} /></ToastProvider>);
+  fireEvent.click(await screen.findByRole("button", { name: "更多操作：山谷" }));
+
+  // 快照在菜单打开后异步到达
+  expect(await screen.findByText("设为指定屏幕")).toBeInTheDocument();
+  expect(screen.getByRole("menuitem", { name: "DELL · 3840×2160 · 主" })).toBeInTheDocument();
+  expect(screen.getByRole("menuitem", { name: "BenQ · 1920×1080" })).toBeInTheDocument();
 });
 
 test("renders one archive card for regional variants of the same visual", async () => {
