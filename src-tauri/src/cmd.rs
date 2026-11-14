@@ -3,7 +3,7 @@ use std::path::Path;
 use crate::config::RotateMode;
 use crate::scheduler;
 use crate::services::{bing, AsyncProcessMessage, PhotoService};
-use crate::{config, services};
+use crate::{config, platform, services};
 
 use tauri::{AppHandle, Runtime};
 use tokio::sync::{mpsc, Mutex};
@@ -20,22 +20,45 @@ fn config_value(config: config::PavoConfig) -> Result<serde_json::Value, String>
 pub async fn set_as_desktop<R: Runtime>(
   app: AppHandle<R>,
   url: &str,
+  monitor_id: Option<String>,
   service: PhotoService,
 ) -> Result<String, String> {
   println!("set as {:?}", url);
 
+  // 逐屏设置的先行校验（能力位 + 屏幕 id 存在性），失败时避免无效下载
+  if let Some(id) = &monitor_id {
+    let snapshot = tokio::task::spawn_blocking(platform::list_monitors)
+      .await
+      .map_err(|e| format!("list monitors failed: {e}"))??;
+    if !snapshot.per_monitor {
+      return Err("当前系统不支持按屏幕设置".to_string());
+    }
+    if !snapshot.monitors.iter().any(|monitor| &monitor.id == id) {
+      return Err("显示器不存在或已断开".to_string());
+    }
+  }
+
   let result = match service {
-    PhotoService::Bing => bing::Wallpaper::set_wallpaper(url)
+    PhotoService::Bing => bing::Wallpaper::set_wallpaper(url, monitor_id.as_deref())
       .await
       .map_err(|e| e.to_string()),
   };
 
   if result.is_ok() {
     let scheduler = scheduler::SCHEDULER.lock().await;
-    let _ = scheduler.emit_wallpaper_event_by_url(&app, url).await;
+    let _ = scheduler
+      .emit_wallpaper_event_by_url(&app, url, monitor_id.as_deref())
+      .await;
   }
 
   result
+}
+
+#[tauri::command]
+pub async fn list_monitors() -> Result<platform::MonitorSnapshot, String> {
+  tokio::task::spawn_blocking(platform::list_monitors)
+    .await
+    .map_err(|e| format!("list monitors failed: {e}"))?
 }
 
 #[tauri::command]

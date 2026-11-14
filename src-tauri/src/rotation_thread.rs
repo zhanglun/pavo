@@ -69,13 +69,14 @@ impl RotationWorker {
           None => continue,
         };
 
-        match bing::Wallpaper::set_wallpaper(&url).await {
+        match bing::Wallpaper::set_wallpaper(&url, None).await {
           Ok(_) => {
             let event = WallpaperEvent {
               title: photo.titles.first().cloned().unwrap_or_default(),
               copyright: photo.copyrights.first().cloned().unwrap_or_default(),
               url: url.clone(),
               startdate: photo.startdates.first().cloned().unwrap_or_default(),
+              monitor_id: None,
             };
             let _ = app.emit("wallpaper:changed", event);
             log::info!("rotation: wallpaper changed (idx={})", idx);

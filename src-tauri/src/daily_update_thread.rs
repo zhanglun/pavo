@@ -64,7 +64,7 @@ impl DailyUpdateWorker {
               }
             };
 
-            match bing::Wallpaper::set_wallpaper(&url).await {
+            match bing::Wallpaper::set_wallpaper(&url, None).await {
               Ok(_) => {
                 if let Some(idx) = list.iter().position(|p| p.filename == photo.filename) {
                   scheduler.current_idx = idx;
@@ -74,6 +74,7 @@ impl DailyUpdateWorker {
                   copyright: photo.copyrights.first().cloned().unwrap_or_default(),
                   url: url.clone(),
                   startdate: photo.startdates.first().cloned().unwrap_or_default(),
+                  monitor_id: None,
                 };
                 let _ = app.emit("wallpaper:changed", event);
                 log::info!("Daily wallpaper updated to today's Bing wallpaper");

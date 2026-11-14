@@ -110,7 +110,7 @@ impl Scheduler {
 
     let item = &list[self.current_idx];
 
-    bing::Wallpaper::set_wallpaper(&item.urls[0]).await?;
+    bing::Wallpaper::set_wallpaper(&item.urls[0], None).await?;
 
     Ok(())
   }
@@ -130,7 +130,7 @@ impl Scheduler {
 
     let item = &list[self.current_idx];
 
-    bing::Wallpaper::set_wallpaper(&item.urls[0]).await?;
+    bing::Wallpaper::set_wallpaper(&item.urls[0], None).await?;
 
     Ok(())
   }
@@ -140,7 +140,7 @@ impl Scheduler {
     app: &tauri::AppHandle<R>,
   ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     self.next_photo().await?;
-    self.emit_wallpaper_event(app).await?;
+    self.emit_wallpaper_event(app, None).await?;
     Ok(())
   }
 
@@ -149,13 +149,14 @@ impl Scheduler {
     app: &tauri::AppHandle<R>,
   ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     self.previous_photo().await?;
-    self.emit_wallpaper_event(app).await?;
+    self.emit_wallpaper_event(app, None).await?;
     Ok(())
   }
 
   async fn emit_wallpaper_event<R: tauri::Runtime>(
     &self,
     app: &tauri::AppHandle<R>,
+    monitor_id: Option<&str>,
   ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let item = &self.cache_list[self.current_idx];
     let event = WallpaperEvent {
@@ -163,6 +164,7 @@ impl Scheduler {
       copyright: item.copyrights.first().cloned().unwrap_or_default(),
       url: item.urls.first().cloned().unwrap_or_default(),
       startdate: item.startdates.first().cloned().unwrap_or_default(),
+      monitor_id: monitor_id.map(|id| id.to_string()),
     };
     app.emit("wallpaper:changed", event)?;
     Ok(())
@@ -172,6 +174,7 @@ impl Scheduler {
     &self,
     app: &tauri::AppHandle<R>,
     url: &str,
+    monitor_id: Option<&str>,
   ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let item = self
       .cache_list
@@ -184,6 +187,7 @@ impl Scheduler {
         copyright: item.copyrights.first().cloned().unwrap_or_default(),
         url: url.to_string(),
         startdate: item.startdates.first().cloned().unwrap_or_default(),
+        monitor_id: monitor_id.map(|id| id.to_string()),
       };
       app.emit("wallpaper:changed", event)?;
     }

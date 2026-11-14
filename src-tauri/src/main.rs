@@ -78,7 +78,9 @@ async fn main() {
 
       {
         let retention_days = config::PavoConfig::get_config().cache_retention_days;
-        let _ = bing::clean_cache(retention_days);
+        // 引用保护：当前被某块屏幕引用的壁纸文件不参与清理
+        let protected = platform::referenced_wallpaper_files();
+        let _ = bing::clean_cache(retention_days, &protected);
       }
 
       let _ = tray::create_tray(app, sender);
@@ -101,6 +103,7 @@ async fn main() {
     })
     .invoke_handler(tauri::generate_handler![
       cmd::set_as_desktop,
+      cmd::list_monitors,
       cmd::download,
       cmd::view_photo,
       cmd::get_bing_wallpaper_list,

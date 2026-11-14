@@ -1,5 +1,6 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::path::Path;
 
 use super::download_file;
@@ -140,20 +141,24 @@ impl Wallpaper {
     res
   }
 
-  pub async fn set_wallpaper_from_local(path: &str) -> Result<String> {
+  pub async fn set_wallpaper_from_local(path: &str, monitor_id: Option<&str>) -> Result<String> {
     let path_owned = path.to_string();
+    let monitor_owned = monitor_id.map(|s| s.to_string());
     tokio::task::spawn_blocking(move || {
-      crate::platform::set_wallpaper_all(&path_owned)?;
+      match monitor_owned.as_deref() {
+        Some(id) => crate::platform::set_wallpaper_for(id, &path_owned)?,
+        None => crate::platform::set_wallpaper_all(&path_owned)?,
+      }
       Ok(path_owned)
     })
     .await
     .map_err(|e| format!("Failed to join wallpaper task: {e}"))?
   }
 
-  pub async fn set_wallpaper(url: &str) -> Result<String> {
+  pub async fn set_wallpaper(url: &str, monitor_id: Option<&str>) -> Result<String> {
     let file_path = Wallpaper::save_wallpaper(url, None).await?;
 
-    Self::set_wallpaper_from_local(&file_path)
+    Self::set_wallpaper_from_local(&file_path, monitor_id)
       .await
       .map_err(|e| format!("Failed to set wallpaper from local file: {}", e))?;
 
@@ -176,8 +181,9 @@ fn get_url(index: u8, number: u8, mkt: Option<String>) -> String {
   url
 }
 
-/// 清理超过保留天数的壁纸缓存文件
-pub fn clean_cache(retention_days: u32) -> Result<()> {
+/// 清理超过保留天数的壁纸缓存文件。
+/// protected 为当前被任一屏幕引用的文件名集合，跳过不清理（引用保护）。
+pub fn clean_cache(retention_days: u32, protected: &HashSet<String>) -> Result<()> {
   let app_folder = config::PavoConfig::get_app_folder().map_err(
     |e| -> Box<dyn std::error::Error + Send + Sync> {
       Box::new(std::io::Error::new(
@@ -208,6 +214,16 @@ pub fn clean_cache(retention_days: u32) -> Result<()> {
       if let Ok(modified) = metadata.modified() {
         if let Ok(age) = now.duration_since(modified) {
           if age > retention {
+            // 引用保护：该文件仍是某块屏幕的当前壁纸时跳过，避免 macOS 重启丢壁纸
+            let still_referenced = path
+              .file_name()
+              .and_then(|name| name.to_str())
+              .map(|name| protected.contains(name))
+              .unwrap_or(false);
+            if still_referenced {
+              log::info!("Skip referenced cache: {:?}", path);
+              continue;
+            }
             match std::fs::remove_file(&path) {
               Ok(_) => log::info!("Cleaned cache: {:?}", path),
               Err(e) => log::warn!("Failed to clean cache {:?}: {}", path, e),
