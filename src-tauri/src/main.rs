@@ -8,6 +8,7 @@ mod cmd;
 mod config;
 mod daily_update_thread;
 mod events;
+mod platform;
 mod plugins;
 mod rotation_thread;
 mod scheduler;
@@ -62,6 +63,9 @@ async fn main() {
     .setup(move |app| {
       #[cfg(target_os = "macos")]
       app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
+      // 平台层需要的应用句柄（macOS 主线程调度壁纸设置用）
+      let _ = platform::set_app_handle(app.handle().clone());
 
       // 非自启动时显示主窗口（tauri.conf.json 默认 visible: false 防止闪烁）
       if !std::env::args().any(|arg| arg == "--autostart") {

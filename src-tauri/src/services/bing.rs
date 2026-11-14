@@ -143,12 +143,7 @@ impl Wallpaper {
   pub async fn set_wallpaper_from_local(path: &str) -> Result<String> {
     let path_owned = path.to_string();
     tokio::task::spawn_blocking(move || {
-      wallpaper::set_from_path(&path_owned).map_err(|e| e.to_string())?;
-
-      if cfg!(not(target_os = "macos")) {
-        wallpaper::set_mode(wallpaper::Mode::Crop).map_err(|e| e.to_string())?;
-      }
-
+      crate::platform::set_wallpaper_all(&path_owned)?;
       Ok(path_owned)
     })
     .await
