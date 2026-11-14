@@ -260,7 +260,8 @@ mod windows_impl {
 
     let mut out: Vec<(RECT, bool)> = Vec::new();
     unsafe {
-      EnumDisplayMonitors(
+      // 枚举起点调用本身不会失败，结果由回调逐条收集
+      let _ = EnumDisplayMonitors(
         HDC(std::ptr::null_mut()),
         None,
         Some(callback),
@@ -314,6 +315,21 @@ mod windows_impl {
       .map(|info| info.is_primary)
       .unwrap_or(origin_primary);
     (width, height, is_primary)
+  }
+
+  /// 查询某屏当前壁纸的完整路径（端到端测试的取证与恢复用）。
+  #[cfg(test)]
+  pub fn current_wallpaper_path(monitor_id: &str) -> super::PlatformResult<String> {
+    unsafe {
+      with_desktop_wallpaper(|wallpaper| {
+        let path = wallpaper
+          .GetWallpaper(&HSTRING::from(monitor_id))
+          .map_err(|e| format!("[win] GetWallpaper failed: {e}"))?;
+        take_pwstr(path)
+          .filter(|p| !p.is_empty())
+          .ok_or_else(|| format!("[win] no wallpaper set for monitor: {monitor_id}"))
+      })
+    }
   }
 
   pub fn set_wallpaper_all(path: &str) -> super::PlatformResult<()> {
@@ -647,4 +663,89 @@ mod tests {
   }
 }
 
+
+
+/// 端到端（真机，会短暂修改真实桌面并在结束时恢复原壁纸）：
+/// cargo test e2e_wallpaper -- --ignored --nocapture
+///
+/// 注意：测试图必须是真实有效的图片——无效图片（如损坏的字节流）会被 Windows
+/// 静默拒绝渲染并让 GetWallpaper 进入空状态。这里复制应用图标作为测试图。
+#[cfg(all(test, target_os = "windows"))]
+mod e2e_tests {
+  fn prepare_test_image() -> std::path::PathBuf {
+    // 以仓库中的真实 PNG（应用图标）为源，复制到应用缓存目录
+    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let source = manifest.join("..").join("public").join("icon.png");
+    let app_folder = crate::config::PavoConfig::get_app_folder().expect("app folder");
+    let target = std::path::Path::new(&app_folder).join("pavo-e2e-test.png");
+    std::fs::copy(&source, &target).expect("copy icon.png as test image");
+    target
+  }
+
+  #[test]
+  #[ignore = "端到端：短暂修改真实桌面壁纸并自动恢复，仅本机手动执行"]
+  fn e2e_wallpaper_pipeline_sets_targets_and_restores() {
+    let snapshot = super::list_monitors().expect("enumerate monitors");
+    assert!(snapshot.per_monitor, "per-monitor capability required");
+    assert!(!snapshot.monitors.is_empty(), "at least one display");
+
+    // 取证：每屏原始壁纸完整路径（壁纸应用是异步的，取证与断言都需要轮询容错）
+    let original: Vec<(String, String)> = snapshot
+      .monitors
+      .iter()
+      .filter_map(|monitor| {
+        super::windows_impl::current_wallpaper_path(&monitor.id)
+          .ok()
+          .map(|path| (monitor.id.clone(), path))
+      })
+      .collect();
+    assert!(!original.is_empty(), "monitors should have current wallpapers");
+    println!("original wallpapers: {original:?}");
+
+    let test_image = prepare_test_image();
+    let test_path = test_image.to_str().unwrap().to_string();
+
+    // 步骤 1：所有屏幕 → 测试图
+    super::windows_impl::set_wallpaper_all(&test_path).expect("set all screens");
+    for (id, _) in &original {
+      poll_wallpaper(id, &test_path, "set all");
+    }
+    println!("step 1 ok: all screens -> test image");
+
+    // 步骤 2：逐屏定向 → 只改第一块屏为原始壁纸，其余屏不受影响
+    let (first_id, first_original) = &original[0];
+    super::windows_impl::set_wallpaper_for(first_id, first_original).expect("targeted set");
+    poll_wallpaper(first_id, first_original, "targeted set");
+    if let Some((second_id, _)) = original.get(1) {
+      poll_wallpaper(second_id, &test_path, "targeted set isolation");
+    }
+    println!("step 2 ok: targeted set only affects the chosen screen");
+
+    // 步骤 3：恢复所有屏幕的原始壁纸
+    for (id, path) in &original {
+      super::windows_impl::set_wallpaper_for(id, path).expect("restore");
+      poll_wallpaper(id, path, "restore");
+    }
+    println!("step 3 ok: all screens restored to original wallpapers");
+
+    let _ = std::fs::remove_file(&test_image);
+  }
+
+  /// 轮询等待 GetWallpaper 落到期望值；超时带实际值失败。
+  fn poll_wallpaper(id: &str, expected: &str, label: &str) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    loop {
+      match super::windows_impl::current_wallpaper_path(id) {
+        Ok(path) if path == expected => return,
+        Ok(path) if std::time::Instant::now() >= deadline => {
+          panic!("{label}: wallpaper did not settle: expected {expected:?}, got {path:?}");
+        }
+        Err(_) if std::time::Instant::now() >= deadline => {
+          panic!("{label}: wallpaper did not settle to {expected:?} (query empty)");
+        }
+        _ => std::thread::sleep(std::time::Duration::from_millis(250)),
+      }
+    }
+  }
+}
 
