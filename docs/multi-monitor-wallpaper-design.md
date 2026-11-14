@@ -1,6 +1,6 @@
 # Pavo 多显示器壁纸技术方案
 
-> 版本：v1.2（2026-11-14 第三轮评审修订）
+> 版本：v1.3（2026-11-14 第四轮评审修订）
 > 状态：已评审定稿
 > 前置分析：见本文档第 1.1 节与附录 B（方案自审记录）
 
@@ -241,7 +241,7 @@ pub fn list_monitors() -> PlatformResult<MonitorSnapshot>;
 
 **关键实现点：**
 
-1. **主线程约束**：AppKit API（`NSScreen.screens`、`NSWorkspace`）必须在主线程调用。Tauri 提供 `AppHandle::run_on_main_thread`，用 `std::sync::mpsc` channel 回传结果：
+1. **主线程约束**：AppKit API（`NSScreen.screens`、`NSWorkspace`）必须在主线程调用。Tauri 提供 `AppHandle::run_on_main_thread`，用 `std::sync::mpsc` channel 回传结果。AppHandle 经 setup 阶段注入的全局 `OnceLock<AppHandle>` 获取（`platform::set_app_handle`），不改变 `set_wallpaper_all` 等函数签名——与 `tray.rs` 的 `TRAY_RECT_CACHE` 全局缓存惯例一致：
 
    ```rust
    let (tx, rx) = std::sync::mpsc::channel();
@@ -766,21 +766,22 @@ flowchart TD
 
 ### 9.1 Phase 0 · 平台层替换（行为保持）
 
-**范围**：仅替换"应用到系统"层；命令签名、事件、调度、UI 全部不动。
+**范围**：仅替换"应用到系统"层；命令签名、事件、调度、UI 全部不动（macOS 主线程调度所需的 AppHandle 经全局句柄注入获取，不改变函数签名——与 `tray.rs` 的 `TRAY_RECT_CACHE` 全局缓存惯例一致，见 3.3）。
 
 | 文件 | 改动 |
 |------|------|
-| `src-tauri/src/platform.rs` | 新增：`set_wallpaper_all`；Win = IDesktopWallpaper `SetWallpaper(NULL)` + `SetPosition(FILL)`；mac = run_on_main_thread 遍历 NSScreen；linux = 委托 crate |
+| `src-tauri/src/platform.rs` | 新增：`set_wallpaper_all` + `set_app_handle`；Win = IDesktopWallpaper `SetWallpaper(NULL)` + `SetPosition(FILL)`；mac = 经全局句柄 `run_on_main_thread` 遍历 NSScreen；linux = 委托 crate（`set_from_path` + `set_mode(Crop)` 两步都保留，维持现有填充行为） |
 | `src-tauri/src/services/bing.rs` | `set_wallpaper_from_local`（143-156 行）函数体改为调用 `platform::set_wallpaper_all`，删除 `wallpaper::set_from_path/set_mode` 调用与 `cfg!(not(macos))` 分支 |
 | `src-tauri/Cargo.toml` | `wallpaper` 移入 `[target.'cfg(target_os = "linux")'.dependencies]` 并去掉 `from_url`；新增 windows / objc2 系列 target 依赖；顺带移除未使用的 `indicatif`（经核实源码零引用） |
-| `src-tauri/src/main.rs` | `mod platform;` |
+| `src-tauri/src/main.rs` | `mod platform;` + setup 中 `platform::set_app_handle(app.handle().clone())` |
 
 **验收标准**：
 
 1. Windows 多屏（含 125% + 100% 缩放混排）：设为桌面后**所有屏幕**显示同一张图，填充模式与旧版视觉一致；
 2. macOS 内置屏 + 外接屏：同上；设置耗时相对 osascript 版本明显下降；无权限弹窗；
 3. 单屏设备行为不变；`cargo test` / `cargo check` / `pnpm test` / `pnpm typecheck` 全绿；
-4. Linux：`cargo check` 通过（CI 矩阵验证），运行行为依赖 crate 不变。
+4. Linux：`cargo check` 通过（CI 矩阵验证），运行行为依赖 crate 不变。说明：开发机为 Windows，Linux 运行时行为无法本地验证，保障手段是依赖声明仅移动（不改调用逻辑）+ CI 编译；
+5. Phase 0 以 patch 版本独立发版（`pnpm release`），回归窗口最小化。
 
 ### 9.2 Phase 1 · 屏幕枚举与逐屏定向
 
@@ -789,16 +790,19 @@ flowchart TD
 | `platform.rs` | `list_monitors` 快照（内含每屏反查辅助）/ `set_wallpaper_for` |
 | `services/bing.rs` | `clean_cache` 增加引用保护：跳过当前被任一屏幕引用的壁纸文件（引用集合来自 `list_monitors` 反查），见 4.2 |
 | `cmd.rs` | 新命令 `list_monitors`；`set_as_desktop` 加 `monitor_id: Option<String>` 与校验 |
+| `scheduler.rs` | `emit_wallpaper_event_by_url` / `emit_wallpaper_event` 增加屏幕参数透传（托盘路径） |
 | `events.rs` + 4 个发射点 | `WallpaperEvent` v2，透传屏幕参数 |
 | `main.rs` | 注册新命令 |
 
 ### 9.3 Phase 2 · 前端逐屏交互
 
-按 7.1–7.4 落地：三页菜单、Today 主按钮、设置页"屏幕"分组（仅展示）、`useMonitors`、toast 文案。
+按 7.1–7.4 落地：三页菜单、Today 主按钮、设置页"屏幕"分组（仅展示）、`useMonitors`、toast 文案；同步更新受影响的既有测试（三页菜单结构与设置页断言）。
 
 ### 9.4 Phase 3 · 轮播逐屏独立
 
 `config.rs`（`WallpaperMode` + 容错解析 + 测试）→ `cmd::set_wallpaper_mode` → 设置页模式开关 → `rotation_thread.rs` / `scheduler.rs` 逐屏分支（8.2）。
+
+文件级清单：`config.rs`、`cmd.rs`、`services/mod.rs`（`AsyncProcessMessage` 扩展载荷或新增消息）、`background.rs`（处理模式切换消息、重启轮播 worker）、`rotation_thread.rs`、`scheduler.rs`（共享推进函数 + 事件透传）、设置页模式开关。
 
 ### 9.5 阶段顺序与依赖
 
@@ -828,7 +832,7 @@ objc2-app-kit = { version = "0.3", features = ["NSScreen", "NSWorkspace"] }
 wallpaper = "3.2"
 ```
 
-（objc2 各 crate 的具体 feature 列表以实际编译为准，此处为占位。）
+（依赖版本以 crates.io 实际发布为准，此处为占位；objc2 各 crate 的具体 feature 列表以实际编译为准。`Win32_Graphics_Gdi` 自 Phase 1 屏幕枚举起才需要，Phase 0 仅前两项。）
 
 ### 9.7 风险与回滚
 
@@ -945,3 +949,9 @@ wallpaper = "3.2"
 12. **功能遗漏**：发现 `clean_cache`（按 mtime 无差别清理）与逐屏引用存在冲突——某屏长期引用较早收藏图片时，源文件被清理后 macOS 有重启丢壁纸风险 → 增加引用保护策略（4.2、9.2、10.4）；
 13. **术语残留**：能力矩阵仍用旧字段名 `supports_per_monitor` → 统一为快照能力位 `per_monitor`；自审记录第 4 条与最终设计矛盾（仍写"独立查询接口"）→ 更正为快照能力位；
 14. **补充**：worker 启动时读取 `wallpaper_mode` 的时机（8.2）；顺带清理零引用依赖 `indicatif`（9.1）。
+
+**第四轮评审补充修正（开发计划专项，v1.3）：**
+
+15. **矛盾修复**：Phase 0 声称"调用方零改动"，但 macOS 主线程调度需要 AppHandle 而 `bing::Wallpaper::set_wallpaper` 无该参数 → 采用 setup 注入的全局 `OnceLock<AppHandle>`（`platform::set_app_handle`，与 tray.rs 全局缓存惯例一致），签名保持不变；
+16. **错误修复**：Phase 0 的 Linux 分支原描述"委托 crate"遗漏 `set_mode(Crop)`，会导致填充行为回归 → 明确 linux 分支保留 `set_from_path + set_mode(Crop)` 两步；
+17. **遗漏补充**：Phase 3 文件清单补 `services/mod.rs` 与 `background.rs`（模式切换消息与 worker 重启）；Phase 1 文件清单补 `scheduler.rs`（emit 透传屏幕参数）；Phase 2 补"更新受影响的既有前端测试"；Phase 0 补 patch 独立发版策略与 Linux 验证局限说明。
