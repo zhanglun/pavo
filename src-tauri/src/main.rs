@@ -121,6 +121,7 @@ async fn main() {
       cmd::set_auto_rotate,
       cmd::set_rotate_interval,
       cmd::set_rotate_mode,
+      cmd::set_wallpaper_mode,
       cmd::set_auto_start,
       cmd::set_cache_retention_days,
       cmd::set_theme_preference,

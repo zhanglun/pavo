@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { MonitorSnapshot } from "../../entities/monitor/model/types";
 import type { SchedulerPhoto } from "../../entities/wallpaper/model/types";
-import type { FavoriteItem, RotateMode, ThemePreference, UserConfig } from "../../entities/settings/model/types";
+import type { FavoriteItem, RotateMode, ThemePreference, UserConfig, WallpaperMode } from "../../entities/settings/model/types";
 
 export const tauri = {
   wallpapers: {
@@ -28,6 +28,7 @@ export const tauri = {
     setAutoRotate: (enabled: boolean) => invoke<UserConfig>("set_auto_rotate", { enabled }),
     setRotateInterval: (minutes: number) => invoke<UserConfig>("set_rotate_interval", { minutes }),
     setRotateMode: (mode: RotateMode) => invoke<UserConfig>("set_rotate_mode", { mode }),
+    setWallpaperMode: (mode: WallpaperMode) => invoke<UserConfig>("set_wallpaper_mode", { mode }),
     setAutoStart: (enabled: boolean) => invoke<UserConfig>("set_auto_start", { enabled }),
     setCacheRetentionDays: (days: number) => invoke<UserConfig>("set_cache_retention_days", { days }),
     revealLog: () => invoke<void>("reveal_log_file"),

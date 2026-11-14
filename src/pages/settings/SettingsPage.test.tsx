@@ -12,12 +12,12 @@ vi.mock("../../shared/platform/updater", () => ({ checkForUpdates: vi.fn() }));
 vi.mock("../../shared/platform/shell", () => ({ openExternal: vi.fn() }));
 vi.mock("../../shared/tauri/client", () => ({ tauri: {
   settings: {
-    get: vi.fn(), setThemePreference: vi.fn(), setAutoDailyUpdate: vi.fn(), setHistoryRangeDays: vi.fn(), setAutoRotate: vi.fn(), setRotateInterval: vi.fn(), setRotateMode: vi.fn(), setAutoStart: vi.fn(), setCacheRetentionDays: vi.fn(), revealLog: vi.fn(),
+    get: vi.fn(), setThemePreference: vi.fn(), setAutoDailyUpdate: vi.fn(), setHistoryRangeDays: vi.fn(), setAutoRotate: vi.fn(), setRotateInterval: vi.fn(), setRotateMode: vi.fn(), setWallpaperMode: vi.fn(), setAutoStart: vi.fn(), setCacheRetentionDays: vi.fn(), revealLog: vi.fn(),
   },
   wallpapers: { listMonitors: vi.fn(), getRecent: vi.fn() },
 } }));
 
-const config = (overrides: Partial<UserConfig> = {}): UserConfig => ({ auto_daily_update: true, history_range_days: 7, favorites: [], auto_rotate: false, rotate_interval_minutes: 60, rotate_mode: "Sequential", auto_start: false, cache_retention_days: 14, theme_preference: "system", ...overrides });
+const config = (overrides: Partial<UserConfig> = {}): UserConfig => ({ auto_daily_update: true, history_range_days: 7, favorites: [], auto_rotate: false, rotate_interval_minutes: 60, rotate_mode: "Sequential", wallpaper_mode: "all", auto_start: false, cache_retention_days: 14, theme_preference: "system", ...overrides });
 
 beforeEach(() => {
   vi.clearAllMocks(); localStorage.clear();
@@ -97,4 +97,19 @@ test("hides the screen section when per-monitor is unsupported", async () => {
   renderPage();
   await screen.findByRole("heading", { name: "外观" });
   expect(screen.queryByRole("heading", { name: "屏幕" })).not.toBeInTheDocument();
+});
+
+test("persists the wallpaper mode switch", async () => {
+  vi.mocked(tauri.wallpapers.listMonitors).mockResolvedValue({
+    per_monitor: true,
+    monitors: [{ id: "1", name: "DELL", index: 0, width: 3840, height: 2160, is_primary: true, current_filename: null }],
+  });
+  vi.mocked(tauri.settings.setWallpaperMode).mockResolvedValue(config({ wallpaper_mode: "per_monitor" }));
+  const user = userEvent.setup(); renderPage();
+
+  await screen.findByRole("heading", { name: "屏幕" });
+  await user.click(screen.getByRole("radio", { name: "按屏幕独立" }));
+
+  expect(tauri.settings.setWallpaperMode).toHaveBeenCalledWith("per_monitor");
+  expect(await screen.findByRole("radio", { name: "按屏幕独立" })).toBeChecked();
 });

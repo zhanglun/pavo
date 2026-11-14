@@ -85,7 +85,7 @@ export function SettingsPage({ onBack, onHistoryRangeChanged }: { onBack: () => 
   return <section className={styles.page} aria-labelledby="settings-title">
     <header><Tooltip align="start" label="返回今日"><button aria-label="返回今日" onClick={onBack}>←</button></Tooltip><div><p>PREFERENCES</p><h1 id="settings-title">设置</h1></div></header>
     <section className={styles.group}><h2>外观</h2><fieldset className={styles.segment}><legend>主题</legend>{([['system','跟随系统'],['light','浅色'],['dark','深色']] as const).map(([value,label]) => <label key={value}><input type="radio" name="theme" checked={config.theme_preference === value} onChange={() => void saveTheme(value)} />{label}</label>)}</fieldset></section>
-    {monitors?.per_monitor && monitors.monitors.length > 0 && <section className={styles.group}><h2>屏幕</h2>{monitors.monitors.map((monitor) => {
+    {monitors?.per_monitor && monitors.monitors.length > 0 && <section className={styles.group}><h2>屏幕</h2><fieldset className={styles.segment}><legend>壁纸模式</legend>{([['all','统一壁纸'],['per_monitor','按屏幕独立']] as const).map(([value,label]) => <label key={value}><input type="radio" name="wallpaper-mode" checked={config.wallpaper_mode === value} onChange={() => void persist(tauri.settings.setWallpaperMode(value))} />{label}</label>)}</fieldset>{monitors.monitors.map((monitor) => {
       const label = monitor.is_primary ? `${monitor.name} · 主` : monitor.name;
       const current = monitor.current_filename
         ? (wallpaperTitles[monitor.current_filename] ?? monitor.current_filename)

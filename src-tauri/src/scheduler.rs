@@ -1,8 +1,10 @@
 use chrono::offset::Utc;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
+use crate::config::RotateMode;
 use crate::events::WallpaperEvent;
 use crate::services::bing;
 use tauri::Emitter;
@@ -151,6 +153,64 @@ impl Scheduler {
     self.previous_photo().await?;
     self.emit_wallpaper_event(app, None).await?;
     Ok(())
+  }
+
+  /// 逐屏独立推进（轮播与托盘上一张/下一张共用）：
+  /// 每屏从 OS 反查的当前壁纸在列表中的位置推进 dir 位；缺失态回落全局索引；
+  /// 结束后全局索引整体推进，保持回落锚点新鲜。
+  pub async fn advance_per_monitor<R: tauri::Runtime>(
+    &mut self,
+    app: &tauri::AppHandle<R>,
+    mode: &RotateMode,
+    dir: i32,
+  ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let list = self.batch_fetch().await?;
+    if list.is_empty() {
+      return Err("No wallpapers available in cache".into());
+    }
+
+    let snapshot = tokio::task::spawn_blocking(crate::platform::list_monitors)
+      .await
+      .map_err(|e| format!("list monitors failed: {e}"))??;
+    if !snapshot.per_monitor {
+      return Err("per-monitor rotation is not supported on this system".into());
+    }
+
+    for monitor in &snapshot.monitors {
+      let position = monitor
+        .current_filename
+        .as_deref()
+        .and_then(|filename| list.iter().position(|photo| photo.filename == filename))
+        .unwrap_or(self.current_idx);
+      let next = match mode {
+        RotateMode::Sequential => Self::next_position(position, list.len(), dir),
+        RotateMode::Random => rand::thread_rng().gen_range(0..list.len()),
+      };
+      let photo = &list[next];
+      let Some(url) = photo.urls.first() else { continue };
+
+      bing::Wallpaper::set_wallpaper(url, Some(&monitor.id)).await?;
+      let event = WallpaperEvent {
+        title: photo.titles.first().cloned().unwrap_or_default(),
+        copyright: photo.copyrights.first().cloned().unwrap_or_default(),
+        url: url.clone(),
+        startdate: photo.startdates.first().cloned().unwrap_or_default(),
+        monitor_id: Some(monitor.id.clone()),
+      };
+      app.emit("wallpaper:changed", event)?;
+    }
+
+    if dir < 0 {
+      self.current_idx = if self.current_idx == 0 { list.len() - 1 } else { self.current_idx - 1 };
+    } else {
+      self.current_idx = (self.current_idx + 1) % list.len();
+    }
+    Ok(())
+  }
+
+  /// 纯函数：顺序模式下单屏推进位置计算（含环绕，advance_per_monitor 的可测核心）。
+  fn next_position(position: usize, len: usize, dir: i32) -> usize {
+    ((position as i32) + dir).rem_euclid(len as i32) as usize
   }
 
   async fn emit_wallpaper_event<R: tauri::Runtime>(
@@ -537,5 +597,28 @@ mod scheduler_tests {
   fn is_cache_valid_returns_false_when_empty() {
     let scheduler = Scheduler::new();
     assert!(!scheduler.is_cache_valid());
+  }
+}
+
+#[cfg(test)]
+mod advance_tests {
+  use super::{RotateMode, Scheduler};
+
+  #[test]
+  fn next_position_advances_forward_with_wraparound() {
+    assert_eq!(Scheduler::next_position(0, 5, 1), 1);
+    assert_eq!(Scheduler::next_position(4, 5, 1), 0);
+  }
+
+  #[test]
+  fn next_position_advances_backward_with_wraparound() {
+    assert_eq!(Scheduler::next_position(2, 5, -1), 1);
+    assert_eq!(Scheduler::next_position(0, 5, -1), 4);
+  }
+
+  #[test]
+  fn next_position_handles_single_item_list() {
+    assert_eq!(Scheduler::next_position(0, 1, 1), 0);
+    assert_eq!(Scheduler::next_position(0, 1, -1), 0);
   }
 }

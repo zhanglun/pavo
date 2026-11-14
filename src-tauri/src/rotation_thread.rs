@@ -1,4 +1,4 @@
-use crate::config::RotateMode;
+use crate::config::{RotateMode, WallpaperMode};
 use crate::events::WallpaperEvent;
 use crate::scheduler;
 use crate::services::bing;
@@ -21,12 +21,14 @@ impl RotationWorker {
     app: AppHandle,
     interval_minutes: u16,
     mode: RotateMode,
+    wallpaper_mode: WallpaperMode,
   ) {
     if let Some(thread) = self.thread.take() {
       thread.abort();
     }
 
-    let mode_clone = mode.clone();
+    let mode_task = mode.clone();
+    let wallpaper_mode_task = wallpaper_mode.clone();
     let mut interval = time::interval(time::Duration::from_secs(interval_minutes as u64 * 60));
 
     let thread = tauri::async_runtime::spawn(async move {
@@ -41,6 +43,14 @@ impl RotationWorker {
           }
         };
 
+        if wallpaper_mode_task == WallpaperMode::PerMonitor {
+          // 逐屏模式：每屏从 OS 反查的当前壁纸位置独立推进
+          if let Err(e) = scheduler.advance_per_monitor(&app, &mode_task, 1).await {
+            log::error!("rotation: per-monitor advance failed: {}", e);
+          }
+          continue;
+        }
+
         let list = match scheduler.batch_fetch().await {
           Ok(l) => l,
           Err(e) => {
@@ -54,7 +64,7 @@ impl RotationWorker {
           continue;
         }
 
-        let idx = match mode {
+        let idx = match mode_task {
           RotateMode::Sequential => {
             let idx = scheduler.current_idx;
             scheduler.current_idx = (idx + 1) % list.len();
@@ -89,9 +99,10 @@ impl RotationWorker {
     });
 
     log::info!(
-      "rotation worker started (interval={}min, mode={:?})",
+      "rotation worker started (interval={}min, mode={:?}, wallpaper-mode={:?})",
       interval_minutes,
-      mode_clone
+      mode,
+      wallpaper_mode
     );
     self.thread = Some(thread);
   }

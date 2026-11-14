@@ -35,6 +35,7 @@ impl Background {
           app.clone(),
           cfg.rotate_interval_minutes,
           cfg.rotate_mode,
+          cfg.wallpaper_mode,
         )
         .await;
     }
@@ -65,6 +66,7 @@ impl Background {
                   app_clone.clone(),
                   cfg.rotate_interval_minutes,
                   cfg.rotate_mode,
+                  cfg.wallpaper_mode,
                 )
                 .await;
             }
@@ -75,21 +77,32 @@ impl Background {
             AsyncProcessMessage::UpdateRotationConfig {
               interval_minutes,
               mode,
+              wallpaper_mode,
             } => {
               if rotation_active {
                 rotation_worker.stop();
                 rotation_worker
-                  .start(app_clone.clone(), interval_minutes, mode)
+                  .start(app_clone.clone(), interval_minutes, mode, wallpaper_mode)
                   .await;
               }
             }
             AsyncProcessMessage::PreviousPhoto => {
+              let cfg = config::PavoConfig::get_config();
               let mut scheduler = scheduler::SCHEDULER.lock().await;
-              let _ = scheduler.previous_photo_with_event(&app_clone).await;
+              if cfg.wallpaper_mode == config::WallpaperMode::PerMonitor {
+                let _ = scheduler.advance_per_monitor(&app_clone, &cfg.rotate_mode, -1).await;
+              } else {
+                let _ = scheduler.previous_photo_with_event(&app_clone).await;
+              }
             }
             AsyncProcessMessage::NextPhoto => {
+              let cfg = config::PavoConfig::get_config();
               let mut scheduler = scheduler::SCHEDULER.lock().await;
-              let _ = scheduler.next_photo_with_event(&app_clone).await;
+              if cfg.wallpaper_mode == config::WallpaperMode::PerMonitor {
+                let _ = scheduler.advance_per_monitor(&app_clone, &cfg.rotate_mode, 1).await;
+              } else {
+                let _ = scheduler.next_photo_with_event(&app_clone).await;
+              }
             }
           };
         };

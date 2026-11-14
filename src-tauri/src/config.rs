@@ -15,6 +15,15 @@ pub enum RotateMode {
   Random,
 }
 
+/// 壁纸模式：统一（所有屏幕同一张）或逐屏独立
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum WallpaperMode {
+  #[default]
+  All,
+  PerMonitor,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ThemePreference {
@@ -50,6 +59,10 @@ fn default_rotate_interval_minutes() -> u16 {
 
 fn default_rotate_mode() -> RotateMode {
   RotateMode::Sequential
+}
+
+fn default_wallpaper_mode() -> WallpaperMode {
+  WallpaperMode::All
 }
 
 fn default_history_range_days() -> u8 {
@@ -92,6 +105,8 @@ pub struct PavoConfig {
   pub rotate_interval_minutes: u16,
   #[serde(default = "default_rotate_mode")]
   pub rotate_mode: RotateMode,
+  #[serde(default = "default_wallpaper_mode")]
+  pub wallpaper_mode: WallpaperMode,
   #[serde(default = "default_auto_start")]
   pub auto_start: bool,
   #[serde(default = "default_cache_retention_days")]
@@ -109,6 +124,7 @@ impl PavoConfig {
       auto_rotate: false,
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
+      wallpaper_mode: WallpaperMode::All,
       auto_start: false,
       cache_retention_days: 7,
       theme_preference: ThemePreference::System,
@@ -231,6 +247,15 @@ impl PavoConfig {
           _ => None,
         })
         .unwrap_or_default(),
+      wallpaper_mode: table
+        .get("wallpaper_mode")
+        .and_then(|v| v.as_str())
+        .and_then(|value| match value {
+          "all" => Some(WallpaperMode::All),
+          "per_monitor" => Some(WallpaperMode::PerMonitor),
+          _ => None,
+        })
+        .unwrap_or_default(),
       auto_start: table
         .get("auto_start")
         .and_then(|v| v.as_bool())
@@ -316,6 +341,10 @@ impl PavoConfig {
     Self::update_config(|cfg| cfg.rotate_mode = mode)
   }
 
+  pub fn set_wallpaper_mode(&self, mode: WallpaperMode) -> Result<Self, String> {
+    Self::update_config(|cfg| cfg.wallpaper_mode = mode)
+  }
+
   pub fn set_auto_start(&self, enabled: bool) -> Result<Self, String> {
     Self::update_config(|cfg| cfg.auto_start = enabled)
   }
@@ -370,6 +399,7 @@ show_layer = false
       auto_rotate: false,
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
+      wallpaper_mode: WallpaperMode::All,
       auto_start: false,
       cache_retention_days: 7,
       theme_preference: ThemePreference::System,
@@ -418,6 +448,7 @@ show_layer = false
       auto_rotate: false,
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
+      wallpaper_mode: WallpaperMode::All,
       auto_start: false,
       cache_retention_days: 7,
       theme_preference: ThemePreference::System,
@@ -435,6 +466,7 @@ show_layer = false
       auto_rotate: false,
       rotate_interval_minutes: 60,
       rotate_mode: RotateMode::Sequential,
+      wallpaper_mode: WallpaperMode::All,
       auto_start: false,
       cache_retention_days: 7,
       theme_preference: ThemePreference::System,
@@ -528,6 +560,22 @@ favorites = "not_an_array"
   fn legacy_config_defaults_theme_to_system() {
     let parsed = PavoConfig::parse_tolerant("auto_rotate = true");
     assert_eq!(parsed.theme_preference, ThemePreference::System);
+  }
+
+  #[test]
+  fn wallpaper_mode_serializes_as_snake_case() {
+    let mut cfg = PavoConfig::new();
+    cfg.wallpaper_mode = WallpaperMode::PerMonitor;
+    let text = toml::to_string(&cfg).unwrap();
+    assert!(text.contains("wallpaper_mode = \"per_monitor\""));
+  }
+
+  #[test]
+  fn wallpaper_mode_parses_tolerantly() {
+    assert_eq!(PavoConfig::parse_tolerant("wallpaper_mode = \"per_monitor\"").wallpaper_mode, WallpaperMode::PerMonitor);
+    assert_eq!(PavoConfig::parse_tolerant("wallpaper_mode = \"all\"").wallpaper_mode, WallpaperMode::All);
+    assert_eq!(PavoConfig::parse_tolerant("wallpaper_mode = \"bogus\"").wallpaper_mode, WallpaperMode::All);
+    assert_eq!(PavoConfig::parse_tolerant("").wallpaper_mode, WallpaperMode::All);
   }
 
   #[test]

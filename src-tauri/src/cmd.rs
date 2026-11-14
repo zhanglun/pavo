@@ -251,6 +251,7 @@ pub async fn set_rotate_interval(
     .send(AsyncProcessMessage::UpdateRotationConfig {
       interval_minutes: cfg.rotate_interval_minutes,
       mode: cfg.rotate_mode.clone(),
+      wallpaper_mode: cfg.wallpaper_mode.clone(),
     })
     .await
     .map_err(|error| error.to_string())?;
@@ -270,6 +271,28 @@ pub async fn set_rotate_mode(
     .send(AsyncProcessMessage::UpdateRotationConfig {
       interval_minutes: cfg.rotate_interval_minutes,
       mode: cfg.rotate_mode.clone(),
+      wallpaper_mode: cfg.wallpaper_mode.clone(),
+    })
+    .await
+    .map_err(|error| error.to_string())?;
+
+  config_value(cfg)
+}
+
+#[tauri::command]
+pub async fn set_wallpaper_mode(
+  mode: config::WallpaperMode,
+  state: tauri::State<'_, AsyncProcInputTx>,
+) -> Result<serde_json::Value, String> {
+  let cfg = config::PavoConfig::get_config().set_wallpaper_mode(mode)?;
+
+  // 轮播运行中时重启 worker，让新模式在下一个 tick 生效
+  let sender = state.sender.lock().await;
+  sender
+    .send(AsyncProcessMessage::UpdateRotationConfig {
+      interval_minutes: cfg.rotate_interval_minutes,
+      mode: cfg.rotate_mode.clone(),
+      wallpaper_mode: cfg.wallpaper_mode.clone(),
     })
     .await
     .map_err(|error| error.to_string())?;
