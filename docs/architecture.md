@@ -18,19 +18,20 @@ graph TD
     HISTORY[历史档案 HistoryPage]
     FAV[收藏册页 FavoritesPage]
     SETTINGS[设置 SettingsPage]
-    NORM[数据规整 normalize 去重排序]
-    TPL[设计 Token tokens.css]
   end
   subgraph Tauri 后端 Rust
+    MAIN[应用装配 main.rs]
     CMD[命令接口 cmd.rs]
     CONF[配置管理 config.rs]
     SCHED[调度器 scheduler.rs]
     BG[后台服务 background.rs]
+    ROT[自动轮播 rotation_thread.rs]
+    DAILY[每日更新 daily_update_thread.rs]
+    EVT[事件 events.rs]
     TRAY[托盘交互 tray.rs]
     PLUG[插件系统 plugins.rs]
-    SVCS[服务 services/mod.rs]
+    SVCS[服务助手 services/mod.rs]
     BING[壁纸服务 bing.rs]
-    SHUFFLE[自动切换 shuffle_thread.rs]
   end
   APP-->TODAY
   APP-->HISTORY
@@ -40,17 +41,24 @@ graph TD
   HISTORY--invoke-->CMD
   FAV--invoke-->CMD
   SETTINGS--invoke-->CMD
+  MAIN-->CMD
+  MAIN-->PLUG
+  MAIN-->TRAY
+  MAIN-->BG
   CMD--读写配置-->CONF
   CMD--调度壁纸-->SCHED
-  CMD--调用服务-->SVCS
-  CMD--托盘交互-->TRAY
-  CMD--插件注册-->PLUG
-  SCHED--调用Bing服务-->BING
-  SCHED--自动切换-->SHUFFLE
-  BG--消息调度-->SCHED
-  BG--消息调度-->SHUFFLE
-  SVCS--下载/保存壁纸-->BING
+  CMD--设置/下载壁纸-->BING
+  CMD--预览窗口-->SVCS
+  CMD--emit事件-->EVT
+  SCHED--emit事件-->EVT
   TRAY--发送消息-->BG
+  BG--消息调度-->SCHED
+  BG--启停轮播线程-->ROT
+  BG--启停每日更新线程-->DAILY
+  SCHED--调用Bing服务-->BING
+  ROT--设置壁纸-->BING
+  DAILY--设置壁纸-->BING
+  BING--使用下载助手-->SVCS
 ```
 
 ## 前端分层（FSD-Lite）
@@ -85,13 +93,17 @@ src/
 ## 说明
 
 - **前端（React）**：负责 UI 展示和用户交互，通过 `shared/tauri/client.ts` 统一封装的 invoke 与后端通信。数据规整集中在 `entities/wallpaper/model/normalize.ts`，按稳定标识多层去重，避免跨地区与跨日期重复展示。
-- **Tauri 后端（Rust）**：实现所有业务逻辑，包括配置管理、壁纸调度、后台服务、托盘菜单、插件注册、壁纸下载与切换等。
+- **Tauri 后端（Rust）**：实现所有业务逻辑，包括配置管理、壁纸调度、后台服务、托盘菜单、插件注册、壁纸下载与设置等。
 - **核心流程**：
   1. 前端页面通过封装的 client 调用后端命令（获取今日/近期壁纸、收藏、配置等）。
   2. 后端命令分发到对应模块（scheduler、services、config）。
-  3. 调度器负责壁纸的获取、缓存、切换，支持自动定时切换（shuffle_thread）。
-  4. 托盘菜单和后台服务通过消息通道与调度器联动，实现快捷操作和自动化。
-  5. 插件系统用于扩展功能，如日志、更新、文件系统等。
-- **主题**：三档（跟随系统 / 浅色 / 深色），偏好持久化在 localStorage，`index.html` 内联脚本在 React 挂载前同步应用，减少启动闪烁。
+  3. 调度器负责壁纸列表的获取、缓存与索引；自动轮播（`rotation_thread.rs`）与每日更新（`daily_update_thread.rs`）作为独立后台线程按间隔触发，最终都调用统一的壁纸设置入口。
+  4. 托盘菜单和后台服务通过消息通道联动，实现上一张/下一张、轮播启停等快捷操作和自动化。
+  5. 事件机制：后端通过 `wallpaper:changed`、`wallpapers:cache-refreshed` 等事件通知前端；插件系统用于扩展功能，如日志、更新、文件系统等。
+- **主题**：三档（跟随系统 / 浅色 / 深色），偏好持久化在 Rust 配置 `pavo.toml`（`theme_preference` 字段）；前端将其镜像写入 `localStorage`，`index.html` 内联脚本在 React 挂载前同步应用，减少启动闪烁。
+
+## 进行中的设计
+
+- 多显示器逐屏壁纸支持：设计规格见 [multi-monitor-wallpaper-design.md](./multi-monitor-wallpaper-design.md)（待评审，尚未实施）。
 
 ---
