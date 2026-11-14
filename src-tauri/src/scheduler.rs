@@ -209,7 +209,7 @@ impl Scheduler {
   }
 
   /// 纯函数：顺序模式下单屏推进位置计算（含环绕，advance_per_monitor 的可测核心）。
-  fn next_position(position: usize, len: usize, dir: i32) -> usize {
+  pub(crate) fn next_position(position: usize, len: usize, dir: i32) -> usize {
     ((position as i32) + dir).rem_euclid(len as i32) as usize
   }
 

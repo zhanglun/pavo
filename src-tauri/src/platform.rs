@@ -749,3 +749,115 @@ mod e2e_tests {
   }
 }
 
+
+/// 逐屏独立轮播的真机端到端（会短暂修改真实桌面并自动恢复）：
+/// 预设两块屏为相册中不同的两张图 → 推进一轮 → 验证各自独立 +1 → 恢复原壁纸。
+/// cargo test e2e_per_monitor_rotation -- --ignored --nocapture
+#[cfg(all(test, target_os = "windows"))]
+mod e2e_rotation_tests {
+  use crate::config::RotateMode;
+  use crate::services::bing;
+  use crate::scheduler;
+  use std::time::{Duration, Instant};
+
+  /// 轮询某屏的当前壁纸文件名落到期望值（壁纸应用是异步的）。
+  async fn poll_filename(monitor_id: &str, expected: &str, label: &str) {
+    let deadline = Instant::now() + Duration::from_secs(10);
+    loop {
+      let actual = crate::platform::list_monitors()
+        .ok()
+        .and_then(|snapshot| {
+          snapshot
+            .monitors
+            .iter()
+            .find(|m| m.id == monitor_id)
+            .and_then(|m| m.current_filename.clone())
+        });
+      match actual {
+        Some(name) if name == expected => return,
+        other if Instant::now() >= deadline => {
+          panic!("{label}: wallpaper did not settle: expected {expected:?}, got {other:?}");
+        }
+        _ => tokio::time::sleep(Duration::from_millis(300)).await,
+      }
+    }
+  }
+
+  #[tokio::test]
+  #[ignore = "端到端：短暂修改真实桌面壁纸并自动恢复，仅本机手动执行"]
+  async fn e2e_per_monitor_rotation_advances_each_screen_independently() {
+    let app = tauri::test::mock_app();
+    let handle = app.handle().clone();
+
+    let snapshot = crate::platform::list_monitors().expect("enumerate monitors");
+    assert!(snapshot.per_monitor, "per-monitor capability required");
+    assert!(
+      snapshot.monitors.len() >= 2,
+      "per-monitor rotation E2E requires at least two displays"
+    );
+
+    // 取证：每屏原始壁纸完整路径，结束后恢复
+    let original: Vec<(String, String)> = snapshot
+      .monitors
+      .iter()
+      .filter_map(|monitor| {
+        super::windows_impl::current_wallpaper_path(&monitor.id)
+          .ok()
+          .map(|path| (monitor.id.clone(), path))
+      })
+      .collect();
+    assert!(original.len() >= 2, "monitors should have current wallpapers");
+
+    let mut scheduler = scheduler::SCHEDULER.lock().await;
+    let list = scheduler.batch_fetch().await.expect("fetch album list");
+    assert!(
+      list.len() >= 3,
+      "album list should have at least three photos to verify independent advance"
+    );
+
+    // 预设：屏 1 ← 列表第 0 张，屏 2 ← 列表第 1 张（两张不同，为独立性验证铺底）
+    let screen_a = snapshot.monitors[0].id.clone();
+    let screen_b = snapshot.monitors[1].id.clone();
+    bing::Wallpaper::set_wallpaper(&list[0].urls[0], Some(&screen_a))
+      .await
+      .expect("preset screen a");
+    bing::Wallpaper::set_wallpaper(&list[1].urls[0], Some(&screen_b))
+      .await
+      .expect("preset screen b");
+    poll_filename(&screen_a, &list[0].filename, "preset screen a").await;
+    poll_filename(&screen_b, &list[1].filename, "preset screen b").await;
+
+    // 推进一轮：每屏应从各自当前位置 +1（环绕），互不影响
+    let expected_a = &list[scheduler::Scheduler::next_position(0, list.len(), 1)].filename;
+    let expected_b = &list[scheduler::Scheduler::next_position(1, list.len(), 1)].filename;
+    scheduler
+      .advance_per_monitor(&handle, &RotateMode::Sequential, 1)
+      .await
+      .expect("advance per monitor");
+
+    poll_filename(&screen_a, expected_a, "advance screen a").await;
+    poll_filename(&screen_b, expected_b, "advance screen b").await;
+    println!("per-monitor advance ok: {screen_a} -> {expected_a:?}, {screen_b} -> {expected_b:?}");
+
+    // 恢复每屏原始壁纸
+    drop(scheduler);
+    for (id, path) in &original {
+      super::windows_impl::set_wallpaper_for(id, path).expect("restore");
+    }
+    for (id, path) in &original {
+      let deadline = Instant::now() + Duration::from_secs(10);
+      loop {
+        let restored = super::windows_impl::current_wallpaper_path(id)
+          .ok()
+          .map(|p| p == *path)
+          .unwrap_or(false);
+        if restored || Instant::now() >= deadline {
+          assert!(restored, "screen {id} should be restored");
+          break;
+        }
+        tokio::time::sleep(Duration::from_millis(300)).await;
+      }
+    }
+    println!("original wallpapers restored");
+  }
+}
