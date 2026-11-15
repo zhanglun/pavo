@@ -1,13 +1,14 @@
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 use tauri_plugin_updater::UpdaterExt;
 
-pub async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
+/// 检查并安装更新。弹窗文案由调用方（bin）按语言提供，lib 保持无语言感知。
+pub async fn update(app: tauri::AppHandle, title: &str, message: &str) -> tauri_plugin_updater::Result<()> {
   if let Some(update) = app.updater()?.check().await? {
     let (tx, rx) = tokio::sync::oneshot::channel();
     app
       .dialog()
-      .message("A new version is available. Install now?")
-      .title("Update Available")
+      .message(message)
+      .title(title)
       .buttons(MessageDialogButtons::OkCancel)
       .show(move |confirmed| {
         let _ = tx.send(confirmed);

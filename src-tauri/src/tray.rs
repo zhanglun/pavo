@@ -7,6 +7,7 @@ use tauri::{
   App, AppHandle, Emitter, Manager, Runtime, WebviewWindow,
 };
 
+use crate::localization;
 use crate::services::AsyncProcessMessage;
 use tokio::sync::mpsc;
 
@@ -144,21 +145,23 @@ pub fn create_tray(
   app: &mut App,
   sender: mpsc::Sender<AsyncProcessMessage>,
 ) -> Result<(), tauri::Error> {
-  let quit = MenuItemBuilder::new("Quit").id("quit").build(app)?;
-  let show = MenuItemBuilder::new("Show").id("show").build(app)?;
-  let hide = MenuItemBuilder::new("Hide").id("hide").build(app)?;
+  // 文案跟随系统显示语言；菜单项 id 稳定，与标签语言解耦
+  let texts = localization::tray_texts(localization::Language::system());
+  let quit = MenuItemBuilder::new(texts.quit).id("quit").build(app)?;
+  let show = MenuItemBuilder::new(texts.show).id("show").build(app)?;
+  let hide = MenuItemBuilder::new(texts.hide).id("hide").build(app)?;
 
-  let previous_wallpaper = MenuItemBuilder::new("Previous Wallpaper")
+  let previous_wallpaper = MenuItemBuilder::new(texts.previous_wallpaper)
     .id("previous_wallpaper")
     .build(app)?;
-  let next_wallpaper = MenuItemBuilder::new("Next Wallpaper")
+  let next_wallpaper = MenuItemBuilder::new(texts.next_wallpaper)
     .id("next_wallpaper")
     .build(app)?;
 
-  let check_for_update = MenuItemBuilder::new("Check for Updates")
+  let check_for_update = MenuItemBuilder::new(texts.check_for_updates)
     .id("check_for_updates")
     .build(app)?;
-  let settings = MenuItemBuilder::new("Settings...")
+  let settings = MenuItemBuilder::new(texts.settings)
     .id("settings")
     .build(app)?;
 

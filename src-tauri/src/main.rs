@@ -8,6 +8,7 @@ mod cmd;
 mod config;
 mod daily_update_thread;
 mod events;
+mod localization;
 mod platform;
 mod plugins;
 mod rotation_thread;
@@ -94,7 +95,8 @@ async fn main() {
         background::Background::new(Arc::new(Mutex::new(async_process_input_rx)), handle.clone())
           .await;
 
-        if let Err(e) = update(handle).await {
+        let (title, message) = localization::update_dialog_texts(localization::Language::system());
+        if let Err(e) = update(handle, title, message).await {
           log::error!("update check failed: {}", e);
         }
       });
