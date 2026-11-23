@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.0.17](https://github.com/zhanglun/pavo/compare/v0.0.16...v0.0.17) (2026-11-23)
+
+
+### Features
+
+* **rotation:** 壁纸轮播逐屏独立模式 ([c2468cb](https://github.com/zhanglun/pavo/commit/c2468cb8cf0bcfb25a5a0c1c07f1f17b0ad417cf))
+* **ui:** 逐屏设置壁纸的前端入口 ([2e16967](https://github.com/zhanglun/pavo/commit/2e169677eef3123d8bebd41407e481ab1a3208e1))
+* **platform:** 屏幕枚举与逐屏壁纸定向 ([16e8b0a](https://github.com/zhanglun/pavo/commit/16e8b0a2884fb35cf54fb2fe9c1a533bd4383c03))
+* **website:** 接入 GitHub 下载量统计（过滤更新器元数据） ([dc5a1e1](https://github.com/zhanglun/pavo/commit/dc5a1e1504dc6ba0891cf34445c5e74dff155986))
+
+
+### Bug Fixes
+
+* **tray:** 托盘菜单与更新弹窗跟随系统语言 ([5939717](https://github.com/zhanglun/pavo/commit/5939717936c989f9b654b7da865ef46cb99864b2))
+* **ci:** update-stats 补充 actions:write 权限以 dispatch 官网部署 ([301a6dd](https://github.com/zhanglun/pavo/commit/301a6ddd98aeedc76df85795ebe3922bcbc310a3))
+* **stats:** update-stats 完成后自动重新部署官网 ([db2ffa9](https://github.com/zhanglun/pavo/commit/db2ffa9792453109df87dd2f5a7b21c2f01ad4de))
+
 ## [0.0.16](https://github.com/zhanglun/pavo/compare/v0.0.15...v0.0.16) (2026-08-02)
 
 
