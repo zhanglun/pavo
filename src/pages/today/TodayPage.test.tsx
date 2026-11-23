@@ -1,12 +1,12 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { ToastProvider } from "../../shared/ui/toast/ToastProvider";
 import { tauri } from "../../shared/tauri/client";
 import { TodayPage } from "./TodayPage";
 
 vi.mock("../../shared/tauri/client", () => ({
-  tauri: { wallpapers: { getTodayCollection: vi.fn(), getRecent: vi.fn(), setAsDesktop: vi.fn(), download: vi.fn() } },
+  tauri: { wallpapers: { getTodayCollection: vi.fn(), getRecent: vi.fn(), setAsDesktop: vi.fn(), download: vi.fn(), listMonitors: vi.fn() } },
 }));
 vi.mock("../../shared/platform/shell", () => ({ openExternal: vi.fn() }));
 
@@ -17,8 +17,15 @@ const photo = (filename: string, title: string, region = "zh-CN") => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // fixture 的 startdate 固定为 20260723；冻结系统日期使"今日/近期"窗口与 fixture 对齐
+  vi.useFakeTimers({ now: new Date("2026-07-23T00:00:00"), shouldAdvanceTime: true });
+  vi.mocked(tauri.wallpapers.listMonitors).mockResolvedValue({ per_monitor: false, monitors: [] });
   vi.mocked(tauri.wallpapers.setAsDesktop).mockResolvedValue("ok");
   vi.mocked(tauri.wallpapers.download).mockResolvedValue("ok");
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 test("renders the daily folio and sets the selected wallpaper", async () => {

@@ -1,4 +1,4 @@
-use crate::config::RotateMode;
+use crate::config::{RotateMode, WallpaperMode};
 use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -23,6 +23,7 @@ pub enum AsyncProcessMessage {
   UpdateRotationConfig {
     interval_minutes: u16,
     mode: RotateMode,
+    wallpaper_mode: WallpaperMode,
   },
 }
 

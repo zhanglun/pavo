@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { MoreHorizontal } from "lucide-react";
 import { Tooltip } from "../tooltip/Tooltip";
 import styles from "./Menu.module.css";
 
-type Item = { id: string; label: string; onSelect: () => void; disabled?: boolean };
+type Item = { id: string; label: string; onSelect: () => void; disabled?: boolean; group?: string };
 type Rect = { left: number; right: number; top: number; bottom: number; width: number; height: number };
 type Size = { width: number; height: number };
 type MenuPosition = { left: number; top: number; side: "top" | "bottom"; arrowLeft: number };
@@ -27,12 +27,20 @@ export function getMenuPosition(trigger: Rect, menu: Size, viewport: Size): Menu
   return { left, top, side, arrowLeft };
 }
 
-export function Menu({ label, items }: { label: string; items: Item[] }) {
+export function Menu({ label, items, onOpenChange }: { label: string; items: Item[]; onOpenChange?: (open: boolean) => void }) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<MenuPosition | null>(null);
   const wrapper = useRef<HTMLSpanElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLSpanElement>(null);
+  // 经 ref 转发最新回调，保持 toggle 稳定，避免监听器随渲染反复挂卸
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
+
+  const toggle = useCallback((next: boolean) => {
+    setOpen(next);
+    onOpenChangeRef.current?.(next);
+  }, []);
 
   const updatePosition = useCallback(() => {
     if (!trigger.current || !menu.current) return;
@@ -54,13 +62,13 @@ export function Menu({ label, items }: { label: string; items: Item[] }) {
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setOpen(false);
+        toggle(false);
         trigger.current?.focus();
       }
     };
     const outside = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (!wrapper.current?.contains(target) && !menu.current?.contains(target)) setOpen(false);
+      if (!wrapper.current?.contains(target) && !menu.current?.contains(target)) toggle(false);
     };
     const reposition = () => updatePosition();
     window.addEventListener("keydown", close);
@@ -73,7 +81,7 @@ export function Menu({ label, items }: { label: string; items: Item[] }) {
       window.removeEventListener("resize", reposition);
       window.removeEventListener("scroll", reposition, true);
     };
-  }, [updatePosition]);
+  }, [toggle, updatePosition]);
 
   const moveFocus = (event: React.KeyboardEvent<HTMLSpanElement>) => {
     if (!event.key.startsWith("Arrow")) return;
@@ -94,7 +102,7 @@ export function Menu({ label, items }: { label: string; items: Item[] }) {
   return <>
     <span className={styles.root} ref={wrapper}>
       <Tooltip align="end" disabled={open} label={label}>
-        <button className={styles.trigger} ref={trigger} aria-label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <button className={styles.trigger} ref={trigger} aria-label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => toggle(!open)}>
           <MoreHorizontal size={15} strokeWidth={1.75} />
         </button>
       </Tooltip>
@@ -108,7 +116,17 @@ export function Menu({ label, items }: { label: string; items: Item[] }) {
         style={menuStyle}
         onKeyDown={moveFocus}
       >
-        {items.map((item) => <button className={styles.item} key={item.id} role="menuitem" disabled={item.disabled} onClick={() => { setOpen(false); item.onSelect(); }}>{item.label}</button>)}
+        {items.map((item, index) => {
+          const header = item.group && (index === 0 || items[index - 1].group !== item.group)
+            ? <span className={styles.groupLabel} aria-hidden="true">{item.group}</span>
+            : null;
+          return (
+            <Fragment key={item.id}>
+              {header}
+              <button className={styles.item} role="menuitem" disabled={item.disabled} onClick={() => { toggle(false); item.onSelect(); }}>{item.label}</button>
+            </Fragment>
+          );
+        })}
       </span>,
       document.body,
     )}

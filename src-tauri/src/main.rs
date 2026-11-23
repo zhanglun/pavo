@@ -8,6 +8,8 @@ mod cmd;
 mod config;
 mod daily_update_thread;
 mod events;
+mod localization;
+mod platform;
 mod plugins;
 mod rotation_thread;
 mod scheduler;
@@ -63,6 +65,9 @@ async fn main() {
       #[cfg(target_os = "macos")]
       app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
+      // 平台层需要的应用句柄（macOS 主线程调度壁纸设置用）
+      let _ = platform::set_app_handle(app.handle().clone());
+
       // 非自启动时显示主窗口（tauri.conf.json 默认 visible: false 防止闪烁）
       if !std::env::args().any(|arg| arg == "--autostart") {
         if let Some(window) = app.get_webview_window("main") {
@@ -74,7 +79,9 @@ async fn main() {
 
       {
         let retention_days = config::PavoConfig::get_config().cache_retention_days;
-        let _ = bing::clean_cache(retention_days);
+        // 引用保护：当前被某块屏幕引用的壁纸文件不参与清理
+        let protected = platform::referenced_wallpaper_files();
+        let _ = bing::clean_cache(retention_days, &protected);
       }
 
       let _ = tray::create_tray(app, sender);
@@ -88,7 +95,8 @@ async fn main() {
         background::Background::new(Arc::new(Mutex::new(async_process_input_rx)), handle.clone())
           .await;
 
-        if let Err(e) = update(handle).await {
+        let (title, message) = localization::update_dialog_texts(localization::Language::system());
+        if let Err(e) = update(handle, title, message).await {
           log::error!("update check failed: {}", e);
         }
       });
@@ -97,6 +105,7 @@ async fn main() {
     })
     .invoke_handler(tauri::generate_handler![
       cmd::set_as_desktop,
+      cmd::list_monitors,
       cmd::download,
       cmd::view_photo,
       cmd::get_bing_wallpaper_list,
@@ -114,6 +123,7 @@ async fn main() {
       cmd::set_auto_rotate,
       cmd::set_rotate_interval,
       cmd::set_rotate_mode,
+      cmd::set_wallpaper_mode,
       cmd::set_auto_start,
       cmd::set_cache_retention_days,
       cmd::set_theme_preference,
