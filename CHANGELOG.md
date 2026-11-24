@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.18](https://github.com/zhanglun/pavo/compare/v0.0.17...v0.0.18) (2026-11-24)
+
+
+### Bug Fixes
+
+* **macos:** 适配 objc2 0.6 API，修复 macOS 构建失败 ([7296c0d](https://github.com/zhanglun/pavo/commit/7296c0dd6f8fb884af41cfc723ca89628070e75f))
+
 ## [0.0.17](https://github.com/zhanglun/pavo/compare/v0.0.16...v0.0.17) (2026-11-23)
 
 
