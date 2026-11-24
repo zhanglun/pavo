@@ -39,6 +39,20 @@ const FILES = {
         `$1"${version}"`
       ),
   },
+  "src-tauri/Cargo.lock": {
+    path: resolve(root, "src-tauri/Cargo.lock"),
+    read: (content) => {
+      const match = content.match(
+        /\[\[package\]\]\nname = "pavo"\nversion = "([^"]+)"/
+      );
+      return match ? match[1] : null;
+    },
+    write: (content, version) =>
+      content.replace(
+        /(\[\[package\]\]\nname = "pavo"\nversion = )"[^"]+"/,
+        `$1"${version}"`
+      ),
+  },
 };
 
 function bump(current, type) {
