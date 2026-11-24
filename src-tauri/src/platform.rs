@@ -7,7 +7,6 @@
 //! 屏幕标识为运行时标识（每次 list_monitors 实时枚举产生），不持久化。
 
 use std::collections::HashSet;
-use std::path::Path;
 use std::sync::OnceLock;
 use serde::Serialize;
 
@@ -52,10 +51,12 @@ fn app_handle() -> PlatformResult<tauri::AppHandle> {
 }
 
 /// 从本地路径提取文件名（用于 OS 反查结果与相册数据映射）。
+/// 手动按 / 与 \ 双分隔符切分，保证 Windows 风格路径在类 Unix 平台上也能正确解析。
 pub fn filename_from_path(path: &str) -> Option<String> {
-  Path::new(path)
-    .file_name()
-    .and_then(|name| name.to_str())
+  path
+    .rsplit(|c| c == '/' || c == '\\')
+    .next()
+    .filter(|name| !name.is_empty())
     .map(|name| name.to_string())
 }
 
@@ -442,19 +443,24 @@ mod macos_impl {
     NSScreen,
   };
   use objc2_foundation::{NSNumber, NSDictionary, NSString, NSURL};
+  use std::path::Path;
   use std::sync::mpsc;
   use std::time::Duration;
 
   /// 主线程任务的通用执行入口：dispatch + 超时兜底。
   fn run_on_main<T>(
     task: impl FnOnce() -> super::PlatformResult<T> + Send + 'static,
-  ) -> super::PlatformResult<T> {
+  ) -> super::PlatformResult<T>
+  where
+    T: Send + 'static,
+  {
     let handle = super::app_handle()?;
     let (tx, rx) = mpsc::channel::<super::PlatformResult<T>>();
 
     handle
       .run_on_main_thread(move || {
-        let result = autoreleasepool(task);
+        // objc2 0.6 起 autoreleasepool 的闭包需接收 AutoreleasePool 参数
+        let result = autoreleasepool(|_pool| task());
         let _ = tx.send(result);
       })
       .map_err(|e| format!("[mac] dispatch to main thread failed: {e}"))?;
@@ -473,8 +479,10 @@ mod macos_impl {
 
   /// 构造填充缩放选项：保持与旧实现的视觉语义一致（按比例放大/缩小填满屏幕）。
   unsafe fn build_fill_options() -> Retained<NSDictionary<NSWorkspaceDesktopImageOptionKey, AnyObject>> {
-    let scaling = NSNumber::new_isize(NSImageScaling::NSImageScaleProportionallyUpOrDown.0);
-    let any: Retained<AnyObject> = scaling.into_super();
+    let scaling =
+      NSNumber::new_isize(NSImageScaling::ScaleProportionallyUpOrDown.0 as isize);
+    // NSNumber → NSValue → NSObject → AnyObject，逐级提升
+    let any: Retained<AnyObject> = scaling.into_super().into_super().into_super();
     NSDictionary::from_retained_objects(&[NSWorkspaceDesktopImageScalingKey], &[any])
   }
 
@@ -503,8 +511,9 @@ mod macos_impl {
   }
 
   pub fn set_wallpaper_all(path: &str) -> super::PlatformResult<()> {
+    let path = path.to_string();
     run_on_main(move || unsafe {
-      let url = NSURL::from_file_path(Path::new(path))
+      let url = NSURL::from_file_path(Path::new(&path))
         .ok_or_else(|| format!("[mac] invalid wallpaper path: {path}"))?;
       let workspace = NSWorkspace::sharedWorkspace();
       let options = build_fill_options();
@@ -519,11 +528,13 @@ mod macos_impl {
   }
 
   pub fn set_wallpaper_for(monitor_id: &str, path: &str) -> super::PlatformResult<()> {
+    let path = path.to_string();
+    let monitor_id = monitor_id.to_string();
     run_on_main(move || unsafe {
       let target = monitor_id
         .parse::<u32>()
         .map_err(|_| format!("[mac] monitor not found: {monitor_id}"))?;
-      let url = NSURL::from_file_path(Path::new(path))
+      let url = NSURL::from_file_path(Path::new(&path))
         .ok_or_else(|| format!("[mac] invalid wallpaper path: {path}"))?;
       let workspace = NSWorkspace::sharedWorkspace();
       let options = build_fill_options();
@@ -557,7 +568,7 @@ mod macos_impl {
       let mut monitors = Vec::new();
       for (index, screen) in screens.to_vec().iter().enumerate() {
         let id = screen_display_id(screen)?.to_string();
-        let name = screen.localizedDescription().to_string();
+        let name = screen.localizedName().to_string();
         let frame = screen.frame();
         let scale = screen.backingScaleFactor();
         let width = (frame.size.width * scale).round() as u32;
@@ -567,7 +578,7 @@ mod macos_impl {
         let current_filename = workspace
           .desktopImageURLForScreen(screen)
           .and_then(|url| url.path())
-          .and_then(|path| path.to_string())
+          .map(|path| path.to_string())
           .and_then(|path| super::filename_from_path(&path));
 
         monitors.push(super::MonitorInfo {
